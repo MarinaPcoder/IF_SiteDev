@@ -6,6 +6,7 @@
   <title>Catálogo de Jogos</title>
   <link rel="stylesheet" href="./assets/css/index-styles.css">
 </head>
+
 <body>
   <div class="sidebar">
     <h2>Gêneros</h2>

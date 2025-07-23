@@ -2,7 +2,7 @@
     "name": "pedro/i-fsitedev",
     "autoload": {
         "psr-4": {
-            "Pedro\\IFsitedev\\": "src/"
+            "App\\": "App/"
         }
     },
     "require": {}
