@@ -8,7 +8,6 @@
         $datadenascimento, 
         $senha, 
         $bio;
-
         private function SetNome($nome): void {
             
         }
