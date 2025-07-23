@@ -5,27 +5,27 @@
         private 
         $nome, 
         $email, 
-        $nascimento, 
+        $datadenascimento, 
         $senha, 
         $bio;
 
-        private function SetNome(): void {
+        private function SetNome($nome): void {
+            
+        }
+
+        private function SetEmail($email): void {
 
         }
 
-        private function SetEmail(): void {
+        private function SetNascimento($nascimento): void {
 
         }
 
-        private function SetNascimento(): void {
+        private function SetSenha($senha): void {
 
         }
 
-        private function SetSenha(): void {
-
-        }
-
-        private function SetBio(): void {
+        private function SetBio($bio): void {
 
         }
     }
