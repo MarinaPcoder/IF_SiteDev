@@ -1,6 +1,11 @@
 <?php
  
  namespace App\models;
-Class Usuario {
 
+ use App\Core\Conexao;
+
+Class Usuario {
+    public function Cadastrar() {
+
+    }
 }
