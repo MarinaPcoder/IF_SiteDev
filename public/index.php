@@ -6,7 +6,9 @@
   <title>Catálogo de Jogos</title>
   <link rel="stylesheet" href="./assets/css/index-styles.css">
 </head>
-
+<?php 
+      require_once '../vendor/autoload.php';
+?>
 <body>
   <div class="sidebar">
     <h2>Gêneros</h2>

@@ -7,16 +7,28 @@
 
 <?php 
     use App\Controllers\UsuarioController;
+    use App\models\UsuarioCRUD;
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $usuario = new UsuarioController;
-        $usuario ->cadastrar(
-            nome: $_POST['nomeusuario'], 
-            email: $_POST['email'], 
-            datadenascimento: $_POST['nascimento'], 
-            senha: $_POST['senha'], 
-            senha2: $_POST['senha2'], 
-            bio: $_POST['bio']);
+        
+        try {
+            $usuario = new UsuarioController();
+            $usuario ->cadastrar(
+                nome: $_POST['nomeusuario'], 
+                email: $_POST['email'], 
+                datadenascimento: $_POST['nascimento'], 
+                senha: $_POST['senha'], 
+                senha2: $_POST['senha2'], 
+                bio: $_POST['bio']
+            );
+            if (!(isset($_SESSION['msg_erro']) || isset($_SESSION['msg_erro']))) {
+                $usuarioCRUD = new UsuarioCRUD();
+                $usuarioCRUD -> Cadastrar(usuario: $usuario);
+            }
+            
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
     }
 
     session_start(); 
