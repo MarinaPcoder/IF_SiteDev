@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\Core;
+namespace App\Core\DB;
 
 use PDO;
 use PDOException;
@@ -16,13 +16,13 @@ class Conexao {
         $dbName = 'storm';
         $username = 'root';
         $pass = '';
-        $dsn = "mysql:host=$host;dbname=$dbName;";
+
+        $dsn = "mysql:host=$host; dbname=$dbName;";
         
         try {
             
             $this->pdo = new PDO(dsn: $dsn, username: $username, password: $pass);
         } catch (PDOException $e) {
-            
             die('Erro na conexão: ' . $e->getMessage());
         }
     }

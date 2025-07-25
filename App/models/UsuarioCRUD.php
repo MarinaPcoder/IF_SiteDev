@@ -1,12 +1,12 @@
 <?php
  
- namespace App\models;
+ namespace App\Models;
 
-use App\Core\Conexao;
+use App\Core\DB\Conexao;
 Use PDO;
 
 Class UsuarioCRUD {
-    public function Cadastrar($usuario) {
+    public function Create($usuario) {
         
         $hoje = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
 

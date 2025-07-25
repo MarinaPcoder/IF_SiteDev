@@ -4,13 +4,18 @@
     use DateTime;
 
     class UsuarioController {
-        private $nome, $email, $nascimento, $senhaCrip, $bio;
+        private 
+                $nome, 
+                $email, 
+                $nascimento, 
+                $senhaCrip, 
+                $bio;
 
         public function cadastrar($nome, $email, $datadenascimento, $senha, $senha2, $bio)
     {
-        session_start();
 
         $erros = [];
+        $errosMSG = [];
 
         // Validação
         if (!preg_match(pattern: "/^[a-zA-Z\s]+$/", subject: $nome)) {
@@ -34,14 +39,16 @@
 
             // cálculo
             $idade = floor((((($hoje - $nascimento) / 60) / 60) / 24) / 365.25);
-        }
 
-        if ($idade < 1 || $idade >= 150) {
+            if ($idade < 1 || $idade > 150) {
             $idade >= 150 ? 
                 $erros['data'][] = 'Idade máxima atingida'
                 : 
                 $erros['data'][] = 'Idade mínima atingida';
+            }
         }
+
+        
 
         $pattern = '/^(?=.*[A-Z])      # pelo menos 1 maiúscula
               (?=.*[a-z])      # pelo menos 1 minúscula
@@ -53,7 +60,7 @@
             $erros['senha2'][] = 'As senhas devem ser iguais';
         }
 
-        if (strlen(string: $senha) <= 30 || strlen(string: $senha) >= 8 || !preg_match(pattern: $pattern, subject: $senha)) {
+        if (strlen(string: $senha) > 30 || strlen(string: $senha) < 8 || !preg_match(pattern: $pattern, subject: $senha)) {
             if (strlen(string: $senha) <= 30) {
                 $erros['senha'][] = 'Senha muito grande: máximo 30 caracteres.';
             }
@@ -74,8 +81,7 @@
         if (!empty($erros) || !empty($errosMSG)) {
 
             $_SESSION['msg_erro'] = $erros;
-            $_SESSION['old_value'] = ['nome' => $nome, 'email' => $email, 'nascimento' => $datadenascimento, 'senha' => $senha, 'senha2' => $senha2, 'bio' => $bio];
-            
+            $_SESSION['old_value'] = ['nomeusuario' => $nome, 'email' => $email, 'nascimento' => $datadenascimento, 'senha' => $senha, 'senha2' => $senha2, 'bio' => $bio];
             
             header(header: 'Location: ../views/cadastroUsuario.php');
             exit;
@@ -83,53 +89,53 @@
             // Criptografia da senha
             $senhaCrip = md5(string: $senha);
 
-            self::SetNome(nome: $nome);
-            self::SetEmail(email: $email);
-            self::SetNascimento(nascimento: $nascimento);
-            self::SetSenhaClip(senhaCrip: $senhaCrip);
-            self::SetBio(bio: $bio);
+            $this->SetNome(nome: $nome);
+            $this->SetEmail(email: $email);
+            $this->SetNascimento(nascimento: $nascimento);
+            $this->SetSenhaCrip(senhaCrip: $senhaCrip);
+            $this->SetBio(bio: $bio);
         }
         
     }
     
     private function SetNome($nome) {
-        self::$nome = $nome;
+        $this->nome = $nome;
     }
 
     private function SetEmail($email) {
-        self::$email = $email;
+        $this->email = $email;
     }
 
     private function SetNascimento($nascimento) {
-        self::$nascimento = $nascimento;
+        $this->nascimento = $nascimento;
     }
 
-    private function SetSenhaClip($senhaCrip) {
-        self::$senhaCrip = $senhaCrip;
+    private function SetSenhaCrip($senhaCrip) {
+        $this->senhaCrip = $senhaCrip;
     }
 
     private function SetBio($bio) {
-        self::$bio = $bio;
+        $this->bio = $bio;
     }
 
     private function GetNome() {
-        return self::$nome;
+        return $this->nome;
     }
 
     private function GetEmail() {
-        return self::$email;
+        return $this->email;
     }
 
     private function getDataNascimento() {
-        return self::$nascimento;
+        return $this->nascimento;
     }
 
-    private function GetSenhaClip() {
-        return self::$senhaCrip;
+    private function GetSenhaCrip() {
+        return $this->senhaCrip;
     }
 
     private function GetBio() {
-        return self::$bio;
+        return $this->bio;
     }
 
     }
