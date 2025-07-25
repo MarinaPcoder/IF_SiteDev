@@ -1,6 +1,9 @@
 <?php 
+    require_once '../../vendor/autoload.php';
+
     $titulo = 'Registro';
     require_once '../../public/assets/components/head.php';
+    
 ?>
 
 </head>
@@ -21,6 +24,7 @@
                 senha2: $_POST['senha2'], 
                 bio: $_POST['bio']
             );
+
             if (!(isset($_SESSION['msg_erro']) || isset($_SESSION['msg_erro']))) {
                 $usuarioCRUD = new UsuarioCRUD();
                 $usuarioCRUD -> Cadastrar(usuario: $usuario);

@@ -37,12 +37,10 @@
         }
 
         if ($idade < 1 || $idade >= 150) {
-            
-            if ($idade >= 150) {
+            $idade >= 150 ? 
+                $erros['data'][] = 'Idade máxima atingida'
+                : 
                 $erros['data'][] = 'Idade mínima atingida';
-            } else {
-                $erros['data'][] = 'Idade máxima atingida';
-            }
         }
 
         $pattern = '/^(?=.*[A-Z])      # pelo menos 1 maiúscula
