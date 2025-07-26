@@ -12,12 +12,12 @@ class Conexao {
 
     private function __construct()
     {
-        $host = '127.0.0.1';
+        $host = 'localhost';
         $dbName = 'storm';
         $username = 'root';
+        $porta = '3307';
         $pass = '';
-
-        $dsn = "mysql:host=$host; dbname=$dbName;";
+        $dsn = "mysql:host=$host; port=$porta; dbname=$dbName;";
         
         try {
             

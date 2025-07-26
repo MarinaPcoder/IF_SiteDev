@@ -2,6 +2,7 @@
     namespace App\Controllers;
 
     use DateTime;
+    use Vtiful\Kernel\Format;
 
     class UsuarioController {
         private 
@@ -18,38 +19,41 @@
         $errosMSG = [];
 
         // Validação
-        if (!preg_match(pattern: "/^[a-zA-Z\s]+$/", subject: $nome)) {
-            $erros['nome'][] = 'Formato de nome inválido: só é permitido letras minúsculas, maiúsculas e espaços em branco.';
-        }
 
-        if (!filter_var(value: $email, filter: FILTER_VALIDATE_EMAIL)) {
-            $erros['email'][] = 'Formato de email inválido.';
-        }
-
-        $data = DateTime::createFromFormat('Y-m-d', $datadenascimento);
-        if (!$data || $data->format('Y-m-d') !== $datadenascimento) {
-            $erros['data'][] = 'Formato de data incorreto.';
-        } else {
-            list($ano, $mes, $dia) = explode(separator: '-', string: $datadenascimento);
-
-            // data atual
-            $hoje = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
-            // Descobre a unix timestamp da data de nascimento do fulano
-            $nascimento = mktime( 0, 0, 0, $mes, $dia, $ano);
-
-            // cálculo
-            $idade = floor((((($hoje - $nascimento) / 60) / 60) / 24) / 365.25);
-
-            if ($idade < 1 || $idade > 150) {
-            $idade >= 150 ? 
-                $erros['data'][] = 'Idade máxima atingida'
-                : 
-                $erros['data'][] = 'Idade mínima atingida';
+        // Verificação Nome
+            if (!preg_match(pattern: "/^[a-zA-Z\s]+$/", subject: $nome)) {
+                $erros['nome'][] = 'Formato de nome inválido: só é permitido letras minúsculas, maiúsculas e espaços em branco.';
             }
-        }
 
-        
+        // Verificação Email
+            if (!filter_var(value: $email, filter: FILTER_VALIDATE_EMAIL)) {
+                $erros['email'][] = 'Formato de email inválido.';
+            }
 
+        // Verificação Data
+            $data = DateTime::createFromFormat('Y-m-d', $datadenascimento);
+            if (!$data || $data->format('Y-m-d') !== $datadenascimento) {
+                $erros['data'][] = 'Formato de data incorreto.';
+            } else {
+                list($ano, $mes, $dia) = explode(separator: '-', string: $datadenascimento);
+
+                // data atual
+                $hoje = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
+                // Descobre a unix timestamp da data de nascimento do fulano
+                $mknascimento = mktime( 0, 0, 0, $mes, $dia, $ano);
+
+                // cálculo
+                $idade = floor((((($hoje - $mknascimento) / 60) / 60) / 24) / 365.25);
+
+                if ($idade < 1 || $idade > 150) {
+                $idade >= 150 ? 
+                    $erros['data'][] = 'Idade máxima atingida'
+                    : 
+                    $erros['data'][] = 'Idade mínima atingida';
+                }
+            }
+
+        // Verificação senha
         $pattern = '/^(?=.*[A-Z])      # pelo menos 1 maiúscula
               (?=.*[a-z])      # pelo menos 1 minúscula
               (?=.*\d)         # pelo menos 1 dígito
@@ -72,11 +76,9 @@
             }
         }
 
-
         // Sanitização
         $email = filter_var(value: $email, filter: FILTER_SANITIZE_EMAIL);
         $bio = htmlspecialchars(string: $bio);
-
 
         if (!empty($erros) || !empty($errosMSG)) {
 
@@ -91,7 +93,7 @@
 
             $this->SetNome(nome: $nome);
             $this->SetEmail(email: $email);
-            $this->SetNascimento(nascimento: $nascimento);
+            $this->SetNascimento(nascimento: $datadenascimento);
             $this->SetSenhaCrip(senhaCrip: $senhaCrip);
             $this->SetBio(bio: $bio);
         }
@@ -118,23 +120,23 @@
         $this->bio = $bio;
     }
 
-    private function GetNome() {
+    public function GetNome() {
         return $this->nome;
     }
 
-    private function GetEmail() {
+    public function GetEmail() {
         return $this->email;
     }
 
-    private function getDataNascimento() {
+    public function getDataNascimento() {
         return $this->nascimento;
     }
 
-    private function GetSenhaCrip() {
+    public function GetSenhaCrip() {
         return $this->senhaCrip;
     }
 
-    private function GetBio() {
+    public function GetBio() {
         return $this->bio;
     }
 
