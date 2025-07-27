@@ -10,9 +10,6 @@ Class UsuarioCRUD {
     
 
     public function Create($usuario) {
-        
-        // Timestamp de hoje (se precisar)
-        $criacao = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
 
         $comando = "
             INSERT INTO usuario (
@@ -44,7 +41,7 @@ Class UsuarioCRUD {
         $stmt->bindValue(param: ':senha',           value: $usuario->getSenhaCrip(),         type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':data_nascimento', value: $usuario->getDataNascimento(),    type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':tipo_perfil',     value: 'usuario',                        type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':criado_em', value: (new \DateTime())->format(format: 'Y-m-d H:i:s'),type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':criado_em',value: (new \DateTime())->format(format: 'Y-m-d H:i:s'),type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':pontos',          value: 0,                                type: PDO::PARAM_INT);
         $stmt->bindValue(param: ':status',          value: True,                             type: PDO::PARAM_BOOL);
         $stmt->bindValue(param: ':bio',             value: $usuario->getBio(),               type: PDO::PARAM_STR);

@@ -2,7 +2,6 @@
     namespace App\Controllers;
 
     use DateTime;
-    use Vtiful\Kernel\Format;
 
     class UsuarioController {
         private 
