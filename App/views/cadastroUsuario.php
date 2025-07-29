@@ -37,7 +37,12 @@
         } catch (PDOException $e) {
             
             error_log(message: "Erro PDO: " . $e->getMessage());
-            echo "Erro ao cadastrar usuário: " . $e->getMessage();
+
+            if ($e->getCode() == 23000) {
+                echo "Não é possível cadastrar o usuário: E-mail já está registrado.";
+            } else {
+                echo "Erro ao cadastrar usuário: " . $e->getMessage();
+            }
         } catch (Throwable $t) {
             
             error_log(message: "Erro inesperado: " . $t->getMessage());
@@ -62,12 +67,18 @@
             </div>
         <?php endforeach ?>
     <form action="<?= htmlspecialchars(string: $_SERVER['PHP_SELF'], flags: ENT_QUOTES) ?>" method="post">
-        <input type="text" name="nomeusuario" id="nomeusuario" placeholder="Nome de usuário" value="<?=$old['nomeusuario'] ?? null?>">
-        <input type="email" name="email" id="email" placeholder="Email" value="<?=$old['email']?? null?>">
-        <input type="date" name="nascimento" id="nascimento" placeholder="Data de nascimento" value="<?=$old['nascimento'] ?? null?>">
-        <input type="password" name="senha" id="senha" placeholder="senha" value="<?=$old['senha'] ?? null?>">
-        <input type="password" name="senha2" id="senha2" placeholder="Confirme a senha" value="<?=$old['senha2'] ?? null?>">
-        <textarea name="bio" id="bio"><?= htmlspecialchars(string: $old['bio'] ?? '', flags: ENT_QUOTES) ?></textarea>
+        <input type="text" name="nomeusuario" id="nomeusuario" placeholder="Nome de usuário" value="<?=htmlspecialchars(string: $_POST['nomeusuario']  ?? null )?>">
+
+        <input type="email" name="email" id="email" placeholder="Email" value="<?=htmlspecialchars(string: $_POST['email'] ?? null)?>">
+
+        <input type="date" name="nascimento" id="nascimento" placeholder="Data de nascimento" value="<?=htmlspecialchars(string: $_POST['nascimento'] ?? null )?>">
+
+        <input type="password" name="senha" id="senha" placeholder="senha" value="<?=$_POST['senha'] ?? null?>">
+
+        <input type="password" name="senha2" id="senha2" placeholder="Confirme a senha" value="<?=htmlspecialchars(string: $_POST['senha2'] ?? null)?>">
+ 
+        <textarea name="bio" id="bio"><?= htmlspecialchars(string: $_POST['bio'] ?? '', flags: ENT_QUOTES) ?></textarea>
+
         <input type="submit" value="Registrar">
     </form>
 </body>
