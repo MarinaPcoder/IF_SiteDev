@@ -6,7 +6,7 @@
     
     session_start();
 
-    if (isset($_SESSION['usuario'])) {
+    if (isset($_SESSION['Usuario'])) {
         header(header: 'Location: ../../public/index.php');
         exit;
     }

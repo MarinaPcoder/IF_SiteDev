@@ -17,28 +17,32 @@
 </head>
 
 <?php 
+    $erros = [];
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+        
         if (isset($_POST['email']) and isset($_POST['senha'])) {
             
             $usuario = new UsuarioController;
 
-            $email = $usuario -> VerificarEmail(email: $_POST['email']);
-            $senha = $usuario -> VerificarSenha(senha: $_POST['senha'], senha2: $_POST['senha']);
             
-            if (!isset($_SESSION['msg_erro'])) {
-                    
+
+            list($email, $errosEmail)   = $usuario -> VerificarEmail(email: $_POST['email']);
+            list($senha, $errosSenha)   = $usuario -> VerificarSenha(senha: $_POST['senha'], senha2: $_POST['senha']);
+
+            $erros = array_merge($errosEmail, $errosSenha);
+            
+            if (empty($erros)) {
+                   
                 $usuario -> Login(email: $email, senha: $senha);
                     
             }
-
             
         }
     }
     
-    $erros = $_SESSION['msg_erro'] ?? [];
-
-    unset($_SESSION['msg_erro']);
+    
 ?>
 
 <body>
