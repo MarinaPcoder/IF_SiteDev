@@ -2,6 +2,7 @@
     namespace App\Controllers;
 
     use DateTime;
+    use App\Models\UsuarioCRUD;
 
     class UsuarioController {
         private 
@@ -15,7 +16,6 @@
     {
 
         $erros = [];
-        $errosMSG = [];
 
         // Validação
 
@@ -24,10 +24,7 @@
                 $erros['nome'][] = 'Formato de nome inválido: só é permitido letras minúsculas, maiúsculas e espaços em branco.';
             }
 
-        // Verificação Email
-            if (!filter_var(value: $email, filter: FILTER_VALIDATE_EMAIL)) {
-                $erros['email'][] = 'Formato de email inválido.';
-            }
+        $email = $this -> VerificarEmail(email: $email);
 
         // Verificação Data
             $data = DateTime::createFromFormat('Y-m-d', $datadenascimento);
@@ -45,44 +42,22 @@
                 $idade = floor((((($hoje - $mknascimento) / 60) / 60) / 24) / 365.25);
 
                 if ($idade < 1 || $idade > 150) {
-                $idade >= 150 ? 
-                    $erros['data'][] = 'Idade máxima atingida'
-                    : 
-                    $erros['data'][] = 'Idade mínima atingida';
+                    
+                    $idade >= 150 ? 
+                        $erros['data'][] = 'Idade máxima atingida'
+                        : 
+                        $erros['data'][] = 'Idade mínima atingida';
                 }
             }
 
-        // Verificação senha
-        $pattern = '/^(?=.*[A-Z])      # pelo menos 1 maiúscula
-              (?=.*[a-z])      # pelo menos 1 minúscula
-              (?=.*\d)         # pelo menos 1 dígito
-              [A-Za-z\d#?!@$%^&*\-] # letras, dígitos e símbolos permitidos
-            /x';
-
-        if ($senha !== $senha2) {
-            $erros['senha2'][] = 'As senhas devem ser iguais';
-        }
-
-        if (strlen(string: $senha) > 30 || strlen(string: $senha) < 8 || !preg_match(pattern: $pattern, subject: $senha)) {
-            if (strlen(string: $senha) <= 30) {
-                $erros['senha'][] = 'Senha muito grande: máximo 30 caracteres.';
-            }
-            if (strlen(string: $senha) >= 8) {
-                $erros['senha'][] = 'Senha muito pequena: mínimo 8 caracteres';
-            }
-            if (!preg_match(pattern: $pattern, subject: $senha)) {
-                $erros['senha'][] = 'Formato incorreto: a senha deve ter pelo menos 1 dígito decimal, pelo menos 1 maiúscula, pelo menos 1 minúscula';
-            }
-        }
+        $senha = $this -> VerificarSenha(senha: $senha, senha2: $senha2);
 
         // Sanitização
-        $email = filter_var(value: $email, filter: FILTER_SANITIZE_EMAIL);
         $bio = htmlspecialchars(string: $bio);
 
-        if (!empty($erros) || !empty($errosMSG)) {
+        if (!empty($erros)) {
 
             $_SESSION['msg_erro'] = $erros;
-            $_SESSION['old_value'] = ['nomeusuario' => $nome, 'email' => $email, 'nascimento' => $datadenascimento, 'senha' => $senha, 'senha2' => $senha2, 'bio' => $bio];
             
             header(header: 'Location: ../views/cadastroUsuario.php');
             exit;
@@ -97,6 +72,48 @@
             $this->SetBio(bio: $bio);
         }
         
+    }
+
+    public function VerificarEmail($email): string{
+        // Verificação Email
+            if (!filter_var(value: $email, filter: FILTER_VALIDATE_EMAIL)) {
+                $erros['email'][] = 'Formato de email inválido.';
+            }
+
+        $email = filter_var(value: $email, filter: FILTER_SANITIZE_EMAIL);
+
+        $_SESSION['msg_erro'] = $erros;
+
+        return $email;
+    }
+
+    public function VerificarSenha($senha, $senha2): string {
+        // Verificação senha
+        $pattern = '/^(?=.*[A-Z])      # pelo menos 1 maiúscula
+              (?=.*[a-z])      # pelo menos 1 minúscula
+              (?=.*\d)         # pelo menos 1 dígito
+              [A-Za-z\d#?!@$%^&*\-] # letras, dígitos e símbolos permitidos
+            /x';
+
+        if ($senha !== $senha2) {
+            $erros['senha2'][] = 'As senhas devem ser iguais';
+        }
+
+        if (strlen(string: $senha) > 30 || strlen(string: $senha) < 8 || !preg_match(pattern: $pattern, subject: $senha)) {
+            if (strlen(string: $senha) >= 30) {
+                $erros['senha'][] = 'Senha muito grande: máximo 30 caracteres.';
+            }
+            if (strlen(string: $senha) <= 8) {
+                $erros['senha'][] = 'Senha muito pequena: mínimo 8 caracteres';
+            }
+            if (!preg_match(pattern: $pattern, subject: $senha)) {
+                $erros['senha'][] = 'Formato incorreto: a senha deve ter pelo menos 1 dígito decimal, pelo menos 1 maiúscula, pelo menos 1 minúscula';
+            }
+        }
+
+        $_SESSION['msg_erro'] = $erros;
+
+        return $senha;
     }
     
     private function SetNome($nome) {
@@ -137,6 +154,29 @@
 
     public function GetBio() {
         return $this->bio;
+    }
+
+    public function Login($email, $senha): void {
+        $usuario = new UsuarioCRUD;
+        $senhaBD = $usuario-> Read(email: $email)[0]['senha'];
+        $senha = md5(string: $senha);
+
+        if ($senhaBD == $senha) {
+            $this -> SessaoLogin(
+                id: $usuario-> Read(email: $email)[0]['id'], 
+                email: $email
+            );
+
+            header(header: 'Location: ../../public/index.php');
+            exit;
+        }
+    }
+
+    public function SessaoLogin($id, $email): void {
+        $_SESSION['Usuario'] = [
+            "Id" => $id,
+            "Email" => $email
+        ];
     }
 
     }

@@ -61,8 +61,22 @@ Class UsuarioCRUD {
         return true;
     }
 
-    public function Read($usuario) {
+    public function Read($email): array {
+        $comando = "
+            SELECT * FROM usuario WHERE email = '$email'
+        ";
 
+        $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
+            $resultado = $stmt->fetchAll(mode: PDO::FETCH_ASSOC);
+
+            return $resultado;
+            
+        } else {
+            return [];
+        }
     }
 
     public function Update($usuario) {
@@ -73,5 +87,25 @@ Class UsuarioCRUD {
         
     }
 
+    public function Getsenha($email): array {
+        // Função teste (redudante já que temos a função READ)
+
+        $comando = "
+            SELECT senha FROM usuario WHERE email  = '$email'
+        ";
+
+        $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
+            $senha = $stmt->fetchAll(mode: PDO::FETCH_ASSOC);
+
+            return $senha;
+            
+        } else {
+            return [];
+        }
+
+    }
     
 }

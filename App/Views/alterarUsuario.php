@@ -1,51 +1,26 @@
 <?php 
     require_once '../../vendor/autoload.php';
 
-    $titulo = 'Registro';
+    $titulo = 'Edição';
     require_once '../../public/assets/components/head.php';
     
     session_start();
 
-    if (isset($_SESSION['usuario'])) {
-        header(header: 'Location: ../../public/index.php');
+    if (!isset($_SESSION['Usuario'])) {
+        header(header: 'Location: ./loginUsuario.php');
         exit;
-    }
+    } 
 ?>
 
 </head>
 
 <?php 
-    use App\Controllers\UsuarioController;
-    use App\Models\UsuarioCRUD;
+    
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         try {
-            $usuario = new UsuarioController();
-            $usuario ->cadastrar(
-                nome: $_POST['nomeusuario'], 
-                email: $_POST['email'], 
-                datadenascimento: $_POST['nascimento'], 
-                senha: $_POST['senha'], 
-                senha2: $_POST['senha2'], 
-                bio: $_POST['bio']
-            );
 
-
-            $usuarioCRUD = new UsuarioCRUD();
-            $sucesso = $usuarioCRUD -> Create(usuario: $usuario);
-
-            if ($sucesso) {
-                
-                $_SESSION['Usuario'] = [
-                    "Email" => $usuario -> getEmail()  
-                ];
-
-                header(header: 'Location: ../../public/index.php');
-                exit;
-            }
-
-            
         } catch (PDOException $e) {
             
             error_log(message: "Erro PDO: " . $e->getMessage());
@@ -63,7 +38,6 @@
     }
 
     $erros = $_SESSION['msg_erro'] ?? [];
-    
     unset($_SESSION['msg_erro']);
 ?>
 
@@ -91,7 +65,7 @@
  
         <textarea name="bio" id="bio"><?= htmlspecialchars(string: $_POST['bio'] ?? '', flags: ENT_QUOTES) ?></textarea>
 
-        <input type="submit" value="Registrar">
+        <input type="submit" value="Alterar">
     </form>
 </body>
 </html>

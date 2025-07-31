@@ -15,7 +15,7 @@ class Conexao {
         $host = 'localhost';
         $dbName = 'storm';
         $username = 'root';
-        $porta = '3307';
+        $porta = '3306';
         $pass = '';
         $dsn = "mysql:host=$host; port=$porta; dbname=$dbName;";
         
