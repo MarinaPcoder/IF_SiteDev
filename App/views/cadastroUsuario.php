@@ -16,7 +16,6 @@
 
 <?php 
     use App\Controllers\UsuarioController;
-    use App\Models\UsuarioCRUD;
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
@@ -30,21 +29,6 @@
                 senha2: $_POST['senha2'], 
                 bio: $_POST['bio']
             );
-
-
-            $usuarioCRUD = new UsuarioCRUD();
-            $sucesso = $usuarioCRUD -> Create(usuario: $usuario);
-
-            if ($sucesso) {
-                
-                $_SESSION['Usuario'] = [
-                    "Email" => $usuario -> getEmail()  
-                ];
-
-                header(header: 'Location: ../../public/index.php');
-                exit;
-            }
-
             
         } catch (PDOException $e) {
             

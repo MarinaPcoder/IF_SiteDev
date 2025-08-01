@@ -7,13 +7,13 @@
     
     session_start();
 
-    if (!isset($_SESSION['Usuario'])) {
+    if (empty($_SESSION['Usuario'])) {
         header(header: 'Location: ./loginUsuario.php');
         exit;
     } 
 
     use App\Controllers\UsuarioController;
-    use App\Models\UsuarioCRUD;
+
 ?>
 
 </head>
@@ -21,14 +21,22 @@
 <?php 
 
     // Perguntar o professor
-    
-    $usuarioCRUD = new UsuarioCRUD;
-    $usuario = ($usuarioCRUD -> Read(id: $usuarioCRUD-> GetId(email: $_SESSION['Usuario']['Email'])))[0];
+    $usuario = new UsuarioController;
+
+    $dado = ($usuario -> getUsuario(id: $_SESSION['Usuario']['Id']))[0];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         try {
-
+            $usuario -> AtualizarUsuario(
+                id: $_SESSION['Usuario']['Id'],
+                nome: $_POST['nomeusuario'], 
+                email: $_POST['email'], 
+                datadenascimento: $_POST['nascimento'], 
+                senha: $_POST['senha'], 
+                senha2: $_POST['senha2'], 
+                bio: $_POST['bio']
+            );
         } catch (PDOException $e) {
             
             error_log(message: "Erro PDO: " . $e->getMessage());
@@ -44,8 +52,6 @@
             echo "Ocorreu um erro inesperado. Tente novamente mais tarde." . $t->getMessage();
     }
     }
-
-
 
     $erros = $_SESSION['msg_erro'] ?? [];
     
@@ -64,17 +70,17 @@
             </div>
         <?php endforeach ?>
     <form action="<?= htmlspecialchars(string: $_SERVER['PHP_SELF'], flags: ENT_QUOTES) ?>" method="post">
-        <input type="text" name="nomeusuario" id="nomeusuario" placeholder="Nome de usuário" value="<?=htmlspecialchars(string: $_POST['nomeusuario']  ?? $usuario['nome_usuario'] )?>">
+        <input type="text" name="nomeusuario" id="nomeusuario" placeholder="Nome de usuário" value="<?=htmlspecialchars($_POST['nomeusuario']  ?? $dado["nome_usuario"] )?>">
 
-        <input type="email" name="email" id="email" placeholder="Email" value="<?=htmlspecialchars(string: $_POST['email'] ?? $usuario['email'])?>">
+        <input type="email" name="email" id="email" placeholder="Email" value="<?=htmlspecialchars($_POST['email']  ?? $dado['email'] )?>">
 
-        <input type="date" name="nascimento" id="nascimento" placeholder="Data de nascimento" value="<?=htmlspecialchars(string: $_POST['nascimento'] ?? $usuario['data_nascimento'] )?>">
+        <input type="date" name="nascimento" id="nascimento" placeholder="Data de nascimento" value="<?=htmlspecialchars($_POST['nascimento'] ?? $dado['data_nascimento']  )?>">
 
-        <input type="password" name="senha" id="senha" placeholder="Nova senha" value="<?=$_POST['senha']  ?? null ?>">
+        <input type="password" name="senha" id="senha" placeholder="Nova senha" value="<?=htmlspecialchars($_POST['senha']  ?? null)?>">
 
         <input type="password" name="senha2" id="senha2" placeholder="Confirme a nova senha" value="<?=htmlspecialchars(string: $_POST['senha2'] ?? null)?>">
  
-        <textarea name="bio" id="bio"><?= htmlspecialchars(string: $_POST['bio'] ?? $usuario['bio'], flags: ENT_QUOTES) ?></textarea>
+        <textarea name="bio" id="bio"><?= htmlspecialchars(string: $_POST['bio'] ?? $dado['bio'], flags: ENT_QUOTES) ?></textarea>
 
         <input type="submit" value="Alterar">
     </form>

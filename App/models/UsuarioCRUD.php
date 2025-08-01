@@ -2,6 +2,7 @@
  
  namespace App\Models;
 
+use App\Controllers\UsuarioController;
 use App\Core\DB\Conexao;
 use PDO;
 use PDOException;
@@ -9,7 +10,7 @@ use PDOException;
 Class UsuarioCRUD {
     
 
-    public function Create($usuario) {
+    public function Create(UsuarioController $usuario) {
 
         $comando = "
             INSERT INTO usuario (
@@ -66,7 +67,7 @@ Class UsuarioCRUD {
         }
     }
 
-    public function Update($usuario) {
+    public function Update(UsuarioController $usuario) {
         $comando = "
             UPDATE usuario 
             
@@ -77,7 +78,7 @@ Class UsuarioCRUD {
                 data_nascimento = :data_nascimento,
                 bio = :bio
                 
-                WHERE id = '$usuario->get'
+                WHERE id_usuario = '".$usuario->GetId()."'
         ";
 
         $stmt = Conexao::getInstancia()->prepare(query: $comando);
@@ -88,7 +89,18 @@ Class UsuarioCRUD {
         $stmt->bindValue(param: ':data_nascimento', value: $usuario->getDataNascimento(),                      type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':bio',             value: $usuario->getBio(),                                 type: PDO::PARAM_STR);
 
+        // Executa e verifica
+        $sucesso = $stmt->execute();
+        if (! $sucesso) {
+            // Pega informação de erro do driver
+            $errorInfo = $stmt->errorInfo();
+            throw new PDOException(
+                message: "Erro ao atualizar o usuário: " .
+                ($errorInfo[2] ?? 'Desconhecido')
+            );
+        }
 
+        return true;
     }
 
     public function Delete($id) {

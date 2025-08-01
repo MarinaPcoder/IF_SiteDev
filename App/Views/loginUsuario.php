@@ -6,7 +6,7 @@
     
     session_start();
 
-    if (isset($_SESSION['usuario'])) {
+    if (isset($_SESSION['Usuario'])) {
         header(header: 'Location: ../../public/index.php');
         exit;
     }
@@ -25,8 +25,6 @@
         if (isset($_POST['email']) and isset($_POST['senha'])) {
             
             $usuario = new UsuarioController;
-
-            
 
             list($email, $errosEmail)   = $usuario -> VerificarEmail(email: $_POST['email']);
             list($senha, $errosSenha)   = $usuario -> VerificarSenha(senha: $_POST['senha'], senha2: $_POST['senha']);

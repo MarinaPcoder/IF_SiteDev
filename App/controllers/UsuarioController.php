@@ -6,15 +6,15 @@
 
     class UsuarioController {
         private 
-                $nome, 
-                $email, 
-                $nascimento, 
-                $senhaCrip, 
-                $bio;
+            $id,
+            $nome, 
+            $email, 
+            $nascimento, 
+            $senhaCrip, 
+            $bio;
 
         public function cadastrar($nome, $email, $datadenascimento, $senha, $senha2, $bio)
     {
-
         $erros = [];
 
         // Validação
@@ -26,11 +26,99 @@
 
         list($email, $errosEmail)   = $this->VerificarEmail($email);
         list($senha, $errosSenha)   = $this->VerificarSenha($senha, $senha2);
-        
-        $erros = array_merge($erros, $errosEmail, $errosSenha);
-
+    
         // Verificação Data
-            $data = DateTime::createFromFormat('Y-m-d', $datadenascimento);
+        list($datadenascimento, $errosNascimento) = $this->VerificarData($datadenascimento);
+
+        $erros = array_merge($erros, $errosEmail, $errosSenha, $errosNascimento);
+            
+
+        // Sanitização
+        $bio = htmlspecialchars(string: $bio);
+
+        if (!empty($erros)) {
+
+            $_SESSION['msg_erro'] = $erros;
+
+        } else {
+            // Criptografia da senha
+            $senhaCrip = md5(string: $senha);
+
+            $this->SetNome(nome: $nome);
+            $this->SetEmail(email: $email);
+            $this->SetNascimento(nascimento: $datadenascimento);
+            $this->SetSenhaCrip(senhaCrip: $senhaCrip);
+            $this->SetBio(bio: $bio);
+
+            $usuarioCRUD = new UsuarioCRUD();
+            $sucesso = $usuarioCRUD -> Create(usuario: $this);
+
+            if ($sucesso) {
+                
+                $this->SessaoLogin($usuarioCRUD->GetId($this ->email), $this ->email);
+
+                header(header: 'Location: ../../public/index.php');
+                exit;
+            }
+        }
+        
+    }
+
+    public function AtualizarUsuario($id, $nome, $email, $datadenascimento, $senha, $senha2, $bio)
+    {
+         $erros = [];
+
+        // Validação
+
+        // Verificação Nome
+            if (!preg_match(pattern: "/^[a-zA-Z\s]+$/", subject: $nome)) {
+                $erros['nome'][] = 'Formato de nome inválido: só é permitido letras minúsculas, maiúsculas e espaços em branco.';
+            }
+
+        list($email, $errosEmail)   = $this->VerificarEmail($email);
+        list($senha, $errosSenha)   = $this->VerificarSenha($senha, $senha2);
+    
+        // Verificação Data
+        list($datadenascimento, $errosNascimento) = $this->VerificarData($datadenascimento);
+
+        $erros = array_merge($erros, $errosEmail, $errosSenha, $errosNascimento);
+            
+
+        // Sanitização
+        $bio = htmlspecialchars(string: $bio);
+
+        if (!empty($erros)) {
+
+            $_SESSION['msg_erro'] = $erros;
+
+        } else {
+            // Criptografia da senha
+            $senhaCrip = md5(string: $senha);
+
+            $this->SetId            (id: $id);
+            $this->SetNome          (nome: $nome);
+            $this->SetEmail         (email: $email);
+            $this->SetNascimento    (nascimento: $datadenascimento);
+            $this->SetSenhaCrip     (senhaCrip: $senhaCrip);
+            $this->SetBio           (bio: $bio);
+
+            $usuarioCRUD = new UsuarioCRUD();
+            $sucesso = $usuarioCRUD -> Update(usuario: $this);
+
+            if ($sucesso) {
+
+                unset($_SESSION['Usuario']);
+                $this->SessaoLogin($usuarioCRUD->GetId($this ->email), $this ->email);
+
+                header(header: 'Location: ../../public/index.php');
+                exit;
+            }
+        }
+    }
+
+    private function VerificarData($datadenascimento): array {
+        $data = DateTime::createFromFormat('Y-m-d', $datadenascimento);
+
             if (!$data || $data->format('Y-m-d') !== $datadenascimento) {
                 $erros['data'][] = 'Formato de data incorreto.';
             } else {
@@ -53,28 +141,7 @@
                 }
             }
 
-
-        // Sanitização
-        $bio = htmlspecialchars(string: $bio);
-
-        if (!empty($erros)) {
-
-            $_SESSION['msg_erro'] = $erros;
-
-            
-            header(header: 'Location: ../views/cadastroUsuario.php');
-            exit;
-        } else {
-            // Criptografia da senha
-            $senhaCrip = md5(string: $senha);
-
-            $this->SetNome(nome: $nome);
-            $this->SetEmail(email: $email);
-            $this->SetNascimento(nascimento: $datadenascimento);
-            $this->SetSenhaCrip(senhaCrip: $senhaCrip);
-            $this->SetBio(bio: $bio);
-        }
-        
+            return [$datadenascimento, $erros['data'] ?? []];
     }
 
     public function VerificarEmail($email): array{
@@ -83,9 +150,7 @@
                 $erros['email'][] = 'Formato de email inválido.';
             }
 
-        $email = [filter_var(value: $email, filter: FILTER_SANITIZE_EMAIL), $erros['email'] ?? []];
-
-        return $email;
+        return [filter_var(value: $email, filter: FILTER_SANITIZE_EMAIL), $erros['email'] ?? []];
     }
 
     public function VerificarSenha($senha, $senha2): array {
@@ -112,12 +177,19 @@
             }
         }
 
-        $senha = [$senha, $erros['senha'] ?? []];
 
-        return $senha;
+        return [$senha, $erros['senha'] ?? []];
     }
 
-    
+    public function getUsuario($id): mixed {
+        $usuario = new UsuarioCRUD;
+
+        return $usuario -> Read(id: $id);
+    }
+
+    private function SetId($id): void {
+        $this->id = $id;
+    }
     
     private function SetNome($nome) {
         $this->nome = $nome;
@@ -137,6 +209,10 @@
 
     private function SetBio($bio) {
         $this->bio = $bio;
+    }
+
+    public function GetId() {
+        return $this->id;
     }
 
     public function GetNome() {
@@ -161,12 +237,12 @@
 
     public function Login($email, $senha): void {
         $usuario = new UsuarioCRUD;
-        $senhaBD = $usuario-> Read(id: $usuario -> GetId(email: $email)[0]['id_usuario'])[0]['senha'];
+        $senhaBD = $usuario-> Read(id: $usuario -> GetId(email: $email))[0]['senha'];
         $senha = md5(string: $senha);
 
         if ($senhaBD == $senha) {
             $this -> SessaoLogin(
-                id: $usuario -> GetId(email: $email)[0]['id_usuario'], 
+                id: $usuario -> GetId(email: $email), 
                 email: $email
             );
 
