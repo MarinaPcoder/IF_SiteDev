@@ -20,7 +20,7 @@
 
 <?php 
 
-    // Perguntar o professor
+    
     $usuario = new UsuarioController;
 
     $dado = ($usuario -> getUsuario(id: $_SESSION['Usuario']['Id']))[0];
@@ -50,7 +50,7 @@
             
             error_log(message: "Erro inesperado: " . $t->getMessage());
             echo "Ocorreu um erro inesperado. Tente novamente mais tarde." . $t->getMessage();
-    }
+        }
     }
 
     $erros = $_SESSION['msg_erro'] ?? [];

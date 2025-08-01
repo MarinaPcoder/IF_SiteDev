@@ -32,8 +32,16 @@
             $erros = array_merge($errosEmail, $errosSenha);
             
             if (empty($erros)) {
-                   
-                $usuario -> Login(email: $email, senha: $senha);
+                try {
+                    $usuario -> Login(email: $email, senha: $senha);
+                } catch (\Exception $e) {
+                    
+                    $erros[match ($e -> getCode()) {
+                        43 => 'Senha',
+                        30 => 'Email',
+                        default => 'Indefinido',
+                    }][] = $e -> getMessage();
+                }
                     
             }
             

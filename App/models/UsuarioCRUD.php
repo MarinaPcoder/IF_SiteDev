@@ -8,7 +8,6 @@ use PDO;
 use PDOException;
 
 Class UsuarioCRUD {
-    
 
     public function Create(UsuarioController $usuario) {
 
@@ -103,8 +102,28 @@ Class UsuarioCRUD {
         return true;
     }
 
-    public function Delete($id) {
+    public function Delete($id): bool {
+        $comando = 
+        "
+            DELETE FROM usuario 
+            
+            WHERE   
+                id_usuario = $id
+        ";
+
+        $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        $sucesso = $stmt->execute();
         
+        if (!$sucesso) {
+            // Pega informação de erro do driver
+            $errorInfo = $stmt->errorInfo();
+            throw new PDOException(
+                message: "Erro ao deletar o usuário: " .
+                ($errorInfo[2] ?? 'Desconhecido')
+            );
+        }
+
+        return True;
     }
 
     public function GetId($email): mixed{

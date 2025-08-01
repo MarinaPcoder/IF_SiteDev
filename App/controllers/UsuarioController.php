@@ -3,6 +3,7 @@
 
     use DateTime;
     use App\Models\UsuarioCRUD;
+     
 
     class UsuarioController {
         private 
@@ -116,6 +117,29 @@
         }
     }
 
+    public function ExcluirUsuario($id, $senha) {
+        $usuarioCRUD = new UsuarioCRUD;
+        $senhaBD = $usuarioCRUD-> Read(id: $id)[0]['senha'];
+
+        if (md5($senha) == $senhaBD) {
+            
+            $sucesso = $usuarioCRUD->Delete($id);
+            
+            if ($sucesso) {
+
+                unset($_SESSION['Usuario']);
+
+                header(header: 'Location: ../../public/cadastroUsuario.php');
+                exit;
+            }
+
+        } else {
+            throw new \Exception(message: "Senha incorreta", code: 43);
+            
+        }
+        
+    }
+
     private function VerificarData($datadenascimento): array {
         $data = DateTime::createFromFormat('Y-m-d', $datadenascimento);
 
@@ -163,6 +187,7 @@
 
         if ($senha !== $senha2) {
             $erros['senha2'][] = 'As senhas devem ser iguais';
+            Echo 'Senhas errada';
         }
 
         if (strlen(string: $senha) > 30 || strlen(string: $senha) < 8 || !preg_match(pattern: $pattern, subject: $senha)) {
@@ -236,19 +261,30 @@
     }
 
     public function Login($email, $senha): void {
-        $usuario = new UsuarioCRUD;
-        $senhaBD = $usuario-> Read(id: $usuario -> GetId(email: $email))[0]['senha'];
-        $senha = md5(string: $senha);
+        $usuarioCRUD = new UsuarioCRUD;
+        $id = $usuarioCRUD -> GetId(email: $email);
 
-        if ($senhaBD == $senha) {
-            $this -> SessaoLogin(
-                id: $usuario -> GetId(email: $email), 
-                email: $email
-            );
+        if (!empty($id)) {
+            $senhaBD = $usuarioCRUD-> Read(id: $id)[0]['senha'];
+            $senha = md5(string: $senha);
 
-            header(header: 'Location: ../../public/index.php');
-            exit;
+            if ($senhaBD == $senha) {
+                $this -> SessaoLogin(
+                    id: $usuarioCRUD -> GetId(email: $email), 
+                    email: $email
+                );
+
+                header(header: 'Location: ../../public/index.php');
+                exit;
+            } else {
+                throw new \Exception(message: "Senha incorreta", code: 43);
+                
+            }
+        } else {
+            throw new \Exception("Usuario não encontrado: Email não cadastrado", 30);
+            
         }
+            
     }
 
     public function SessaoLogin($id, $email): void {
