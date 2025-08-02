@@ -27,7 +27,7 @@
             
             $erros = $ErrosSenha;
 
-            $usuario->ExcluirUsuario($id, $senha);
+            $usuario->ExcluirUsuario($dado['id_usuario'], $senha);
 
          } catch(\Exception){
             $erros[match ($e -> getCode()) {

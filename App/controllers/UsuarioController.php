@@ -129,7 +129,7 @@
 
                 unset($_SESSION['Usuario']);
 
-                header(header: 'Location: ../../public/cadastroUsuario.php');
+                header(header: 'Location: ./cadastroUsuario.php');
                 exit;
             }
 
