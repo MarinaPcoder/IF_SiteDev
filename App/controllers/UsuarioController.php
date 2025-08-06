@@ -32,7 +32,6 @@
         list($datadenascimento, $errosNascimento) = $this->VerificarData($datadenascimento);
 
         $erros = array_merge($erros, $errosEmail, $errosSenha, $errosNascimento);
-            
 
         // Sanitização
         $bio = htmlspecialchars(string: $bio);
@@ -186,7 +185,7 @@
             /x';
 
         if ($senha !== $senha2) {
-            $erros['senha2'][] = 'As senhas devem ser iguais';
+            $erros['senha'][] = 'As senhas devem ser iguais';
             Echo 'Senhas errada';
         }
 

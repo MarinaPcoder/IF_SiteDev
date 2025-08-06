@@ -26,6 +26,7 @@ Class UsuarioCRUD {
                 :bio
             )
         ";
+        
         $stmt = Conexao::getInstancia()->prepare(query: $comando);
 
         $stmt->bindValue(param: ':nome',            value: $usuario->getNome(),                                type: PDO::PARAM_STR);

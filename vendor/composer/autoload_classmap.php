@@ -9,6 +9,7 @@ return array(
     'App\\Controllers\\JogoController' => $baseDir . '/App/Controllers/JogoController.php',
     'App\\Controllers\\UsuarioController' => $baseDir . '/App/Controllers/UsuarioController.php',
     'App\\Core\\DB\\Conexao' => $baseDir . '/App/Core/DB/Conexao.php',
+    'App\\Models\\JogoCRUD' => $baseDir . '/App/Models/JogoCRUD.php',
     'App\\Models\\UsuarioCRUD' => $baseDir . '/App/Models/UsuarioCRUD.php',
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
 );

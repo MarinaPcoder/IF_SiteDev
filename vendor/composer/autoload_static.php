@@ -24,6 +24,7 @@ class ComposerStaticInit7bcafe408e4cd8a7d17c93956fe7be74
         'App\\Controllers\\JogoController' => __DIR__ . '/../..' . '/App/Controllers/JogoController.php',
         'App\\Controllers\\UsuarioController' => __DIR__ . '/../..' . '/App/Controllers/UsuarioController.php',
         'App\\Core\\DB\\Conexao' => __DIR__ . '/../..' . '/App/Core/DB/Conexao.php',
+        'App\\Models\\JogoCRUD' => __DIR__ . '/../..' . '/App/Models/JogoCRUD.php',
         'App\\Models\\UsuarioCRUD' => __DIR__ . '/../..' . '/App/Models/UsuarioCRUD.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );

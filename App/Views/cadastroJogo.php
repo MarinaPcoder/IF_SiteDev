@@ -20,7 +20,8 @@
 
 <body>
     <form action="<?=$_SERVER['PHP_SELF']?>" method="post">
-        <input type="text" name="titulo" id="titulo">
+        <input type="text" name="titulo" id="titulo" placeholder="Título do jogo">
+        <label for="plataforma">Qual a plataforma do jogo: </label>
         <select name="plataforma" id="plataforma">
             <option value="pc">PC</option>
             <option value="ps5">Playstation 5</option>
@@ -30,9 +31,13 @@
             <option value="xboxX">Xbox Series X</option>
             <option value="switch">Switch</option>
         </select>
+        <label for="">Data de lançamento: </label>
         <input type="date" name="data_lancamento" id="data_lancamento">
+
+        <input type="text" name="desenvolvedora" id="desenvolvendora" placeholder="Desenvolvedora"> 
+        <input type="url" name="compra" id="compra" placeholder="Link de compra">
         
-        <textarea name="descricao" id="">
+        <textarea name="descricao" id="descricao">
 
         </textarea>
     </form>
