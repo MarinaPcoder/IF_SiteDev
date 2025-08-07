@@ -1,28 +1,34 @@
 CREATE DATABASE  IF NOT EXISTS `Storm` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `Storm`;
 
+DROP TABLE IF EXISTS Usuario;
+
 CREATE TABLE Usuario (
   id_usuario INT AUTO_INCREMENT PRIMARY KEY,
-  nome_usuario VARCHAR(60) NOT NULL,
-  email VARCHAR(120) NOT NULL UNIQUE,
+  nome_usuario VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
   senha VARCHAR(255) NOT NULL,
   data_nascimento DATE,
   tipo_perfil ENUM('admin','usuario') DEFAULT 'usuario',
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   pontos_gamificacao INT DEFAULT 0,
   status_ativo TINYINT(1) DEFAULT 1,
-  bio VARCHAR(280)
+  bio TEXT
 );
+
+DROP TABLE IF EXISTS Jogo;
 
 CREATE TABLE Jogo (
   id_jogo INT AUTO_INCREMENT PRIMARY KEY,
-  titulo VARCHAR(120) NOT NULL,
+  titulo VARCHAR(255) NOT NULL,
   descricao TEXT,
-  desenvolvedora VARCHAR(120),
+  desenvolvedora VARCHAR(255),
   data_lancamento DATE,
   link_compra VARCHAR(255),
-  plataforma VARCHAR(80)
+  plataforma VARCHAR(255)
 );
+
+DROP TABLE IF EXISTS Comentario;
 
 CREATE TABLE Comentario (
   id_comentario INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,6 +48,8 @@ CREATE TABLE Comentario (
       ON DELETE SET NULL
 );
 
+DROP TABLE IF EXISTS Avaliacao;
+
 CREATE TABLE Avaliacao (
   id_avaliacao INT AUTO_INCREMENT PRIMARY KEY,
   id_usuario INT NOT NULL,
@@ -54,10 +62,14 @@ CREATE TABLE Avaliacao (
       REFERENCES Jogo(id_jogo) ON DELETE CASCADE
 );
 
+DROP TABLE IF EXISTS Genero;
+
 CREATE TABLE Genero (
   id_genero INT AUTO_INCREMENT PRIMARY KEY,
   nome_genero VARCHAR(60) NOT NULL UNIQUE
 );
+
+DROP TABLE IF EXISTS Jogo_Genero;
 
 -- tabela ponte M:N
 CREATE TABLE Jogo_Genero (
@@ -69,6 +81,8 @@ CREATE TABLE Jogo_Genero (
   CONSTRAINT fk_jogogen_genero FOREIGN KEY (id_genero)
       REFERENCES Genero(id_genero) ON DELETE CASCADE
 );
+
+DROP TABLE IF EXISTS Jogo_Imagem;
 
 CREATE TABLE Jogo_Imagem (
     id_imagem INT AUTO_INCREMENT PRIMARY KEY,
