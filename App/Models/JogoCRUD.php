@@ -44,7 +44,7 @@
                 // Pega informação de erro do driver
                 $errorInfo = $stmt->errorInfo();
                 throw new PDOException(
-                    message: "Erro ao inserir usuário: " .
+                    message: "Erro ao inserir jogo: " .
                     ($errorInfo[2] ?? 'Desconhecido')
                 );
             }
@@ -58,6 +58,18 @@
             ";
             
             $stmt = Conexao::getInstancia()->prepare(query: $comando);
+
+            // Executa e verifica
+            $success = $stmt->execute();
+
+            if (! $success) {
+                // Pega informação de erro do driver
+                $errorInfo = $stmt->errorInfo();
+                throw new PDOException(
+                    message: "Erro ao ler jogo: " .
+                    ($errorInfo[2] ?? 'Desconhecido')
+                );
+            }
         }
 
         public function Update(JogoController $jogo) {
@@ -76,6 +88,18 @@
             ";
 
             $stmt = Conexao::getInstancia()->prepare(query: $comando);
+
+            // Executa e verifica
+            $success = $stmt->execute();
+
+            if (! $success) {
+                // Pega informação de erro do driver
+                $errorInfo = $stmt->errorInfo();
+                throw new PDOException(
+                    message: "Erro ao editar jogo: " .
+                    ($errorInfo[2] ?? 'Desconhecido')
+                );
+            }
         }
 
         public function Delete($id) {
@@ -88,6 +112,18 @@
             ";
 
             $stmt = Conexao::getInstancia()->prepare(query: $comando);
+
+            // Executa e verifica
+            $success = $stmt->execute();
+
+            if (! $success) {
+                // Pega informação de erro do driver
+                $errorInfo = $stmt->errorInfo();
+                throw new PDOException(
+                    message: "Erro ao deletar jogo: " .
+                    ($errorInfo[2] ?? 'Desconhecido')
+                );
+            }
         }
     }
     

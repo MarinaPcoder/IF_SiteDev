@@ -54,6 +54,7 @@ CREATE TABLE Avaliacao (
   id_avaliacao INT AUTO_INCREMENT PRIMARY KEY,
   id_usuario INT NOT NULL,
   id_jogo INT NOT NULL,
+  justificativa TEXT,
   nota TINYINT UNSIGNED CHECK (nota BETWEEN 0 AND 10),
   data_avaliacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_avaliacao_usuario FOREIGN KEY (id_usuario)

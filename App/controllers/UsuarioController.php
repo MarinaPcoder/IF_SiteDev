@@ -157,7 +157,7 @@
 
                 if ($idade < 1 || $idade > 150) {
                     
-                    $idade >= 150 ? 
+                    $idade > 150 ? 
                         $erros['data'][] = 'Idade máxima atingida'
                         : 
                         $erros['data'][] = 'Idade mínima atingida';

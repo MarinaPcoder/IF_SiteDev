@@ -3,6 +3,7 @@
     namespace App\Controllers;
 
     use App\Models\JogoCRUD;
+    use DateTime;
 
     class JogoController 
     {
@@ -15,35 +16,87 @@
             $link_compra,
             $plataforma;
         
-        public function Cadastrar($titulo, $descricao, $desenvolvedora, $data_lancamento, $link_compra, $plataforma) {
+        public function Cadastrar($titulo, $descricao, $desenvolvedora, $data_lancamento, $link_compra, $plataforma): array {
 
             $erros = [];
 
-            // filtro
+            $norm = static function (?string $v, int $max = 255) {
+                $v ??= '';
+                $v = trim(string: preg_replace(pattern: '/\s+/u', replacement: ' ', subject: $v));
+                // evita payloads enormes
+                return mb_substr(string: $v, start: 0, length: $max);
+            };
 
-            // sanitalização
-
-            // validação
-
+            $dados = [
+                'titulo'          => $norm($titulo, 255),
+                'descricao'       => $norm($descricao, 5000),
+                'desenvolvedora'  => $norm($desenvolvedora, 255),
+                'data_lancamento' => $norm($data_lancamento, 10),
+                'link_compra'     => $norm($link_compra, 500),
+                'plataforma'      => $norm($plataforma, 50),
+            ];
             
-            if (empty($erros)) {
-                // Definindo atributos
-                $this -> SetTitulo(titulo: $titulo);
-                $this -> SetDescricao(descricao: $descricao);
-                $this -> SetDesenvolvedora(desenvolvedora: $desenvolvedora);
-                $this -> SetDataLancamento(data_lancamento: $data_lancamento);
-                $this -> SetLink(link_compra: $link_compra);
-                $this -> SetPlataforma(plataforma: $plataforma);
+            // validação
+                // Título: 2–255, sem somente símbolos
+                if ($dados['titulo'] === '' || mb_strlen($dados['titulo']) < 2 || mb_strlen($dados['titulo']) > 255) {
+                    $erros['titulo'][] = 'Informe um título entre 2 e 255 caracteres.';
+                }
 
-                // Execução
-                $usuarioCRUD = new JogoCRUD;
-                $usuarioCRUD -> Create(jogo: $this);
-            } else {
-                // rotorna os erros
+                // Plataforma: whitelist
+                $plataformasPermitidas = ['pc','ps5','ps4','one','xboxS','xboxX','switch'];
+                if (!in_array(needle: $dados['plataforma'], haystack: $plataformasPermitidas, strict: true)) {
+                    $erros['plataforma'][] = 'Plataforma inválida.';
+                }
 
-                return $erros;
+                // Data: formato YYYY-MM-DD e data real
+                $dt = DateTime::createFromFormat('Y-m-d', $dados['data_lancamento']);
+                $dataValida = $dt && $dt->format('Y-m-d') === $dados['data_lancamento'];
+                if (!$dataValida) {
+                    $erros['data_lancamento'][] = 'Data inválida (use YYYY-MM-DD).';
+                }
+
+                list($ano, $mes, $dia) = explode(separator: '-', string: $dados['data_lancamento']);
+                $mkLancamento = mktime(0, 0, 0, $mes, $dia, $ano);
+                $mkHoje = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
+                if ($mkLancamento >= $mkHoje) {
+                    $erros['data_lancamento'][] = 'Data inválida.';
+                } else if ($ano < 1900) {
+                    $erros['data_lancamento'][] = 'Data inválida.';
+                }
+
+                // Desenvolvedora: 2–120 (você pode afrouxar os caracteres aceitos conforme necessidade)
+                if ($dados['desenvolvedora'] === '' || mb_strlen($dados['desenvolvedora']) < 2 || mb_strlen($dados['desenvolvedora']) > 120) {
+                    $erros['desenvolvedora'][] = 'Informe a desenvolvedora (2–255).';
+                }
+
+                // URL de compra: http(s) válida
+                if ($dados['compra'] !== '' && !filter_var(value: $dados['compra'], filter: FILTER_VALIDATE_URL)) {
+                    $erros['compra'][] = 'URL de compra inválida.';
+                }
+
+                // Descrição: comprimento mínimo opcional
+                if (mb_strlen(string: $dados['descricao']) < 10) {
+                    $erros['descricao'][] = 'Descrição muito curta (mín. 10 caracteres).';
+                }
+
+
+            if (!empty($erros)) {
+                return $erros; // devolva pro controller da rota exibir no form
             }
+            
+            // Definindo atributos
+            $this -> SetTitulo(titulo: $dados['titulo']);
+            $this -> SetDescricao(descricao: $dados['descricao']);
+            $this -> SetDesenvolvedora(desenvolvedora: $dados['desenvolvedora']);
+            $this -> SetDataLancamento(data_lancamento: $dados['data_lancamento']);
+            $this -> SetLink(link_compra: $dados['link_compra']);
+            $this -> SetPlataforma(plataforma: $dados['plataforma']);
 
+            // Execução
+            $usuarioCRUD = new JogoCRUD;
+            $usuarioCRUD -> Create(jogo: $this);
+
+            return [];
         }
 
         private function SetId($id) {

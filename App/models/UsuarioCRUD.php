@@ -55,7 +55,16 @@ Class UsuarioCRUD {
         ";
 
         $stmt = Conexao::getInstancia()->prepare(query: $comando);
-        $stmt->execute();
+        $success = $stmt->execute();
+
+        if (!$success) {
+            // Pega informação de erro do driver
+            $errorInfo = $stmt->errorInfo();
+            throw new PDOException(
+                message: "Erro ao ler usuário: " .
+                ($errorInfo[2] ?? 'Desconhecido')
+            );
+        }
 
         if ($stmt->rowCount() > 0) {
             $resultado = $stmt->fetchAll(mode: PDO::FETCH_ASSOC);
@@ -95,7 +104,7 @@ Class UsuarioCRUD {
             // Pega informação de erro do driver
             $errorInfo = $stmt->errorInfo();
             throw new PDOException(
-                message: "Erro ao atualizar o usuário: " .
+                message: "Erro ao editar o usuário: " .
                 ($errorInfo[2] ?? 'Desconhecido')
             );
         }
