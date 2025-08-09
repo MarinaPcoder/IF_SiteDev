@@ -18,6 +18,8 @@
 <?php 
     use App\Controllers\JogoController;
 
+    $erros = [];
+
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         $dados = filter_input_array(type: INPUT_POST, options: [
@@ -25,11 +27,11 @@
                 'plataforma'      => FILTER_UNSAFE_RAW,
                 'data_lancamento' => FILTER_UNSAFE_RAW,
                 'desenvolvedora'  => FILTER_UNSAFE_RAW,
-                'compra'          => FILTER_UNSAFE_RAW,
+                'link_compra'     => FILTER_UNSAFE_RAW,
                 'descricao'       => FILTER_UNSAFE_RAW,
             ], add_empty: true);
 
-        if (isset($dados['titulo'], $dados['plataforma'], $dados['data_lancamento'], $dados['desenvolvedora'], $dados['compra'], $dados['descricao'])) {
+        if (isset($dados['titulo'], $dados['plataforma'], $dados['data_lancamento'], $dados['desenvolvedora'], $dados['link_compra'], $dados['descricao'])) {
             $usuario = new JogoController;
 
             $erros = $usuario -> Cadastrar(
@@ -37,7 +39,7 @@
                 descricao: $dados['descricao'], 
                 desenvolvedora: $dados['desenvolvedora'], 
                 data_lancamento: $dados['data_lancamento'], 
-                link_compra: $dados['compra'], 
+                link_compra: $dados['link_compra'], 
                 plataforma: $dados['plataforma']
             );
 
@@ -60,30 +62,32 @@
             </ul>
         </div>
     <?php endforeach ?>
+<?php 
 
-    <form action="<?=$_SERVER['PHP_SELF']?>" method="post">
-        <input type="text" name="titulo" id="titulo" placeholder="Título do jogo">
+?>
+    <form action=" <?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> " method="post">
+        <input type="text" name="titulo" id="titulo" placeholder="Título do jogo" value="<?=htmlspecialchars($dados['titulo'] ?? '')?>">
 
         <label for="plataforma">Qual a plataforma do jogo: </label>
         <select name="plataforma" id="plataforma">
-            <option value="pc">PC</option>
-            <option value="ps5">Playstation 5</option>
-            <option value="ps4">Playstation 4</option>
-            <option value="one">Xbox One</option>
-            <option value="xboxS">Xbox Series S</option>
-            <option value="xboxX">Xbox Series X</option>
-            <option value="switch">Switch</option>
+            <option value="pc" <?= (($dados['plataforma'] ?? '') === 'pc') ? 'selected' : '';?>>PC</option>
+            <option value="ps5" <?=(($dados['plataforma'] ?? '') == 'ps5') ? 'selected' : '';?>>Playstation 5</option>
+            <option value="ps4" <?=(($dados['plataforma'] ?? '') == 'ps4') ? 'selected' : '';?>>Playstation 4</option>
+            <option value="one" <?=(($dados['plataforma'] ?? '') == 'one') ? 'selected' : '';?>>Xbox One</option>
+            <option value="xboxS" <?=(($dados['plataforma'] ?? '') == 'xboxS') ? 'selected' : '';?>>Xbox Series S</option>
+            <option value="xboxX" <?=(($dados['plataforma'] ?? '') == 'xboxX') ? 'selected' : '';?>>Xbox Series X</option>
+            <option value="switch" <?=(($dados['plataforma'] ?? '') == 'switch') ? 'selected' : '';?>>Switch</option>
         </select>
 
         <label for="data_lancamento">Data de lançamento: </label>
-        <input type="date" name="data_lancamento" id="data_lancamento">
+        <input type="date" name="data_lancamento" id="data_lancamento" value="<?=htmlspecialchars($dados['data_lancamento'] ?? '')?>">
 
-        <input type="text" name="desenvolvedora" id="desenvolvendora" placeholder="Desenvolvedora">
+        <input type="text" name="desenvolvedora" id="desenvolvendor" placeholder="Desenvolvedora" value="<?=htmlspecialchars($dados['desenvolvedora'] ?? '')?>">
 
-        <input type="url" name="compra" id="compra" placeholder="Link de compra">
+        <input type="url" name="link_compra" id="compra" placeholder="Link de compra" value="<?=htmlspecialchars($dados['link_compra'] ?? '')?>">
         
-        <textarea name="descricao" id="descricao">
-        </textarea>
+        <textarea name="descricao" id="descricao"><?= htmlspecialchars($dados['descricao'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></textarea>
+
 
         <input type="submit" value="Cadastrar">
     </form>

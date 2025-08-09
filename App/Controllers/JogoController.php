@@ -70,8 +70,8 @@
                 }
 
                 // URL de compra: http(s) válida
-                if ($dados['compra'] !== '' && !filter_var(value: $dados['compra'], filter: FILTER_VALIDATE_URL)) {
-                    $erros['compra'][] = 'URL de compra inválida.';
+                if ($dados['link_compra'] !== '' && !filter_var(value: $dados['link_compra'], filter: FILTER_VALIDATE_URL)) {
+                    $erros['link_compra'][] = 'URL de compra inválida.';
                 }
 
                 // Descrição: comprimento mínimo opcional
