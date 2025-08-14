@@ -25,7 +25,15 @@
                     :desenvolvedora,
                     :link,
                     :descricao
-                )
+                );
+                
+                INSERT INTO jogo_genero (
+                    id_genero,
+                    id_jogo
+                ) VALUES (
+                    :id_genero,
+                    (SELECT id FROM jogo WHERE titulo = :titulo AND plataforma = :plataforma)
+                );
             ";
 
             $stmt = Conexao::getInstancia()->prepare(query: $comando);
@@ -36,6 +44,7 @@
             $stmt -> bindValue(param: ":desenvolvedora",    value: $jogo->GetDesenvolvedora(),  type: PDO::PARAM_STR);
             $stmt -> bindValue(param: ":link",              value: $jogo->GetLink(),            type: PDO::PARAM_STR);
             $stmt -> bindValue(param: ":descricao",         value: $jogo->GetDescricao(),       type: PDO::PARAM_STR);
+            $stmt -> bindValue(param: ":id_genero",         value: $jogo->GetGenero(),          type: PDO::PARAM_STR);
 
             // Executa e verifica
             $success = $stmt->execute();

@@ -14,9 +14,10 @@
             $desenvolvedora,
             $data_lancamento,
             $link_compra,
-            $plataforma;
+            $plataforma,
+            $genero;
         
-        public function Cadastrar($titulo, $descricao, $desenvolvedora, $data_lancamento, $link_compra, $plataforma): array {
+        public function Cadastrar($titulo, $descricao, $desenvolvedora, $data_lancamento, $link_compra, $plataforma, $genero): array {
 
             $erros = [];
 
@@ -28,12 +29,13 @@
             };
 
             $dados = [
-                'titulo'          => $norm($titulo, 255),
-                'descricao'       => $norm($descricao, 5000),
-                'desenvolvedora'  => $norm($desenvolvedora, 255),
-                'data_lancamento' => $norm($data_lancamento, 10),
-                'link_compra'     => $norm($link_compra, 500),
-                'plataforma'      => $norm($plataforma, 50),
+                'titulo'          => $norm(v: $titulo,          max: 255),
+                'descricao'       => $norm(v: $descricao,       max: 5000),
+                'desenvolvedora'  => $norm(v: $desenvolvedora,  max: 255),
+                'data_lancamento' => $norm(v: $data_lancamento, max: 10),
+                'link_compra'     => $norm(v: $link_compra,     max: 500),
+                'plataforma'      => $norm(v: $plataforma,      max: 50),
+                'genero'          => $norm(v: $genero,          max: 25)
             ];
             
             // validação
@@ -79,6 +81,11 @@
                     $erros['descricao'][] = 'Descrição muito curta (mín. 10 caracteres).';
                 }
 
+                // genero
+                if (!is_int($genero) and !in_array(needle: $genero, haystack: [1, 2, 3, 4, 5, 6, 7]) ) {
+                    $erros['genero'][] = "Gênero indefinido.";
+                }
+
 
             if (!empty($erros)) {
                 return $erros; // devolva pro controller da rota exibir no form
@@ -91,6 +98,7 @@
             $this -> SetDataLancamento(data_lancamento: $dados['data_lancamento']);
             $this -> SetLink(link_compra: $dados['link_compra']);
             $this -> SetPlataforma(plataforma: $dados['plataforma']);
+            $this -> SetGenero(genero: $genero);
 
             // Execução
             $usuarioCRUD = new JogoCRUD;
@@ -126,6 +134,10 @@
             $this -> plataforma = $plataforma;
         }
 
+        public function SetGenero($genero) {
+            $this -> genero = $genero;
+        }
+
         public function GetId() {
             return $this->id_jogo;
         }
@@ -152,6 +164,10 @@
 
         public function GetPlataforma() {
             return $this->plataforma;
+        }
+
+        public function GetGenero() {
+            return $this->genero;
         }
     }
     
