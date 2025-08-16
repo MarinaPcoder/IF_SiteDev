@@ -29,11 +29,11 @@ Class UsuarioCRUD {
         
         $stmt = Conexao::getInstancia()->prepare(query: $comando);
 
-        $stmt->bindValue(param: ':nome',            value: $usuario->getNome(),                                type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':email',           value: $usuario->getEmail(),                               type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':senha',           value: $usuario->getSenhaCrip(),                           type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':data_nascimento', value: $usuario->getDataNascimento(),                      type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':bio',             value: $usuario->getBio(),                                 type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':nome',            value: $usuario->getNome(),             type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':email',           value: $usuario->getEmail(),            type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':senha',           value: $usuario->getSenhaCrip(),        type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':data_nascimento', value: $usuario->getDataNascimento(),   type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':bio',             value: $usuario->getBio(),              type: PDO::PARAM_STR);
 
         // Executa e verifica
         $success = $stmt->execute();
@@ -92,11 +92,11 @@ Class UsuarioCRUD {
 
         $stmt = Conexao::getInstancia()->prepare(query: $comando);
 
-        $stmt->bindValue(param: ':nome',            value: $usuario->getNome(),                                type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':email',           value: $usuario->getEmail(),                               type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':senha',           value: $usuario->getSenhaCrip(),                           type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':data_nascimento', value: $usuario->getDataNascimento(),                      type: PDO::PARAM_STR);
-        $stmt->bindValue(param: ':bio',             value: $usuario->getBio(),                                 type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':nome',            value: $usuario->getNome(),             type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':email',           value: $usuario->getEmail(),            type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':senha',           value: $usuario->getSenhaCrip(),        type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':data_nascimento', value: $usuario->getDataNascimento(),   type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':bio',             value: $usuario->getBio(),              type: PDO::PARAM_STR);
 
         // Executa e verifica
         $sucesso = $stmt->execute();
@@ -175,5 +175,7 @@ Class UsuarioCRUD {
         }
 
     }
+
+
     
 }

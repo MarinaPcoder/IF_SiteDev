@@ -107,6 +107,11 @@
             return [];
         }
 
+        public function GetJogo($id) {
+            $jogoCRUD = new JogoCRUD;
+            return $jogoCRUD -> Read(id: $id);
+        }
+
         private function SetId($id) {
             $this -> id_jogo = $id;
         }

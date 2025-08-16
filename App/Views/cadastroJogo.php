@@ -1,22 +1,37 @@
 <?php 
+
     session_start();
+
+    require_once '../../vendor/autoload.php';
+
+    use App\Controllers\UsuarioController;
+    use App\Controllers\JogoController;
+    $usuario = new UsuarioController;
+    $jogo = new JogoController;
 
     if (empty($_SESSION['Usuario'])) {
         header(header: 'Location: ./loginUsuario.php');
         exit;
+    } else {
+        [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
+    
+        if (!$logado && $tipo_usuario != 'admin') {
+
+            header(header: 'Location: ./logout.php');
+            exit;
+        }
     }
 
-    require_once '../../vendor/autoload.php';
-
-    $titulo = 'Registro de jogos';
+    $titulo = 'Cadastro de jogos';
     require_once '../../public/assets/components/head.php';
     
 ?>
+ <!-- configuração  Head -->
 
 </head>
 
 <?php 
-    use App\Controllers\JogoController;
+    
 
     $erros = [];
 
@@ -33,9 +48,9 @@
             ], add_empty: true);
 
         if (isset($dados['titulo'], $dados['plataforma'], $dados['data_lancamento'], $dados['desenvolvedora'], $dados['link_compra'], $dados['descricao'], $dados['genero'])) {
-            $usuario = new JogoController;
+            
 
-            $erros = $usuario -> Cadastrar(
+            $erros = $jogo -> Cadastrar(
                 titulo: $dados['titulo'], 
                 descricao: $dados['descricao'], 
                 desenvolvedora: $dados['desenvolvedora'], 

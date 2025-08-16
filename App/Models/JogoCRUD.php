@@ -7,59 +7,53 @@
     use PDO;
     use PDOException;
 
-    final class JogoCRUD {
+    class JogoCRUD {
         
-        public function Create(JogoController $jogo) {
-            $comando = "
-                INSERT INTO jogo (
-                    titulo, 
-                    plataforma, 
-                    data_lancamento, 
-                    desenvolvedora,  
-                    link_compra,
-                    descricao
-                ) VALUES (
-                    :titulo,
-                    :plataforma,
-                    :data,
-                    :desenvolvedora,
-                    :link,
-                    :descricao
-                );
-                
-                INSERT INTO jogo_genero (
-                    id_genero,
-                    id_jogo
-                ) VALUES (
-                    :id_genero,
-                    (SELECT id FROM jogo WHERE titulo = :titulo AND plataforma = :plataforma)
-                );
-            ";
+public function create(JogoController $jogo): int
+{
+    $pdo = Conexao::getInstancia();
+    try {
+        $pdo->beginTransaction();
 
-            $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        // 1) Insere o jogo
+        $sqlJogo = "
+            INSERT INTO Jogo (
+                titulo, plataforma, data_lancamento, desenvolvedora, link_compra, descricao
+            ) VALUES (
+                :titulo, :plataforma, :data, :desenvolvedora, :link, :descricao
+            )
+        ";
+        $stmtJogo = $pdo->prepare(query: $sqlJogo);
+        $stmtJogo->bindValue(param: ':titulo',         value: $jogo->getTitulo(),         type: PDO::PARAM_STR);
+        $stmtJogo->bindValue(param: ':plataforma',     value: $jogo->getPlataforma(),     type: PDO::PARAM_STR);
+        $stmtJogo->bindValue(param: ':data',           value: $jogo->getDataLancamento(), type: PDO::PARAM_STR);
+        $stmtJogo->bindValue(param: ':desenvolvedora', value: $jogo->getDesenvolvedora(), type: PDO::PARAM_STR);
+        $stmtJogo->bindValue(param: ':link',           value: $jogo->getLink(),           type: PDO::PARAM_STR);
+        $stmtJogo->bindValue(param: ':descricao',      value: $jogo->getDescricao(),      type: PDO::PARAM_STR);
+        $stmtJogo->execute();
 
-            $stmt -> bindValue(param: ":titulo",            value: $jogo->GetTitulo(),          type: PDO::PARAM_STR);
-            $stmt -> bindValue(param: ":plataforma",        value: $jogo->GetPlataforma(),      type: PDO::PARAM_STR);
-            $stmt -> bindValue(param: ":data",              value: $jogo->GetDataLancamento(),  type: PDO::PARAM_STR);
-            $stmt -> bindValue(param: ":desenvolvedora",    value: $jogo->GetDesenvolvedora(),  type: PDO::PARAM_STR);
-            $stmt -> bindValue(param: ":link",              value: $jogo->GetLink(),            type: PDO::PARAM_STR);
-            $stmt -> bindValue(param: ":descricao",         value: $jogo->GetDescricao(),       type: PDO::PARAM_STR);
-            $stmt -> bindValue(param: ":id_genero",         value: $jogo->GetGenero(),          type: PDO::PARAM_STR);
+        // ultimo id inserido no BD
+        $idJogo = (int)$pdo->lastInsertId();
 
-            // Executa e verifica
-            $success = $stmt->execute();
+        // Insere na tabela 
+        $sqlJG = "INSERT INTO Jogo_Genero (id_jogo, id_genero) VALUES (:id_jogo, :id_genero)";
+        $stmtJG = $pdo->prepare(query: $sqlJG);
+        $stmtJG->bindValue(param: ':id_jogo',   value: $idJogo,              type: PDO::PARAM_INT);
+        $stmtJG->bindValue(param: ':id_genero', value: $jogo->GetGenero(),  type: PDO::PARAM_INT);
+        $stmtJG->execute();
 
-            if (! $success) {
-                // Pega informação de erro do driver
-                $errorInfo = $stmt->errorInfo();
-                throw new PDOException(
-                    message: "Erro ao inserir jogo: " .
-                    ($errorInfo[2] ?? 'Desconhecido')
-                );
-            }
-
-            return true;
+        $pdo->commit();
+        
+    } catch (\Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
         }
+        throw new PDOException(message: "Falha ao criar jogo/relacionar gênero: " . $e->getMessage(), code: 0, previous: $e);
+    }
+
+    return True;
+}
+
 
         public function Read($id) {
             $comando = "
@@ -78,6 +72,15 @@
                     message: "Erro ao ler jogo: " .
                     ($errorInfo[2] ?? 'Desconhecido')
                 );
+            }
+
+            if ($stmt->rowCount() > 0) {
+            $resultado = $stmt->fetchAll(mode: PDO::FETCH_ASSOC);
+
+            return $resultado;
+            
+            } else {
+                return [];
             }
         }
 

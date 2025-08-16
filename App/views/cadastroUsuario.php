@@ -1,16 +1,18 @@
 <?php 
+    session_start();
+
     require_once '../../vendor/autoload.php';
 
     $titulo = 'Registro';
     require_once '../../public/assets/components/head.php';
     
-    session_start();
 
     if (isset($_SESSION['Usuario'])) {
         header(header: 'Location: ../../public/index.php');
         exit;
     }
 ?>
+<!-- configuração  Head -->
 
 </head>
 

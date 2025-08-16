@@ -1,27 +1,31 @@
 <?php 
+    session_start();
 
     require_once '../../vendor/autoload.php';
 
-    $titulo = 'Edição';
-    require_once '../../public/assets/components/head.php';
-    
-    session_start();
+    use App\Controllers\UsuarioController;
+    $usuario = new UsuarioController;
 
     if (empty($_SESSION['Usuario'])) {
         header(header: 'Location: ./loginUsuario.php');
         exit;
-    } 
+    } else {
+        [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
+        
+        if (!$logado) {
+            header(header: 'Location: ./logout.php');
+            exit;
+        }
+    }
 
-    use App\Controllers\UsuarioController;
-
+    $titulo = 'Edição';
+    require_once '../../public/assets/components/head.php';
 ?>
+ <!-- configuração  Head -->
 
 </head>
 
 <?php 
-
-    
-    $usuario = new UsuarioController;
 
     $dado = ($usuario -> getUsuario(id: $_SESSION['Usuario']['Id']))[0];
 

@@ -267,17 +267,18 @@
             $senhaBD = $usuarioCRUD-> Read(id: $id)[0]['senha'];
             $senha = md5(string: $senha);
 
-            if ($senhaBD == $senha) {
-                $this -> SessaoLogin(
+            switch ($senhaBD) {
+                case $senha:
+                    $this -> SessaoLogin(
                     id: $usuarioCRUD -> GetId(email: $email), 
                     email: $email
-                );
+                    );
 
-                header(header: 'Location: ../../public/index.php');
-                exit;
-            } else {
-                throw new \Exception(message: "Senha incorreta", code: 43);
+                    header(header: 'Location: ../../public/index.php');
+                    exit;
                 
+                default:
+                    throw new \Exception(message: "Senha incorreta", code: 43);   
             }
         } else {
             throw new \Exception("Usuario não encontrado: Email não cadastrado", 30);
@@ -291,6 +292,16 @@
             "Id" => $id,
             "Email" => $email
         ];
+    }
+
+    public function ConfereLogin($id): array {
+        $usuarioCrud = new UsuarioCRUD;
+        
+        $logado = !empty($usuarioCrud -> Read($id));
+
+        $tipo_usuario = $usuarioCrud -> Read($id)[0]['tipo_perfil'];
+
+        return [$logado, $tipo_usuario];
     }
 
     }
