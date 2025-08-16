@@ -35,8 +35,45 @@
 <?php 
 
     $erros = [];
+    $id = (int) $_GET['id'] ?? PaginaInicial();
 
-    $dadoJogo = ($jogo -> GetJogo(id: $_GET['id'] ?? PaginaInicial()))[0];
+    $id ? : PaginaInicial();
+
+    $dadoJogo = $jogo -> GetJogo(id: $id);
+
+    $dadoJogo ? : PaginaInicial();
+
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $dados = filter_input_array(type: INPUT_POST, options: [
+                'titulo'          => FILTER_UNSAFE_RAW,
+                'plataforma'      => FILTER_UNSAFE_RAW,
+                'data_lancamento' => FILTER_UNSAFE_RAW,
+                'desenvolvedora'  => FILTER_UNSAFE_RAW,
+                'link_compra'     => FILTER_UNSAFE_RAW,
+                'descricao'       => FILTER_UNSAFE_RAW,
+                'genero'          => FILTER_UNSAFE_RAW
+            ], add_empty: true);
+
+        if (isset($dados['titulo'], $dados['plataforma'], $dados['data_lancamento'], $dados['desenvolvedora'], $dados['link_compra'], $dados['descricao'], $dados['genero'])) {
+            
+
+            $erros = $jogo -> Atualizar(
+                id: $id,
+                titulo: $dados['titulo'], 
+                descricao: $dados['descricao'], 
+                desenvolvedora: $dados['desenvolvedora'], 
+                data_lancamento: $dados['data_lancamento'], 
+                link_compra: $dados['link_compra'], 
+                plataforma: $dados['plataforma'],
+                genero: $dados['genero']
+            );
+
+            if (empty($erros)) {
+                header(header: 'Location: ../../public/index.php');
+                exit;
+            }
+        }
+    }
 
 ?>
 
@@ -57,13 +94,13 @@
 
         <label for="genero">Gênero:</label>
         <select name="genero" id="genero">
-            <option value="7" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['genero']) == '7') ? 'selected' : '';?>>Ação e combate</option>
-            <option value="4" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['genero']) == '4') ? 'selected' : '';?>> Esportes e competição</option>
-            <option value="5" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['genero']) == '5') ? 'selected' : '';?>> Exploração e aventura</option>
-            <option value="6" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['genero']) == '6') ? 'selected' : '';?>> Música e partygames</option>
-            <option value="2" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['genero']) == '2') ? 'selected' : '';?>> Plataforma e indie</option>
-            <option value="3" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['genero']) == '3') ? 'selected' : '';?>> Simulação e construção </option>
-            <option value="1" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['genero']) == '1') ? 'selected' : '';?>> Terror e mistério      </option>
+            <option value="7" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['generos']['id_genero']) == '7') ? 'selected' : '';?>>Ação e combate</option>
+            <option value="4" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['generos']['id_genero']) == '4') ? 'selected' : '';?>> Esportes e competição</option>
+            <option value="5" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['generos']['id_genero']) == '5') ? 'selected' : '';?>> Exploração e aventura</option>
+            <option value="6" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['generos']['id_genero']) == '6') ? 'selected' : '';?>> Música e partygames</option>
+            <option value="2" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['generos']['id_genero']) == '2') ? 'selected' : '';?>> Plataforma e indie</option>
+            <option value="3" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['generos']['id_genero']) == '3') ? 'selected' : '';?>> Simulação e construção </option>
+            <option value="1" <?= (htmlspecialchars(string: $_POST['genero'] ?? $dadoJogo['generos']['id_genero']) == '1') ? 'selected' : '';?>> Terror e mistério      </option>
         </select>
 
         <label for="plataforma">Qual a plataforma do jogo: </label>
@@ -84,11 +121,11 @@
         <input type="text" name="desenvolvedora" id="desenvolvendor" placeholder="Desenvolvedora" value="<?= htmlspecialchars(string: $_POST['desenvolvedora'] ?? $dadoJogo['desenvolvedora'])?>">
 
         <input type="url" name="link_compra" id="compra" placeholder="Link de compra" value="<?= htmlspecialchars(string: $_POST['link_compra'] ?? $dadoJogo['link_compra'])?>">
-        
+    
+
         <textarea name="descricao" id="descricao"><?= htmlspecialchars(string: $_POST['descricao'] ?? $dadoJogo['descricao'], flags: ENT_QUOTES | ENT_SUBSTITUTE, encoding: 'UTF-8') ?></textarea>
 
-
-        <input type="submit" value="Cadastrar">
+        <input type="submit" value="Alterar">
     </form>
 </body>
 </html>
