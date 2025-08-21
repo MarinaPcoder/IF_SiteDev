@@ -9,6 +9,13 @@ use PDOException;
 
 Class UsuarioCRUD {
 
+    private PDO $pdo;
+
+    public function __construct()
+    {
+        $this->pdo = Conexao::getInstancia();
+        $this->pdo->setAttribute(attribute: PDO::ATTR_ERRMODE, value: PDO::ERRMODE_EXCEPTION);
+    }
     public function Create(UsuarioController $usuario) {
 
         $comando = "
@@ -27,7 +34,7 @@ Class UsuarioCRUD {
             )
         ";
         
-        $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        $stmt = $this->pdo->prepare(query: $comando);
 
         $stmt->bindValue(param: ':nome',            value: $usuario->getNome(),             type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':email',           value: $usuario->getEmail(),            type: PDO::PARAM_STR);
@@ -51,10 +58,11 @@ Class UsuarioCRUD {
 
     public function Read($id): array {
         $comando = "
-            SELECT * FROM usuario WHERE id_usuario = '$id'
+            SELECT * FROM usuario WHERE id_usuario = :id
         ";
 
-        $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        $stmt = $this->pdo->prepare(query: $comando);
+        $stmt->bindValue(param: ':id', value: $id, type: PDO::PARAM_INT);
         $success = $stmt->execute();
 
         if (!$success) {
@@ -87,16 +95,17 @@ Class UsuarioCRUD {
                 data_nascimento = :data_nascimento,
                 bio = :bio
                 
-                WHERE id_usuario = '".$usuario->GetId()."'
+                WHERE id_usuario = :id
         ";
 
-        $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        $stmt = $this->pdo->prepare(query: $comando);
 
         $stmt->bindValue(param: ':nome',            value: $usuario->getNome(),             type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':email',           value: $usuario->getEmail(),            type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':senha',           value: $usuario->getSenhaCrip(),        type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':data_nascimento', value: $usuario->getDataNascimento(),   type: PDO::PARAM_STR);
         $stmt->bindValue(param: ':bio',             value: $usuario->getBio(),              type: PDO::PARAM_STR);
+        $stmt->bindValue(param: ':id',              value: $usuario->GetId(),               type: PDO::PARAM_INT);
 
         // Executa e verifica
         $sucesso = $stmt->execute();
@@ -118,10 +127,11 @@ Class UsuarioCRUD {
             DELETE FROM usuario 
             
             WHERE   
-                id_usuario = $id
+                id_usuario = :id
         ";
 
-        $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        $stmt = $this->pdo->prepare(query: $comando);
+        $stmt -> bindValue(param: ':id', value: $id, type: PDO::PARAM_INT);
         $sucesso = $stmt->execute();
         
         if (!$sucesso) {
@@ -138,10 +148,11 @@ Class UsuarioCRUD {
 
     public function GetId($email): mixed{
         $comando = "
-            SELECT id_usuario FROM usuario WHERE email = '$email'
+            SELECT id_usuario FROM usuario WHERE email = :email
         ";
 
-        $stmt = Conexao::getInstancia()->prepare(query: $comando);
+        $stmt = $this->pdo->prepare(query: $comando);
+        $stmt -> bindValue(param: ':email', value: $email, type: PDO::PARAM_STR);
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
@@ -154,28 +165,4 @@ Class UsuarioCRUD {
         }
     }
 
-
-    public function Getsenha($email): array {
-        // Função teste (redudante já que temos a função READ)
-
-        $comando = "
-            SELECT senha FROM usuario WHERE email  = '$email'
-        ";
-
-        $stmt = Conexao::getInstancia()->prepare(query: $comando);
-        $stmt->execute();
-
-        if ($stmt->rowCount() > 0) {
-            $senha = $stmt->fetchAll(mode: PDO::FETCH_ASSOC);
-
-            return $senha;
-            
-        } else {
-            return [];
-        }
-
-    }
-
-
-    
 }

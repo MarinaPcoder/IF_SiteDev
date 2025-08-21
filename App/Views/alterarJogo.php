@@ -1,8 +1,8 @@
 <?php 
     session_start();
-    use App\Controllers\UsuarioController;
-
+    
     require_once '../../vendor/autoload.php';
+    use App\Controllers\UsuarioController;
     use App\Controllers\JogoController;
     $usuario = new UsuarioController;
     $jogo = new JogoController;
@@ -13,7 +13,7 @@
     } else {
         [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
 
-        if (!$logado && $tipo_usuario != 'admin') {
+        if (!$logado || $tipo_usuario !== 'admin') {
             header(header: 'Location: ./logout.php');
             exit;
         }
@@ -35,13 +35,13 @@
 <?php 
 
     $erros = [];
-    $id = (int) $_GET['id'] ?? PaginaInicial();
 
-    $id ? : PaginaInicial();
+    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    if ($id === null || $id === false) PaginaInicial();
 
     $dadoJogo = $jogo -> GetJogo(id: $id);
 
-    $dadoJogo ? : PaginaInicial();
+    $dadoJogo ? $dadoJogo : PaginaInicial();
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $dados = filter_input_array(type: INPUT_POST, options: [
@@ -56,8 +56,8 @@
 
         if (isset($dados['titulo'], $dados['plataforma'], $dados['data_lancamento'], $dados['desenvolvedora'], $dados['link_compra'], $dados['descricao'], $dados['genero'])) {
             
-
-            $erros = $jogo -> Atualizar(
+            try {
+                $erros = $jogo -> Atualizar(
                 id: $id,
                 titulo: $dados['titulo'], 
                 descricao: $dados['descricao'], 
@@ -65,9 +65,14 @@
                 data_lancamento: $dados['data_lancamento'], 
                 link_compra: $dados['link_compra'], 
                 plataforma: $dados['plataforma'],
-                genero: $dados['genero']
-            );
-
+                genero: (int) $dados['genero']
+                );
+                
+            } catch (\PDOException $th) {
+                print $th->getCode() . ": ". $th ->getMessage();
+                exit;
+            }
+            
             if (empty($erros)) {
                 header(header: 'Location: ../../public/index.php');
                 exit;
@@ -89,7 +94,7 @@
         </div>
     <?php endforeach ?>
     
-    <form action=" <?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post">
+    <form action=" <?= htmlspecialchars(string: $_SERVER['PHP_SELF'], flags: ENT_QUOTES | ENT_SUBSTITUTE, encoding: 'UTF-8').'?id='.(int)$id ?>" method="post">
         <input type="text" name="titulo" id="titulo" placeholder="Título do jogo" value="<?=htmlspecialchars(string: $_POST['titulo'] ?? $dadoJogo['titulo'])?>">
 
         <label for="genero">Gênero:</label>
@@ -118,12 +123,12 @@
         <label for="data_lancamento">Data de lançamento: </label>
         <input type="date" name="data_lancamento" id="data_lancamento" value="<?= htmlspecialchars(string: $_POST['data_lancamento'] ?? $dadoJogo['data_lancamento'])?>">
 
-        <input type="text" name="desenvolvedora" id="desenvolvendor" placeholder="Desenvolvedora" value="<?= htmlspecialchars(string: $_POST['desenvolvedora'] ?? $dadoJogo['desenvolvedora'])?>">
+        <input type="text" name="desenvolvedora" id="desenvolvendora" placeholder="Desenvolvedora" value="<?= htmlspecialchars(string: $_POST['desenvolvedora'] ?? $dadoJogo['desenvolvedora'])?>">
 
         <input type="url" name="link_compra" id="compra" placeholder="Link de compra" value="<?= htmlspecialchars(string: $_POST['link_compra'] ?? $dadoJogo['link_compra'])?>">
     
-
         <textarea name="descricao" id="descricao"><?= htmlspecialchars(string: $_POST['descricao'] ?? $dadoJogo['descricao'], flags: ENT_QUOTES | ENT_SUBSTITUTE, encoding: 'UTF-8') ?></textarea>
+
 
         <input type="submit" value="Alterar">
     </form>

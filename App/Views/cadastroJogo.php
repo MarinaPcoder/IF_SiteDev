@@ -15,7 +15,7 @@
     } else {
         [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
     
-        if (!$logado && $tipo_usuario != 'admin') {
+        if (!$logado || $tipo_usuario !== 'admin') {
 
             header(header: 'Location: ./logout.php');
             exit;

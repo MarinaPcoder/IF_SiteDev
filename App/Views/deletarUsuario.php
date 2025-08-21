@@ -28,15 +28,19 @@
 <?php 
     $dado = ($usuario -> getUsuario(id: $_SESSION['Usuario']['Id']))[0];
 
+    $erros = [];
+
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
          try {
-            list($senha, $ErrosSenha) = $usuario ->VerificarSenha($_POST['senha'], $_POST['senha']);
+            [$senha, $ErrosSenha] = $usuario ->VerificarSenha($_POST['senha'], $_POST['senha']);
             
-            $erros = $ErrosSenha;
+            if (!empty($ErrosSenha)) {
+                $erros['Formato de senha'] = $ErrosSenha;
+            }
 
             $usuario->ExcluirUsuario($dado['id_usuario'], $senha);
 
-         } catch(\Exception){
+         } catch(\Exception $e){
             $erros[match ($e -> getCode()) {
                         43 => 'Senha',  
                         default => 'Indefinido',
@@ -50,16 +54,23 @@
             
          } catch (Throwable $t) {
             error_log(message: "Erro inesperado: " . $t->getMessage());
-            echo "Ocorreu um erro inesperado. Tente novamente mais tarde." . $t->getMessage();
+            echo "Ocorreu um erro inesperado. Tente novamente mais tarde. Erro: " . $t->getMessage();
         }
     }
 
-    $erros = $_SESSION['msg_erro'] ?? [];
-    
-    unset($_SESSION['msg_erro']);
 ?>
 <body>
-    
+    <?php foreach ($erros as $chave => $msgs): ?>
+        <div class="erro">
+            <strong><?= $chave ?>:</strong>
+            <ul>
+                <?php foreach ($msgs as $msg): ?>
+                    <li><?= htmlspecialchars(string: $msg, flags: ENT_QUOTES) ?></li>
+                <?php endforeach ?>
+            </ul>
+        </div>
+    <?php endforeach ?>
+
     <form action="<?=$_SERVER['PHP_SELF']?>" method="post">
         <p>Você tem certeza que deseja excluir a conta de <?=$dado['nome_usuario']?>?</p>
         <input placeholder="Insira a sua senha:" type="password" name="senha" id="senha">

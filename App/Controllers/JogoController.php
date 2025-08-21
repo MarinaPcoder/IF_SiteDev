@@ -124,8 +124,7 @@
                 'desenvolvedora'  => $norm(v: $desenvolvedora,  max: 255),
                 'data_lancamento' => $norm(v: $data_lancamento, max: 10),
                 'link_compra'     => $norm(v: $link_compra,     max: 500),
-                'plataforma'      => $norm(v: $plataforma,      max: 50),
-                'genero'          => $norm(v: $genero,          max: 25)
+                'plataforma'      => $norm(v: $plataforma,      max: 50)
             ];
             
             // validação
@@ -157,7 +156,7 @@
                 }
 
                 // Desenvolvedora: 2–120 (você pode afrouxar os caracteres aceitos conforme necessidade)
-                if ($dados['desenvolvedora'] === '' || mb_strlen($dados['desenvolvedora']) < 2 || mb_strlen($dados['desenvolvedora']) > 120) {
+                if ($dados['desenvolvedora'] === '' || mb_strlen($dados['desenvolvedora']) < 2 || mb_strlen($dados['desenvolvedora']) > 255) {
                     $erros['desenvolvedora'][] = 'Informe a desenvolvedora (2–255).';
                 }
 
@@ -193,7 +192,7 @@
 
             // Execução
             $usuarioCRUD = new JogoCRUD;
-            $usuarioCRUD -> Update(jogo: $this);
+            $sucesso = $usuarioCRUD -> Update(jogo: $this);
 
             return [];
         }

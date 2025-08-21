@@ -41,3 +41,5 @@
 //     if ($pdo->inTransaction()) $pdo->rollBack();
 //     throw $e;
 // }
+header(header: 'Location: ../../public');
+exit;

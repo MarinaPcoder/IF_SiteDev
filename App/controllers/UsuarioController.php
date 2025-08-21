@@ -3,7 +3,6 @@
 
     use DateTime;
     use App\Models\UsuarioCRUD;
-     
 
     class UsuarioController {
         private 
