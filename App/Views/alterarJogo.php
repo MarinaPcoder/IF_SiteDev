@@ -94,7 +94,7 @@
         </div>
     <?php endforeach ?>
     
-    <form action=" <?= htmlspecialchars(string: $_SERVER['PHP_SELF'], flags: ENT_QUOTES | ENT_SUBSTITUTE, encoding: 'UTF-8').'?id='.(int)$id ?>" method="post">
+    <form action="<?= htmlspecialchars(string: $_SERVER['PHP_SELF'], flags: ENT_QUOTES | ENT_SUBSTITUTE, encoding: 'UTF-8').'?id='.(int)$id ?>" method="post">
         <input type="text" name="titulo" id="titulo" placeholder="Título do jogo" value="<?=htmlspecialchars(string: $_POST['titulo'] ?? $dadoJogo['titulo'])?>">
 
         <label for="genero">Gênero:</label>

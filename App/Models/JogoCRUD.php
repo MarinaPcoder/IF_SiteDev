@@ -99,7 +99,7 @@
 
             } catch (\Throwable $e) {
                 if ($this->pdo->inTransaction()) $this->pdo->rollBack();
-                throw new PDOException("Falha ao ler jogo: ".$e->getMessage(), 0, $e);
+                throw new PDOException(message: "Falha ao ler jogo: ".$e->getMessage(), code: 0, previous: $e);
             }
 
             return $jogo;
@@ -186,18 +186,17 @@
                     id_jogo = :id
                 ";
 
-                $stmtJogo = $this->pdo->prepare(query: $sqlJogo);
+                $stmtJogo = $this -> pdo -> prepare(query: $sqlJogo);
                 $stmtJogo -> bindValue(param: ":id", value: $id, type: PDO::PARAM_INT);
                 $stmtJogo->execute();
 
-
-                $this -> pdo ->commit();
+                $this -> pdo -> commit();
 
             }  catch (\Throwable $e) {
                 if ($this->pdo->inTransaction()) {
                     $this->pdo->rollBack();
                 }
-                throw new PDOException(message: "Falha ao deletar jogo." . $e->getMessage(), code: 0, previous: $e);
+                throw new PDOException(message: "Falha ao deletar jogo: " . $e->getMessage(), code: 0, previous: $e);
             }
 
             return True;

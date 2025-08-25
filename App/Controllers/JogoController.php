@@ -3,6 +3,7 @@
     namespace App\Controllers;
 
     use App\Models\JogoCRUD;
+    USE App\Models\UsuarioCRUD;
     use DateTime;
 
     class JogoController 
@@ -16,6 +17,14 @@
             $link_compra,
             $plataforma,
             $genero;
+
+        private JogoCRUD $jogoCRUD;
+        private UsuarioCRUD $usuarioCRUD;
+
+        public function  __construct() {
+            $this -> jogoCRUD = new JogoCRUD;
+            $this -> usuarioCRUD = new UsuarioCRUD;
+        }
         
         public function Cadastrar($titulo, $descricao, $desenvolvedora, $data_lancamento, $link_compra, $plataforma, $genero): array {
 
@@ -101,13 +110,12 @@
             $this -> SetGenero(genero: $genero);
 
             // Execução
-            $usuarioCRUD = new JogoCRUD;
-            $usuarioCRUD -> Create(jogo: $this);
+            $this->jogoCRUD-> Create(jogo: $this);
 
             return [];
         }
 
-        public function Atualizar($id, $titulo, $descricao, $desenvolvedora, $data_lancamento, $link_compra, $plataforma, $genero): array {
+        public function Atualizar($id, $titulo, $descricao, $desenvolvedora, $data_lancamento, $link_compra, $plataforma, $genero): array|bool {
 
             $erros = [];
 
@@ -191,10 +199,30 @@
             $this -> SetGenero(genero: $genero);
 
             // Execução
-            $usuarioCRUD = new JogoCRUD;
-            $sucesso = $usuarioCRUD -> Update(jogo: $this);
+            $sucesso = $this->jogoCRUD -> Update(jogo: $this);
+
+            if (!$sucesso) {
+                return $sucesso;
+            }
 
             return [];
+        }
+
+        public function Deletar($id, $id_usuario, $senhaForm) {
+            $senhaBD = $this -> usuarioCRUD -> Read(id: $id_usuario)[0]['senha'];
+
+            $senhaForm = md5(string: $senhaForm);
+
+            switch ($senhaForm) {
+                case $senhaBD:
+                    $this -> jogoCRUD -> Delete(id: $id);
+
+                    header(header: 'Location: ../../public');
+                    exit;
+                
+                default:
+                    throw new \Exception(message: "Senhas não são iguais", code: 1);
+            }
         }
 
         public function GetJogo($id) {

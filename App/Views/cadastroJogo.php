@@ -82,7 +82,7 @@
 <?php 
 
 ?>
-    <form action=" <?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> " method="post">
+    <form action=" <?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> " method="post" enctype="multipart/form-data">
         <input type="text" name="titulo" id="titulo" placeholder="Título do jogo" value="<?=htmlspecialchars($dados['titulo'] ?? '')?>">
 
         <label for="genero">Gênero:</label>

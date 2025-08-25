@@ -50,7 +50,7 @@
          } catch (\PDOException $th) {
             error_log(message: "Erro PDO: " . $e->getMessage());
 
-            $_SESSION['msg_erro']['Indefinido'][] = "Erro ao deletar o usuário: " . $e->getMessage();
+            $erros['Indefinido'][] = "Erro ao deletar o usuário: " . $e->getMessage();
             
          } catch (Throwable $t) {
             error_log(message: "Erro inesperado: " . $t->getMessage());

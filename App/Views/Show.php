@@ -18,4 +18,5 @@
         echo 'Id: '. $_SESSION['Usuario']['Id'];
         echo "<br>";
         echo 'Email: '. $_SESSION['Usuario']['Email'];
+        var_dump($_SESSION);
     }

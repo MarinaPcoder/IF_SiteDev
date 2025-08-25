@@ -34,52 +34,51 @@
 
 <?php 
     $erros = [];
-    $id = (int) $_GET['id'] ?? PaginaInicial();
 
-    $id ? : PaginaInicial();
+    $id = filter_input(type: INPUT_GET, var_name: 'id', filter: FILTER_VALIDATE_INT);
+    if ($id === null || $id === false) PaginaInicial();
 
     $dadoJogo = $jogo -> GetJogo(id: $id);
 
-    $dadoJogo ? : PaginaInicial();
-
-
-    $plataforma = match ($dadoJogo['plataforma']) {
-        'pc' => 'PC',
-        'ps5' => 'Playstation 5',
-        'ps4' => 'Playstation 5',
-        'one' => 'Xbox One',
-        'xboxS' => 'Xbox Series S',
-        'xboxX' => 'Xbox Series X',
-        'switch' => 'Nintendo Switch',
-    };
+    $dadoJogo ? $dadoJogo : PaginaInicial();
 
     $erros = [];
-
-    $id = (int) $_GET['id'] ?? PaginaInicial();
-    $id ? : PaginaInicial();
-
-    $dadoJogo = $jogo -> GetJogo(id: $id);
-
-    $dadoJogo ? : PaginaInicial();
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             [$senha, $ErrosSenha] = $usuario ->VerificarSenha($_POST['senha'], $_POST['senha']);
 
-            if(!empty($ErrosSenha)) {
+            if(empty($ErrosSenha)) {
+                $jogo -> Deletar(id: $id, id_usuario: $_SESSION['Usuario']['Id'], senhaForm: $senha);
+            } else {
                 $erros['Formato de senha'] = $ErrosSenha;
             }
             
         } catch (\Throwable $th) {
-            $erros[][] = '';
+            $erros[match ($th -> getCode()) {
+                        1 => 'Senha',  
+                        default => 'Indefinido',
+                    }]
+                    
+                    [] = $th -> getMessage();
         }
     }
 
 ?>
 <body>
+    <?php foreach ($erros as $chave => $msgs): ?>
+        <div class="erro">
+            <strong><?= $chave ?>:</strong>
+            <ul>
+                <?php foreach ($msgs as $msg): ?>
+                    <li><?= htmlspecialchars(string: $msg, flags: ENT_QUOTES) ?></li>
+                <?php endforeach ?>
+            </ul>
+        </div>
+    <?php endforeach ?>
     
-    <form action="<?=$_SERVER['PHP_SELF']?>" method="post">
-        <p>Você tem certeza que deseja excluir a versão de <?=$plataforma?> do jogo <?=$dadoJogo['titulo']?>?</p>
+    <form action="<?= htmlspecialchars(string: $_SERVER['PHP_SELF'], flags: ENT_QUOTES | ENT_SUBSTITUTE, encoding: 'UTF-8').'?id='.(int)$id ?>" method="post">
+        <p>Você tem certeza que deseja excluir a versão de <?=$dadoJogo['plataforma']?> do jogo <?=$dadoJogo['titulo']?>?</p>
         <input placeholder="Insira a sua senha:" type="password" name="senha" id="senha">
         <input type="submit"  value="Sim">
     </form>
