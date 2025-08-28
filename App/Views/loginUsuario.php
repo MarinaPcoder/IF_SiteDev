@@ -12,6 +12,7 @@
     }
 
     use App\Controllers\UsuarioController;
+    $usuario = new UsuarioController;
     
 ?>
 </head>
@@ -20,17 +21,15 @@
     $erros = [];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
+        $erros = [];
         
         if (isset($_POST['email']) and isset($_POST['senha'])) {
             
-            $usuario = new UsuarioController;
-
-            list($email, $errosEmail)   = $usuario -> VerificarEmail(email: $_POST['email']);
-            list($senha, $errosSenha)   = $usuario -> VerificarSenha(senha: $_POST['senha'], senha2: $_POST['senha']);
+            [$email, $errosEmail]   = $usuario -> VerificarEmail(email: $_POST['email']);
+            [$senha, $errosSenha]   = $usuario -> VerificarSenha(senha: $_POST['senha'], senha2: $_POST['senha']);
 
             $erros = array_merge($errosEmail, $errosSenha);
-            
+
             if (empty($erros)) {
                 try {
                     $usuario -> Login(email: $email, senha: $senha);
@@ -47,8 +46,6 @@
             
         }
     }
-    
-    
 ?>
 
 <body>

@@ -45,21 +45,23 @@
             
             error_log(message: "Erro PDO: " . $e->getMessage());
 
-            if ($e->getCode() == 23000) {
-                echo "Não é possível cadastrar o usuário: E-mail já está registrado.";
-            } else {
-                echo "Erro ao cadastrar usuário: " . $e->getMessage();
+            switch ($e->getCode()) {
+                case 23000:
+                    $erros['Email'][] = 'E-mail já está registrado.';
+                    break;
+                
+                default:
+                    $erros['Indefinido'][] = "Erro ao cadastrar usuário: " . $e->getMessage();
+                    break;
             }
         } catch (Throwable $t) {
             
             error_log(message: "Erro inesperado: " . $t->getMessage());
-            echo "Ocorreu um erro inesperado. Tente novamente mais tarde." . $t->getMessage();
+            $erros['Indefinido'][] = "Ocorreu um erro inesperado. Tente novamente mais tarde. " . $t->getMessage();
         }
     }
 
-    $erros = $_SESSION['msg_erro'] ?? [];
-    
-    unset($_SESSION['msg_erro']);
+    $erros = array_merge($erros ?? [], $GLOBALS['msg_erro'] ?? []);
 ?>
 
 <body>

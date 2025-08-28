@@ -13,82 +13,96 @@
             $senhaCrip, 
             $bio;
 
-        public function cadastrar($nome, $email, $datadenascimento, $senha, $senha2, $bio)
-    {
-        $erros = [];
+        private UsuarioCRUD $usuarioCRUD;
 
-        // Validação
-
-        // Verificação Nome
-            if (!preg_match(pattern: "/^[a-zA-Z\s]+$/", subject: $nome)) {
-                $erros['nome'][] = 'Formato de nome inválido: só é permitido letras minúsculas, maiúsculas e espaços em branco.';
+        public function __construct() {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
             }
 
-        list($email, $errosEmail)   = $this->VerificarEmail($email);
-        list($senha, $errosSenha)   = $this->VerificarSenha($senha, $senha2);
-    
-        // Verificação Data
-        list($datadenascimento, $errosNascimento) = $this->VerificarData($datadenascimento);
+            $this->usuarioCRUD = new UsuarioCRUD();
+            
+        }
 
-        $erros = array_merge($erros, $errosEmail, $errosSenha, $errosNascimento);
+        public function cadastrar($nome, $email, $datadenascimento, $senha, $senha2, $bio){
+            $erros = [];
 
-        // Sanitização
-        $bio = htmlspecialchars(string: $bio);
+            // Verificação Nome
+            [$nome, $errosNome] = $this->VerificarNome($nome);
 
-        if (!empty($erros)) {
+            // Verificação Email
+            [$email, $errosEmail]   = $this->VerificarEmail($email);
 
-            $_SESSION['msg_erro'] = $erros;
+            // Verificação Senha
+            [$senha, $errosSenha]  = $this->VerificarSenha($senha, $senha2);
+        
+            // Verificação Data
+            [$datadenascimento, $errosNascimento] = $this->VerificarData($datadenascimento);
 
-        } else {
-            // Criptografia da senha
-            $senhaCrip = md5(string: $senha);
+            // Verificação Bio
+            [$bio, $errosBio] = $this->VerificarBio(bio: $bio);
 
-            $this->SetNome(nome: $nome);
-            $this->SetEmail(email: $email);
-            $this->SetNascimento(nascimento: $datadenascimento);
-            $this->SetSenhaCrip(senhaCrip: $senhaCrip);
-            $this->SetBio(bio: $bio);
+            // Sanitização
+            $bio = htmlspecialchars(string: $bio);
 
-            $usuarioCRUD = new UsuarioCRUD();
-            $sucesso = $usuarioCRUD -> Create(usuario: $this);
+            $erros = array_merge($erros,  $errosEmail, $errosSenha, $errosNascimento, $errosNome, $errosBio);
 
-            if ($sucesso) {
+
+            if (!empty($erros)) {
+
+                $GLOBALS['msg_erro'] = $erros;
+
+            } else {
+                // Criptografia da senha
+                $senhaCrip = md5(string: $senha);
+
+                $this->SetNome(nome: $nome);
+                $this->SetEmail(email: $email);
+                $this->SetNascimento(nascimento: $datadenascimento);
+                $this->SetSenhaCrip(senhaCrip: $senhaCrip);
+                $this->SetBio(bio: $bio);
                 
-                $this->SessaoLogin($usuarioCRUD->GetId($this ->email), $this ->email);
 
-                header(header: 'Location: ../../public/index.php');
-                exit;
+                $sucesso = $this->usuarioCRUD->Create(usuario: $this);
+
+                if ($sucesso) {
+
+                    $this->SessaoLogin($this->usuarioCRUD->GetId($this->email), $this->email);
+
+                    header(header: 'Location: ../../public/index.php');
+                    exit;
+                }
             }
         }
-        
-    }
 
-    public function AtualizarUsuario($id, $nome, $email, $datadenascimento, $senha, $senha2, $bio)
-    {
+    public function AtualizarUsuario($id, $nome, $email, $datadenascimento, $senha, $senha2, $bio){
          $erros = [];
 
         // Validação
 
         // Verificação Nome
-            if (!preg_match(pattern: "/^[a-zA-Z\s]+$/", subject: $nome)) {
-                $erros['nome'][] = 'Formato de nome inválido: só é permitido letras minúsculas, maiúsculas e espaços em branco.';
-            }
+        [$nome, $errosNome] = $this->VerificarNome($nome);
 
-        list($email, $errosEmail)   = $this->VerificarEmail($email);
-        list($senha, $errosSenha)   = $this->VerificarSenha($senha, $senha2);
+        // Verificação Email
+        [$email, $errosEmail]   = $this->VerificarEmail($email);
+
+        // Verificação Senha
+        [$senha, $errosSenha]   = $this->VerificarSenha($senha, $senha2);
     
         // Verificação Data
-        list($datadenascimento, $errosNascimento) = $this->VerificarData($datadenascimento);
+        [$datadenascimento, $errosNascimento] = $this->VerificarData($datadenascimento);
 
-        $erros = array_merge($erros, $errosEmail, $errosSenha, $errosNascimento);
-            
+        // Verificação Bio
+        [$bio, $errosBio] = $this->VerificarBio($bio);
 
         // Sanitização
         $bio = htmlspecialchars(string: $bio);
 
+        $erros = array_merge($erros, $errosEmail, $errosSenha, $errosNascimento, $errosNome, $errosBio);
+
         if (!empty($erros)) {
 
-            $_SESSION['msg_erro'] = $erros;
+            $GLOBALS['msg_erro'] = $erros;
 
         } else {
             // Criptografia da senha
@@ -101,13 +115,12 @@
             $this->SetSenhaCrip     (senhaCrip: $senhaCrip);
             $this->SetBio           (bio: $bio);
 
-            $usuarioCRUD = new UsuarioCRUD();
-            $sucesso = $usuarioCRUD -> Update(usuario: $this);
+            $sucesso = $this->usuarioCRUD->Update(usuario: $this);
 
             if ($sucesso) {
 
                 unset($_SESSION['Usuario']);
-                $this->SessaoLogin($usuarioCRUD->GetId($this ->email), $this ->email);
+                $this->SessaoLogin($this->usuarioCRUD->GetId($this->email), $this->email);
 
                 header(header: 'Location: ../../public/index.php');
                 exit;
@@ -116,35 +129,38 @@
     }
 
     public function ExcluirUsuario($id, $senha) {
-        $usuarioCRUD = new UsuarioCRUD;
-        $senhaBD = $usuarioCRUD-> Read(id: $id)[0]['senha'];
+        $senhaBD = $this->usuarioCRUD->Read(id: $id)[0]['senha'];
 
-        if (md5($senha) == $senhaBD) {
+        switch (md5(string: $senha)) {
+            case $senhaBD:
+                $sucesso = $this->usuarioCRUD->Delete($id);
             
-            $sucesso = $usuarioCRUD->Delete($id);
+                if ($sucesso) {
+
+                    unset($_SESSION['Usuario']);
+
+                    header(header: 'Location: ./cadastroUsuario.php');
+                    exit;
+                }
+                
+                break;
             
-            if ($sucesso) {
-
-                unset($_SESSION['Usuario']);
-
-                header(header: 'Location: ./cadastroUsuario.php');
-                exit;
-            }
-
-        } else {
-            throw new \Exception(message: "Senha incorreta", code: 43);
-            
+            default:
+                throw new \Exception(message: "Senha incorreta", code: 43);
         }
         
     }
 
     private function VerificarData($datadenascimento): array {
+
+        $erros = [];
+
         $data = DateTime::createFromFormat('Y-m-d', $datadenascimento);
 
             if (!$data || $data->format('Y-m-d') !== $datadenascimento) {
-                $erros['data'][] = 'Formato de data incorreto.';
+                $erros[] = 'Formato de data incorreto.';
             } else {
-                list($ano, $mes, $dia) = explode(separator: '-', string: $datadenascimento);
+                [$ano, $mes, $dia] = explode(separator: '-', string: $datadenascimento);
 
                 // data atual
                 $hoje = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
@@ -157,25 +173,31 @@
                 if ($idade < 1 || $idade > 150) {
                     
                     $idade > 150 ? 
-                        $erros['data'][] = 'Idade máxima atingida'
+                        $erros[] = 'Idade máxima atingida'
                         : 
-                        $erros['data'][] = 'Idade mínima atingida';
+                        $erros[] = 'Idade mínima atingida';
                 }
             }
 
-            return [$datadenascimento, $erros['data'] ?? []];
+            return [$datadenascimento, empty($erros) ? [] : ['Data de Nascimento' => $erros ?? []]];
     }
 
     public function VerificarEmail($email): array{
+
+        $erros = [];
+
         // Verificação Email
             if (!filter_var(value: $email, filter: FILTER_VALIDATE_EMAIL)) {
-                $erros['email'][] = 'Formato de email inválido.';
+                $erros[] = 'Formato de email inválido.';
             }
 
-        return [filter_var(value: $email, filter: FILTER_SANITIZE_EMAIL), $erros['email'] ?? []];
+        return [filter_var(value: $email, filter: FILTER_SANITIZE_EMAIL), empty($erros) ? [] : ['Email' => $erros] ?? []];
     }
 
     public function VerificarSenha($senha, $senha2): array {
+
+        $erros = [];
+
         // Verificação senha
         $pattern = '/^(?=.*[A-Z])      # pelo menos 1 maiúscula
               (?=.*[a-z])      # pelo menos 1 minúscula
@@ -184,30 +206,61 @@
             /x';
 
         if ($senha !== $senha2) {
-            $erros['senha'][] = 'As senhas devem ser iguais';
-            Echo 'Senhas errada';
+            $erros[] = 'As senhas devem ser iguais';
         }
 
         if (strlen(string: $senha) > 30 || strlen(string: $senha) < 8 || !preg_match(pattern: $pattern, subject: $senha)) {
             if (strlen(string: $senha) >= 30) {
-                $erros['senha'][] = 'Senha muito grande: máximo 30 caracteres.';
+                $erros[] = 'Senha muito grande: máximo 30 caracteres.';
             }
             if (strlen(string: $senha) <= 8) {
-                $erros['senha'][] = 'Senha muito pequena: mínimo 8 caracteres';
+                $erros[] = 'Senha muito pequena: mínimo 8 caracteres';
             }
             if (!preg_match(pattern: $pattern, subject: $senha)) {
-                $erros['senha'][] = 'Formato incorreto: a senha deve ter pelo menos 1 dígito decimal, pelo menos 1 maiúscula, pelo menos 1 minúscula';
+                $erros[] = 'Formato incorreto: a senha deve ter pelo menos 1 dígito decimal, pelo menos 1 maiúscula, pelo menos 1 minúscula';
             }
         }
 
 
-        return [$senha, $erros['senha'] ?? []];
+        return [$senha, empty($erros) ? [] : ['Senha' => $erros ?? []]];
     }
 
-    public function getUsuario($id): mixed {
-        $usuario = new UsuarioCRUD;
+    public function VerificarNome($nome): array {
 
-        return $usuario -> Read(id: $id);
+        $erros = [];
+
+        // Tira espaço
+        $nome = trim(preg_replace('/\s+/', ' ', $nome));
+
+        // Verificação de tamanho
+        if (strlen($nome) < 2 || strlen($nome) > 60) {
+            $erros['Nome'][] = 'O nome deve ter entre 2 e 60 caracteres.';
+        }
+
+        // Verificação de formato
+        if (!preg_match(pattern: "/^[\p{L}\s'-]+$/u", subject: $nome)) {
+            $erros['Nome'][] = 'Formato de nome inválido: só é permitido letras (inclusive acentuadas), espaços, hífen e apóstrofo.';
+        }
+
+        return [$nome, empty($erros) ? [] : ["Nome" => $erros]];
+    }
+
+    public function VerificarBio($bio): array {
+
+        $erros = [];
+
+        if (!is_string($bio)) {
+            $erros['Bio'][] = 'Formato de bio inválido.';
+        }
+        if (strlen(string: $bio) > 1000) {
+            $erros['Bio'][] = 'Bio muito grande: máximo 1000 caracteres.';
+        }
+
+        return [$bio, empty($erros) ? [] : ["Bio" => $erros]];
+    }
+    public function getUsuario($id): mixed {
+
+        return $this->usuarioCRUD->Read(id: $id);
     }
 
     private function SetId($id): void {
@@ -279,6 +332,7 @@
                 default:
                     throw new \Exception(message: "Senha incorreta", code: 43);   
             }
+
         } else {
             throw new \Exception("Usuario não encontrado: Email não cadastrado", 30);
             
@@ -294,11 +348,9 @@
     }
 
     public function ConfereLogin($id): array {
-        $usuarioCrud = new UsuarioCRUD;
-        
-        $logado = !empty($usuarioCrud -> Read($id));
 
-        $tipo_usuario = $usuarioCrud -> Read($id)[0]['tipo_perfil'];
+        $logado = !empty($this->usuarioCRUD->Read($id));
+        $tipo_usuario = $this->usuarioCRUD->Read($id)[0]['tipo_perfil'];
 
         return [$logado, $tipo_usuario];
     }

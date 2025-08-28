@@ -2,6 +2,7 @@
     session_start();
 
     require_once '../../vendor/autoload.php';
+    use App\Controllers\UsuarioController;
 
     $titulo = 'Registro';
     require_once '../../public/assets/components/head.php';
@@ -17,7 +18,6 @@
 </head>
 
 <?php 
-    use App\Controllers\UsuarioController;
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
@@ -33,37 +33,53 @@
             );
             
         } catch (PDOException $e) {
+
+            // Trata erros do PDO
             
             error_log(message: "Erro PDO: " . $e->getMessage());
 
-            if ($e->getCode() == 23000) {
-                $_SESSION['msg_erro']['Email'][] = 'Não é possível cadastrar o usuário: E-mail já está registrado';
-            } else {
-                $_SESSION['msg_erro']['Indefinido'][] = "Erro ao cadastrar usuário: " . $e->getMessage();
+            switch ($e->getCode()) {
+                case 23000:
+                    $erros['Email'][] = 'Não é possível cadastrar o usuário: E-mail já está registrado';
+                    break;
+                
+                default:
+                    $erros['Indefinido'][] = "Erro ao cadastrar usuário: " . $e->getMessage();
+                    break;
             }
 
         } catch (Throwable $t) {
-            error_log(message: "Erro inesperado: " . $t->getMessage());
-            echo "Ocorreu um erro inesperado. Tente novamente mais tarde." . $t->getMessage();
-    }
+
+            // Trata erros do controller
+
+            switch ($t->getCode()) {
+                case 'value':
+                    # code...
+                    break;
+                
+                default:
+                    $erros['Indefinido'][] = "Ocorreu um erro inesperado. Tente novamente mais tarde." . $t->getMessage();
+                    break;
+            }
+        }
     }
 
-    $erros = $_SESSION['msg_erro'] ?? [];
-    
-    unset($_SESSION['msg_erro']);
+    $erros = array_merge($erros ?? [], $GLOBALS['msg_erro'] ?? []);
 ?>
 
 <body>
-        <?php foreach ($erros as $chave => $msgs): ?>
-            <div class="erro">
-                <strong><?= $chave ?>:</strong>
-                <ul>
-                    <?php foreach ($msgs as $msg): ?>
-                        <li><?= htmlspecialchars(string: $msg, flags: ENT_QUOTES) ?></li>
-                    <?php endforeach ?>
-                </ul>
-            </div>
-        <?php endforeach ?>
+    <?php foreach ($erros as $chave => $msgs): ?>
+        <div class="erro">
+            <strong><?= $chave ?>:</strong>
+            <ul>
+                <?php foreach ($msgs as $msg): ?>
+                    <li><?= htmlspecialchars(string: $msg, flags: ENT_QUOTES) ?></li>
+                <?php endforeach ?>
+            </ul>
+        </div>
+    <?php endforeach ?>
+    
+
     <form action="<?= htmlspecialchars(string: $_SERVER['PHP_SELF'], flags: ENT_QUOTES) ?>" method="post">
         <input type="text" name="nomeusuario" id="nomeusuario" placeholder="Nome de usuário" value="<?=htmlspecialchars(string: $_POST['nomeusuario']  ?? null )?>">
 
