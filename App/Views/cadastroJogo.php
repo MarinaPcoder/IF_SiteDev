@@ -61,7 +61,10 @@
             );
 
             if (empty($erros)) {
-                header(header: 'Location: ../../public/index.php');
+
+                $_SESSION['Jogo'] = $jogo -> GetJogoPorTituloEPlataforma(titulo: $dados['titulo'], plataforma: $dados['plataforma']);
+
+                header(header: 'Location: ./upload.php');
                 exit;
             }
         }
@@ -82,7 +85,7 @@
 <?php 
 
 ?>
-    <form action=" <?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> " method="post" enctype="multipart/form-data">
+    <form action=" <?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> " method="post">
         <input type="text" name="titulo" id="titulo" placeholder="Título do jogo" value="<?=htmlspecialchars($dados['titulo'] ?? '')?>">
 
         <label for="genero">Gênero:</label>

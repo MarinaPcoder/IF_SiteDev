@@ -225,9 +225,56 @@
             }
         }
 
+        public function UploadImagens($idJogo, $logo, $banner, $screenshots) {
+            $erros = [];
+
+            // Validação e upload da logo
+            if ($logo && $logo['error'] === UPLOAD_ERR_OK) {
+                $extensao = pathinfo($logo['name'], PATHINFO_EXTENSION);
+                $novoNome = "logo_$idJogo.$extensao";
+                $destino = "../../public/uploads/$novoNome";
+
+                if (!move_uploaded_file($logo['tmp_name'], $destino)) {
+                    $erros['logo'][] = 'Erro ao fazer upload da logo.';
+                }
+            }
+
+            // Validação e upload do banner
+            if ($banner && $banner['error'] === UPLOAD_ERR_OK) {
+                $extensao = pathinfo($banner['name'], PATHINFO_EXTENSION);
+                $novoNome = "banner_$idJogo.$extensao";
+                $destino = "../../public/uploads/$novoNome";
+
+                if (!move_uploaded_file($banner['tmp_name'], $destino)) {
+                    $erros['banner'][] = 'Erro ao fazer upload do banner.';
+                }
+            }
+
+            // Validação e upload das screenshots
+            if ($screenshots) {
+                foreach ($screenshots['tmp_name'] as $key => $tmpName) {
+                    if ($screenshots['error'][$key] === UPLOAD_ERR_OK) {
+                        $extensao = pathinfo($screenshots['name'][$key], PATHINFO_EXTENSION);
+                        $novoNome = "screenshot_{$idJogo}_$key.$extensao";
+                        $destino = "../../public/uploads/$novoNome";
+
+                        if (!move_uploaded_file($tmpName, $destino)) {
+                            $erros['screenshots'][] = "Erro ao fazer upload da screenshot $key.";
+                        }
+                    }
+                }
+            }
+
+            return $erros;
+        }
+
+        public function GetJogoPorTituloEPlataforma($titulo, $plataforma) {
+            
+            return $this-> jogoCRUD -> ReadByTitleAndPlatform(titulo: $titulo, plataforma: $plataforma);
+        }
+
         public function GetJogo($id) {
-            $jogoCRUD = new JogoCRUD;
-            return $jogoCRUD -> Read( $id);
+            return $this-> jogoCRUD -> Read( $id);
         }
 
         private function SetId($id) {

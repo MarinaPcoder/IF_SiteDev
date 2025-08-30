@@ -19,7 +19,7 @@
 
         public function create(JogoController $jogo): bool
         {
-            $this->pdo = Conexao::getInstancia();
+            
             try {
                 $this->pdo->beginTransaction();
 
@@ -64,8 +64,6 @@
 
         public function Read($idJogo) {
 
-            $this->pdo = Conexao::getInstancia();
-
             try {
                 $this->pdo->beginTransaction();
 
@@ -107,8 +105,7 @@
 
         public function Update(JogoController $jogo) {
             
-            $this->pdo = Conexao::getInstancia();
-
+            
             try {
                 $this->pdo->beginTransaction();
 
@@ -163,7 +160,7 @@
 
         public function Delete($id) {
 
-            $this->pdo = Conexao::getInstancia();
+
 
             try {
                 $this->pdo->beginTransaction();
@@ -200,6 +197,50 @@
             }
 
             return True;
+        }
+
+        public function ReadByTitleAndPlatform($titulo, $plataforma) {
+
+
+            try {
+                $this->pdo->beginTransaction();
+
+                $sqlJogo = "
+                SELECT * FROM jogo WHERE titulo = :titulo AND plataforma = :plataforma
+                ";
+
+                $stmtJogo = $this->pdo->prepare(query: $sqlJogo);
+                $stmtJogo -> bindValue(param: ':titulo', value: $titulo, type: PDO::PARAM_STR );
+                $stmtJogo -> bindValue(param: ':plataforma', value: $plataforma, type: PDO::PARAM_STR );
+                $stmtJogo->execute();
+                $jogo = $stmtJogo->fetch(PDO::FETCH_ASSOC);
+
+                if (!$jogo) { $this->pdo->rollBack(); return false; }
+
+                // Ler na tabela jogo_genero
+                $sqlJG = "SELECT id_genero FROM jogo_genero WHERE id_jogo = :id";
+                $stmtJG = $this->pdo->prepare(query: $sqlJG);
+                $stmtJG->bindValue(param: ':id',   value: $jogo['id_jogo'], type: PDO::PARAM_INT);
+                $stmtJG->execute();
+
+                $genero = $stmtJG->fetch(PDO::FETCH_ASSOC);
+                if (!$genero) {
+                    $this->pdo->rollBack(); 
+                    return false; 
+                }
+
+                $jogo['generos'] = $genero;
+
+                $this->pdo->commit();
+                
+
+            } catch (\Throwable $e) {
+                if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+                throw new PDOException(message: "Falha ao ler jogo: ".$e->getMessage(), code: 0, previous: $e);
+            }
+
+            return $jogo;
+
         }
     }
     
