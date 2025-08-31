@@ -88,7 +88,7 @@ DROP TABLE IF EXISTS Jogo_Imagem;
 CREATE TABLE Jogo_Imagem (
     id_imagem INT AUTO_INCREMENT PRIMARY KEY,
     id_jogo INT NOT NULL,
-    tipo ENUM('logo', 'banner', 'screenshot', 'video') NOT NULL,
+    tipo ENUM('poster', 'banner', 'screenshot', 'video') NOT NULL,
     caminho VARCHAR(255) NOT NULL,
     ordem_exib TINYINT UNSIGNED DEFAULT 0,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

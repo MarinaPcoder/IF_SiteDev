@@ -154,7 +154,7 @@
                     $erros['data_lancamento'][] = 'Data inválida (use YYYY-MM-DD).';
                 }
 
-                list($ano, $mes, $dia) = explode(separator: '-', string: $dados['data_lancamento']);
+                [$ano, $mes, $dia] = explode(separator: '-', string: $dados['data_lancamento']);
                 $mkLancamento = mktime(0, 0, 0, $mes, $dia, $ano);
                 $mkHoje = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
                 if ($mkLancamento >= $mkHoje) {
@@ -185,7 +185,7 @@
 
 
             if (!empty($erros)) {
-                return $erros; // devolva pro controller da rota exibir no form
+                return $erros; // devolve pra exibir no form
             }
             
             // Definindo atributos
@@ -225,21 +225,21 @@
             }
         }
 
-        public function UploadImagens($idJogo, $logo, $banner, $screenshots) {
+        public function UploadImagens($idJogo, $poster, $banner, $screenshots) {
             $erros = [];
 
-            // Validação e upload da logo
-            if ($logo && $logo['error'] === UPLOAD_ERR_OK) {
-                $extensao = pathinfo($logo['name'], PATHINFO_EXTENSION);
-                $novoNome = "logo_$idJogo.$extensao";
+            // Validação e upload do poster
+            if ($poster && $poster['error'] === UPLOAD_ERR_OK) {
+                $extensao = pathinfo($poster['name'], PATHINFO_EXTENSION);
+                $novoNome = "poster_$idJogo.$extensao";
                 $destino = "../../public/uploads/$novoNome";
 
-                if (!move_uploaded_file($logo['tmp_name'], $destino)) {
-                    $erros['logo'][] = 'Erro ao fazer upload da logo.';
+                if (!move_uploaded_file($poster['tmp_name'], $destino)) {
+                    $erros['poster'][] = 'Erro ao fazer upload do poster.';
                 } else {
-                    // Registrar o caminho da logo no banco de dados
-                    $caminho = "uploads/$novoNome";
-                    $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'logo');
+                    // Registrar o caminho do poster no banco de dados
+                    $caminho = "/uploads/$novoNome";
+                    $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'poster');
                 }
             }
 
@@ -253,7 +253,7 @@
                     $erros['banner'][] = 'Erro ao fazer upload do banner.';
                 } else {
                     // Registrar o caminho do banner no banco de dados
-                    $caminho = "uploads/$novoNome";
+                    $caminho = "/uploads/$novoNome";
                     $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'banner');
                 }
             }
@@ -270,7 +270,7 @@
                             $erros['screenshots'][] = "Erro ao fazer upload da screenshot $key.";
                         } else {
                             // Registrar o caminho da screenshot no banco de dados
-                            $caminho = "uploads/$novoNome";
+                            $caminho = "/uploads/$novoNome";
                             $this->jogoCRUD->CreateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'screenshot', ordem_exib: $key);
                         }
                     }
@@ -278,6 +278,21 @@
             }
 
             return $erros;
+        }
+
+        public function DeletarImagem($id, $caminho) {
+
+            if (file_exists('./../../public'.$caminho)) {
+                $sucesso = unlink('./../../public'.$caminho);
+            } else {
+                $sucesso = false;
+            }
+
+            if ($sucesso) {
+                $sucesso = $this->jogoCRUD->DeleteImage($id);
+            }
+
+            return $sucesso;
         }
 
         public function LerJogo($idJogo): mixed {
@@ -288,13 +303,12 @@
             return $this->jogoCRUD->Existe(idJogo: $idJogo);
         }
 
-        public function GetJogoPorTituloEPlataforma($titulo, $plataforma) {
-            
-            return $this-> jogoCRUD -> ReadByTitleAndPlatform(titulo: $titulo, plataforma: $plataforma);
+        public function GetJogoPorTituloEPlataforma($titulo, $plataforma) {    
+            return $this -> jogoCRUD -> ReadByTitleAndPlatform(titulo: $titulo, plataforma: $plataforma);
         }
 
         public function GetJogo($id) {
-            return $this-> jogoCRUD -> Read( $id);
+            return $this -> jogoCRUD -> Read( $id);
         }
 
         private function SetId($id) {

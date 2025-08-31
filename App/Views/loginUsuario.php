@@ -1,10 +1,14 @@
 <?php 
+    session_start();
     require_once '../../vendor/autoload.php';
 
     $titulo = 'Login';
     require_once '../../public/assets/components/head.php';
     
-    session_start();
+    if (isset($_SESSION['Mensagem_redirecionamento'])) {
+        echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
+        unset($_SESSION['Mensagem_redirecionamento']);
+    }
 
     if (isset($_SESSION['Usuario'])) {
         header(header: 'Location: ../../public/index.php');

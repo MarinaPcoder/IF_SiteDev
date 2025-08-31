@@ -4,6 +4,11 @@
 
     require_once '../../vendor/autoload.php';
 
+    if (isset($_SESSION['Mensagem_redirecionamento'])) {
+        echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
+        unset($_SESSION['Mensagem_redirecionamento']);
+    }
+    
     use App\Controllers\UsuarioController;
     use App\Controllers\JogoController;
     $usuario = new UsuarioController;

@@ -6,6 +6,11 @@
     use App\Controllers\UsuarioController;
     $usuario = new UsuarioController;
 
+    if (isset($_SESSION['Mensagem_redirecionamento'])) {
+        echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
+        unset($_SESSION['Mensagem_redirecionamento']);
+    }
+
     if (empty($_SESSION['Usuario'])) {
         header(header: 'Location: ./loginUsuario.php');
         exit;

@@ -7,7 +7,13 @@
   <link rel="stylesheet" href="./assets/css/index-styles.css">
 </head>
 <?php 
-      require_once '../vendor/autoload.php';
+  session_start();
+  require_once '../vendor/autoload.php';
+
+  if (isset($_SESSION['Mensagem_redirecionamento'])) {
+      echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
+      unset($_SESSION['Mensagem_redirecionamento']);
+  }
 ?>
 <body>
   <div class="sidebar">
