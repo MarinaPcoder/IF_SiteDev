@@ -49,6 +49,52 @@
                 $stmtJG->bindValue(param: ':id_genero', value: $jogo->GetGenero(),  type: PDO::PARAM_INT);
                 $stmtJG->execute();
 
+                // Define Logo Padrão
+                $sqlLogo = "
+                    INSERT INTO jogo_imagem (
+                        id_jogo, 
+                        caminho,
+                        tipo,
+                        ordem_exib
+                    ) 
+                    VALUES (
+                        :id_jogo, 
+                        :caminho,
+                        :tipo,
+                        :ordem_exib
+                    )
+                ";
+
+                $stmtLogo = $this->pdo->prepare(query: $sqlLogo);
+                $stmtLogo->bindValue(param: ':id_jogo', value: $idJogo, type: PDO::PARAM_INT);
+                $stmtLogo->bindValue(param: ':caminho', value: 'img/logo.png', type: PDO::PARAM_STR);
+                $stmtLogo->bindValue(param: ':tipo', value: 'logo', type: PDO::PARAM_STR);
+                $stmtLogo->bindValue(param: ':ordem_exib', value: 0, type: PDO::PARAM_INT);
+                $stmtLogo->execute();
+
+                // Define Banner Padrão
+                $sqlBanner = "
+                    INSERT INTO jogo_imagem (
+                        id_jogo, 
+                        caminho,
+                        tipo,
+                        ordem_exib
+                    ) 
+                    VALUES (
+                        :id_jogo, 
+                        :caminho,
+                        :tipo,
+                        :ordem_exib
+                    )
+                ";
+
+                $stmtBanner = $this->pdo->prepare(query: $sqlBanner);
+                $stmtBanner->bindValue(param: ':id_jogo', value: $idJogo, type: PDO::PARAM_INT);
+                $stmtBanner->bindValue(param: ':caminho', value: 'img/banner.png', type: PDO::PARAM_STR);
+                $stmtBanner->bindValue(param: ':tipo', value: 'banner', type: PDO::PARAM_STR);
+                $stmtBanner->bindValue(param: ':ordem_exib', value: 0, type: PDO::PARAM_INT);
+                $stmtBanner->execute();
+
                 $this->pdo->commit();
                 
             } catch (\Throwable $e) {
@@ -62,7 +108,7 @@
         }
 
 
-        public function Read($idJogo) {
+        public function Read($idJogo): mixed {
 
             try {
                 $this->pdo->beginTransaction();
@@ -92,9 +138,38 @@
 
                 $jogo['generos'] = $genero;
 
-                $this->pdo->commit();
-                
+                $sqlLogo = "
+                SELECT caminho 
+                FROM jogo_imagem 
+                WHERE id_jogo = :id AND tipo = 'logo'
+                ";
+                $stmtLogo = $this->pdo->prepare(query: $sqlLogo);
+                $stmtLogo->bindValue(param: ':id', value: $idJogo, type: PDO::PARAM_INT);
+                $stmtLogo->execute();
+                $jogo['logo'] = $stmtLogo->fetchColumn();
 
+                $sqlBanner = "
+                SELECT caminho 
+                FROM jogo_imagem 
+                WHERE id_jogo = :id AND tipo = 'banner'
+                ";
+
+                $stmtBanner = $this->pdo->prepare(query: $sqlBanner);
+                $stmtBanner->bindValue(param: ':id', value: $idJogo, type: PDO::PARAM_INT);
+                $stmtBanner->execute();
+                $jogo['banner'] = $stmtBanner->fetchColumn();
+
+                $stmtScreenshot = $this->pdo->prepare(query: "
+                SELECT caminho 
+                FROM jogo_imagem 
+                WHERE id_jogo = :id AND tipo = 'screenshot'
+                ");
+                $stmtScreenshot->bindValue(param: ':id', value: $idJogo, type: PDO::PARAM_INT);
+                $stmtScreenshot->execute();
+                $jogo['screenshots'] = $stmtScreenshot->fetchAll(PDO::FETCH_COLUMN);
+
+                $this->pdo->commit();
+            
             } catch (\Throwable $e) {
                 if ($this->pdo->inTransaction()) $this->pdo->rollBack();
                 throw new PDOException(message: "Falha ao ler jogo: ".$e->getMessage(), code: 0, previous: $e);
@@ -103,8 +178,7 @@
             return $jogo;
         }
 
-        public function Update(JogoController $jogo) {
-            
+        public function Update(JogoController $jogo): bool{
             
             try {
                 $this->pdo->beginTransaction();
@@ -159,9 +233,6 @@
         }
 
         public function Delete($id) {
-
-
-
             try {
                 $this->pdo->beginTransaction();
 
@@ -242,5 +313,69 @@
             return $jogo;
 
         }
+
+        public function CreateImage($idJogo, $caminho, $tipo, $ordem_exib): bool
+        {
+            try {
+                $this->pdo->beginTransaction();
+
+                $sqlImagem = "
+                    INSERT INTO jogo_imagem (
+                        id_jogo, 
+                        caminho,
+                        tipo,
+                        ordem_exib
+                    ) 
+                    VALUES (
+                        :id_jogo, 
+                        :caminho,
+                        :tipo,
+                        :ordem_exib
+                    )
+                ";
+                $stmtImagem = $this->pdo->prepare(query: $sqlImagem);
+                $stmtImagem->bindValue(param: ':id_jogo',       value: $idJogo,     type: PDO::PARAM_INT);
+                $stmtImagem->bindValue(param: ':caminho',       value: $caminho,    type: PDO::PARAM_STR);
+                $stmtImagem->bindValue(param: ':tipo',          value: $tipo,       type: PDO::PARAM_STR);
+                $stmtImagem->bindValue(param: ':ordem_exib',    value: $ordem_exib, type: PDO::PARAM_INT);
+                $stmtImagem->execute();
+
+                $this->pdo->commit();
+            } catch (\Throwable $e) {
+                if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+                throw new PDOException(message: "Falha ao registrar imagens: ".$e->getMessage(), code: 0, previous: $e);
+            }
+
+            return true;
+        }
+
+        public function Existe($idJogo): bool {
+            return $this->Read(idJogo: $idJogo) !== false;
+        }
+
+        public function UpdateImage($idJogo, $caminho, $tipo): bool {
+            try {
+                $this->pdo->beginTransaction();
+
+                $sqlUpdate = "
+                    UPDATE jogo_imagem SET
+                        caminho = :caminho,
+                        tipo = :tipo
+                    WHERE id_jogo = :id_jogo
+                ";
+
+                $stmtUpdate = $this->pdo->prepare(query: $sqlUpdate);
+                $stmtUpdate->bindValue(param: ':id_jogo', value: $idJogo, type: PDO::PARAM_INT);
+                $stmtUpdate->bindValue(param: ':caminho', value: $caminho, type: PDO::PARAM_STR);
+                $stmtUpdate->bindValue(param: ':tipo', value: $tipo, type: PDO::PARAM_STR);
+                $stmtUpdate->execute();
+
+                $this->pdo->commit();
+            } catch (\Throwable $e) {
+                if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+                throw new PDOException(message: "Falha ao atualizar imagem: ".$e->getMessage(), code: 0, previous: $e);
+            }
+
+            return true;
+        }
     }
-    

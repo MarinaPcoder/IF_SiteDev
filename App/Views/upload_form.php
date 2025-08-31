@@ -41,9 +41,22 @@
         exit;
     }
 
+    if (!$jogo->ExisteJogo(idJogo: $idJogo)) {
+        header(header: 'Location: ./../../public');
+        exit;
+    }
+
+    $jogoDados = $jogo->LerJogo(idJogo: $idJogo);
+    if (!$jogoDados) {
+        header(header: 'Location: ./../../public');
+        exit;
+    }
+
     $titulo = 'Upload de imagens';
     require_once '../../public/assets/components/head.php';
-    
+
+    $erros = [];
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $logo = $_FILES['logo'] ?? null;
         $banner = $_FILES['banner'] ?? null;
@@ -58,19 +71,54 @@
     }
 ?>
  <!-- configuração  Head -->
-
+<style>
+    .red {
+        color: red;
+        font-weight: bold;
+        text-decoration: underline;
+        font-size: 15px;
+    }
+</style>
 </head>
 
 <body>
-    <h1><?= htmlspecialchars($titulo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></h1>
+    <h1><?= htmlspecialchars($titulo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').' de '.$jogoDados['titulo'] ?></h1>
+
+    <?php foreach ($erros as $chave => $msgs): ?>
+        <div class="erro">
+            <strong><?= $chave ?>:</strong>
+            <ul>
+                <?php foreach ($msgs as $msg): ?>
+                    <li><?= htmlspecialchars(string: $msg, flags: ENT_QUOTES) ?></li>
+                <?php endforeach ?>
+            </ul>
+        </div>
+    <?php endforeach ?>
+    <H2>Logo atual</H2>
+    
+    <img src="<?= htmlspecialchars('./../../public/assets/'.$jogoDados['logo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="Logo de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" srcset="" width="100" height="100">
+    <?php 
+        if ($jogoDados['logo'] == "img/logo.png") {
+            echo "<p class='red'>Logo padrão, não foi enviada uma logo personalizada para este jogo.</p>";
+        }
+    ?>
+
+    <H2>Banner atual</H2>
+    <img src="<?= htmlspecialchars('./../../public/assets/'.$jogoDados['banner'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="Banner de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" srcset="" width="600" height="200">
+    <?php 
+        if ($jogoDados['banner'] == "img/banner.png") {
+            echo "<p class='red'>Banner padrão, não foi enviada uma banner personalizada para este jogo.</p>";
+        }
+    ?>
 
     <form action="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post" enctype="multipart/form-data">
-        <label for="logo">Insira a logo do jogo:</label>
+        
+        <label for="logo">Insira a logo de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>:</label>
         <br>
         <input type="file" name="logo" id="logo" accept="image/*">
         <br>
         <br>
-        <label for="banner">Insira um banner para o jogo:</label>
+        <label for="banner">Insira um banner de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>:</label>
         <br>
         <input type="file" name="banner" id="banner" accept="image/*">
         <br>

@@ -64,7 +64,7 @@
 
                 $_SESSION['Jogo'] = $jogo -> GetJogoPorTituloEPlataforma(titulo: $dados['titulo'], plataforma: $dados['plataforma']);
 
-                header(header: 'Location: ./upload.php');
+                header(header: 'Location: ./upload_form.php');
                 exit;
             }
         }

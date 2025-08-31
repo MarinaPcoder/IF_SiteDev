@@ -236,6 +236,10 @@
 
                 if (!move_uploaded_file($logo['tmp_name'], $destino)) {
                     $erros['logo'][] = 'Erro ao fazer upload da logo.';
+                } else {
+                    // Registrar o caminho da logo no banco de dados
+                    $caminho = "uploads/$novoNome";
+                    $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'logo');
                 }
             }
 
@@ -247,6 +251,10 @@
 
                 if (!move_uploaded_file($banner['tmp_name'], $destino)) {
                     $erros['banner'][] = 'Erro ao fazer upload do banner.';
+                } else {
+                    // Registrar o caminho do banner no banco de dados
+                    $caminho = "uploads/$novoNome";
+                    $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'banner');
                 }
             }
 
@@ -260,12 +268,24 @@
 
                         if (!move_uploaded_file($tmpName, $destino)) {
                             $erros['screenshots'][] = "Erro ao fazer upload da screenshot $key.";
+                        } else {
+                            // Registrar o caminho da screenshot no banco de dados
+                            $caminho = "uploads/$novoNome";
+                            $this->jogoCRUD->CreateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'screenshot', ordem_exib: $key);
                         }
                     }
                 }
             }
 
             return $erros;
+        }
+
+        public function LerJogo($idJogo): mixed {
+            return $this->jogoCRUD->Read(idJogo: $idJogo);
+        }
+
+        public function ExisteJogo($idJogo) {
+            return $this->jogoCRUD->Existe(idJogo: $idJogo);
         }
 
         public function GetJogoPorTituloEPlataforma($titulo, $plataforma) {

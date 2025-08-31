@@ -39,6 +39,11 @@
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     if ($id === null || $id === false) PaginaInicial();
 
+    if (!$jogo->ExisteJogo(idJogo: $id)) {
+        header(header: 'Location: ./../../public');
+        exit;
+    }
+
     $dadoJogo = $jogo -> GetJogo(id: $id);
 
     $dadoJogo ? $dadoJogo : PaginaInicial();
