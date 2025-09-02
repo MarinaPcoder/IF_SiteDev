@@ -41,33 +41,38 @@
     }
 
     if ($_GET['deletar_imagem'] ?? False) {
+        try {
+            if (!isset($_GET['id_imagem'], $_GET['caminho'])) {
+                $_SESSION['Mensagem_redirecionamento'] = "Nenhuma imagem selecionada.";
+                header(header: 'Location: ./upload_form.php');
+                exit;
+            }
+    
+            $id_imagem = (int) $_GET['id_imagem'];
+    
+            if (!is_int($id_imagem) && $id_imagem >= 0) {
+                $_SESSION['Mensagem_redirecionamento'] = "ID de imagem inválido.";
+                header(header: 'Location: ./upload_form.php');
+                exit;
+            }
 
-        if (!isset($_GET['id_imagem'], $_GET['caminho'])) {
-            $_SESSION['Mensagem_redirecionamento'] = "Nenhuma imagem selecionada.";
-            header(header: 'Location: ./upload_form.php');
-            exit;
-        }
+            $caminho_imagem = $_GET['caminho'];
 
-        $id_imagem = (int) $_GET['id_imagem'];
+            $ordem = $_GET['ordem'];
 
-        if (!is_int($id_imagem) && $id_imagem >= 0) {
-            $_SESSION['Mensagem_redirecionamento'] = "ID de imagem inválido.";
-            header(header: 'Location: ./upload_form.php');
-            exit;
-        }
+            $resultado = $jogo->DeletarImagem(id: $id_imagem, caminho: $caminho_imagem, ordem: $ordem, id_jogo: $id);
 
-        $caminho_imagem = $_GET['caminho'];
+            if ($resultado) {
+                $_SESSION['Mensagem_redirecionamento'] = "Imagem deletada com sucesso.";
+            }
 
-        $resultado = $jogo->DeletarImagem(id: $id_imagem, caminho: $caminho_imagem);
-
-        if ($resultado) {
-            $_SESSION['Mensagem_redirecionamento'] = "Imagem deletada com sucesso.";
-        } else {
-            $_SESSION['Mensagem_redirecionamento'] = "Erro ao deletar imagem.";
+        } catch (\Throwable $th) {
+            $_SESSION['Mensagem_redirecionamento'] = "Erro ao deletar imagem: " . $th->getMessage();
         }
 
         header(header: "Location: ./upload_form.php?id={$id}");
         exit;
+
     } else {
         $_SESSION['Mensagem_redirecionamento'] = "Nenhuma imagem selecionada.";
         header(header: "Location: ./upload_form.php?id={$id}");

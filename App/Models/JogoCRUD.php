@@ -223,7 +223,9 @@
 
                 $stmtScreenshot = $this->pdo->prepare(query: "
                 SELECT 
-                caminho, id_imagem
+                    caminho, 
+                    id_imagem,
+                    ordem_exib
                 FROM jogo_imagem 
                 WHERE id_jogo = :id AND tipo = 'screenshot'
                 ");
@@ -462,10 +464,25 @@
             return $jogo;
         }
 
-        public function CreateImage($idJogo, $caminho, $tipo, $ordem_exib): bool
+        public function CreateImage($idJogo, $caminho, $tipo): bool
         {
             try {
                 $this->pdo->beginTransaction();
+
+                $ordem = 0;
+
+                if ($tipo == 'screenshot') {
+                    $sqlOrdem = "
+                        SELECT COALESCE(MAX(ordem_exib), 0) + 1
+                        FROM jogo_imagem
+                        WHERE id_jogo = :id_jogo AND tipo = :tipo
+                    ";
+                    $stmtOrdem = $this->pdo->prepare(query: $sqlOrdem);
+                    $stmtOrdem->bindValue(param: ':id_jogo', value: $idJogo, type: PDO::PARAM_INT);
+                    $stmtOrdem->bindValue(param: ':tipo', value: $tipo, type: PDO::PARAM_STR);
+                    $stmtOrdem->execute();
+                    $ordem = $stmtOrdem->fetchColumn();
+                }
 
                 $sqlImagem = "
                     INSERT INTO jogo_imagem (
@@ -485,7 +502,7 @@
                 $stmtImagem->bindValue(param: ':id_jogo',       value: $idJogo,     type: PDO::PARAM_INT);
                 $stmtImagem->bindValue(param: ':caminho',       value: $caminho,    type: PDO::PARAM_STR);
                 $stmtImagem->bindValue(param: ':tipo',          value: $tipo,       type: PDO::PARAM_STR);
-                $stmtImagem->bindValue(param: ':ordem_exib',    value: $ordem_exib, type: PDO::PARAM_INT);
+                $stmtImagem->bindValue(param: ':ordem_exib',    value: $ordem,      type: PDO::PARAM_INT);
                 $stmtImagem->execute();
 
                 $this->pdo->commit();
@@ -505,6 +522,23 @@
             try {
                 $this->pdo->beginTransaction();
 
+                $sqlArquivoAntigo = "
+                    SELECT caminho
+                    FROM jogo_imagem
+                    WHERE id_jogo = :id_jogo AND tipo = :tipo
+                ";
+
+                $stmtArquivoAntigo = $this->pdo->prepare(query: $sqlArquivoAntigo);
+                $stmtArquivoAntigo->bindValue(param: ':id_jogo', value: $idJogo, type: PDO::PARAM_INT);
+                $stmtArquivoAntigo->bindValue(param: ':tipo', value: $tipo, type: PDO::PARAM_STR);
+                $stmtArquivoAntigo->execute();
+                $arquivoAntigo = $stmtArquivoAntigo->fetchColumn();
+
+                if (!$arquivoAntigo) {
+                    $this->pdo->rollBack();
+                    throw new PDOException("Arquivo não encontrado para o jogo.");
+                }
+
                 $sqlUpdate = "
                     UPDATE jogo_imagem SET
                         caminho = :caminho
@@ -515,9 +549,24 @@
                 $stmtUpdate->bindValue(param: ':id_jogo', value: $idJogo, type: PDO::PARAM_INT);
                 $stmtUpdate->bindValue(param: ':caminho', value: $caminho, type: PDO::PARAM_STR);
                 $stmtUpdate->bindValue(param: ':tipo', value: $tipo, type: PDO::PARAM_STR);
-                $stmtUpdate->execute();
+                $sucesso = $stmtUpdate->execute();
+
+                if (!$sucesso) {
+                    $this->pdo->rollBack();
+                    throw new PDOException(message: "Falha ao atualizar imagem do jogo.");
+                }
+
+                if ($arquivoAntigo && file_exists("./../../public{$arquivoAntigo}")) {
+                    $sucesso = unlink("./../../public{$arquivoAntigo}");
+
+                    if (!$sucesso) {
+                        $this->pdo->rollBack();
+                        throw new PDOException(message: "Falha ao deletar imagem antiga do jogo.");
+                    }
+                }
 
                 $this->pdo->commit();
+
             } catch (\Throwable $e) {
                 if ($this->pdo->inTransaction()) $this->pdo->rollBack();
                 throw new PDOException(message: "Falha ao atualizar imagem: ".$e->getMessage(), code: 0, previous: $e);
@@ -526,18 +575,90 @@
             return true;
         }
 
-        public function DeleteImage($id): bool {
+        public function DeleteImage($id, $caminho, $ordem, $id_jogo): bool {
             try {
                 $this->pdo->beginTransaction();
 
                 $sqlDelete = "
-                    DELETE FROM jogo_imagem WHERE id_imagem = :id AND tipo = 'screenshot'
-                ";
+                        DELETE FROM jogo_imagem WHERE id_imagem = :id AND tipo = 'screenshot'
+                    ";
+
                 $stmtDelete = $this->pdo->prepare(query: $sqlDelete);
                 $stmtDelete->bindValue(param: ':id', value: $id, type: PDO::PARAM_INT);
-                $stmtDelete->execute();
+                $sucessoBD = $stmtDelete->execute();
+
+                if(!$sucessoBD) {
+                    $this->pdo->rollBack();
+                    throw new PDOException(message: "Falha ao deletar imagem do jogo.");
+                }
+
+                // Conta Screenshots
+                $sqlConta = "
+                    SELECT COUNT(*) FROM jogo_imagem
+                    WHERE id_jogo = :id_jogo AND tipo = 'screenshot'
+                ";
+
+                $stmtConta = $this->pdo->prepare(query: $sqlConta);
+                $stmtConta->bindValue(param: ':id_jogo', value: $id_jogo, type: PDO::PARAM_INT);
+                $stmtConta->execute();
+                $totalScreenshots = $stmtConta->fetchColumn();
+
+                for ($novaordem = $ordem; $novaordem < $totalScreenshots; $novaordem++, $ordem++) {
+
+                    $extensao = explode('.', $caminho);
+                    $extensao = end(array: $extensao);
+
+                    $novo_caminho = "/uploads/screenshots_{$id_jogo}_{$novaordem}.{$extensao}";
+                    $caminhos[$novaordem] = $novo_caminho;
+
+                    $sqlOrdem = "
+                        UPDATE jogo_imagem SET
+                            ordem_exib = :nova_ordem,
+                            caminho = :caminho
+                        WHERE id_jogo = :id_jogo AND tipo = 'screenshot' AND ordem_exib = :ordem
+                    ";
+
+                    $stmtOrdem = $this->pdo->prepare(query: $sqlOrdem);
+                    $stmtOrdem->bindValue(param: ':id_jogo', value: $id_jogo, type: PDO::PARAM_INT);
+                    $stmtOrdem->bindValue(param: ':ordem', value: $ordem, type: PDO::PARAM_INT);
+                    $stmtOrdem->bindValue(param: ':nova_ordem', value: $novaordem, type: PDO::PARAM_INT);
+                    $stmtOrdem->bindValue(param: ':caminho', value: $novo_caminho, type: PDO::PARAM_STR);
+                    $sucesso = $stmtOrdem->execute();
+
+                    if (!$sucesso) {
+                        $this->pdo->rollBack();
+                        throw new PDOException(message: "Falha ao atualizar ordem das screenshots.");
+                    }
+
+                }
+
+                // Deleta a imagem do disco
+                if (file_exists('./../../public'.$caminho)) {
+                    $sucesso = unlink('./../../public'.$caminho);
+
+                    if (!$sucesso) {
+                        $this->pdo->rollBack();
+                        throw new PDOException(message: "Falha ao deletar imagem do jogo.");
+                    }
+                }
+
+                foreach ($caminhos ?? [] as $novaordem => $caminho) {
+                    $extensao = explode('.', $caminho);
+                    $extensao = end(array: $extensao);
+                    $caminho_antigo = "/uploads/screenshots_{$id_jogo}_" . ($novaordem - 1) . ".{$extensao}";
+
+                    if (file_exists('./../../public'.$caminho_antigo)) {
+                        $sucesso = rename('./../../public'.$caminho_antigo, './../../public'.$caminho);
+
+                        if (!$sucesso) {
+                            $this->pdo->rollBack();
+                            throw new PDOException(message: "Falha ao renomear imagem do jogo.");
+                        }
+                    }
+                }
 
                 $this->pdo->commit();
+
             } catch (\Throwable $e) {
                 if ($this->pdo->inTransaction()) $this->pdo->rollBack();
                 throw new PDOException(message: "Falha ao deletar imagem: ".$e->getMessage(), code: 0, previous: $e);

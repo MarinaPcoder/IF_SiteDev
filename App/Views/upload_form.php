@@ -147,7 +147,7 @@
                     echo "<p class='red'>Nenhuma screenshot personalizada foi enviada para este jogo.</p>";
                 }
             ?>
-            <a href="DeletarImagem.php?id_imagem=<?= htmlspecialchars($screenshot['id_imagem'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&deletar_imagem=true&caminho='.$screenshot['caminho'] ?>.'&id=<?= htmlspecialchars($jogoDados['id'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Deletar</a>
+            <a href="DeletarImagem.php?id_imagem=<?= htmlspecialchars($screenshot['id_imagem'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>&deletar_imagem=true&caminho=<?= htmlspecialchars($screenshot['caminho'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>&id=<?= htmlspecialchars($jogoDados['id_jogo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>&ordem=<?= htmlspecialchars($screenshot['ordem_exib'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" >Deletar</a>
         </div>
     <?php endforeach?>
     <form action="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post" enctype="multipart/form-data">

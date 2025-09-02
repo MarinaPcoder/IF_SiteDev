@@ -271,7 +271,7 @@
                         } else {
                             // Registrar o caminho da screenshot no banco de dados
                             $caminho = "/uploads/$novoNome";
-                            $this->jogoCRUD->CreateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'screenshot', ordem_exib: $key);
+                            $this->jogoCRUD->CreateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'screenshot');
                         }
                     }
                 }
@@ -280,17 +280,9 @@
             return $erros;
         }
 
-        public function DeletarImagem($id, $caminho) {
+        public function DeletarImagem($id, $caminho, $ordem, $id_jogo) {
 
-            if (file_exists('./../../public'.$caminho)) {
-                $sucesso = unlink('./../../public'.$caminho);
-            } else {
-                $sucesso = false;
-            }
-
-            if ($sucesso) {
-                $sucesso = $this->jogoCRUD->DeleteImage($id);
-            }
+                $sucesso = $this->jogoCRUD->DeleteImage($id, $caminho, $ordem, $id_jogo);
 
             return $sucesso;
         }
