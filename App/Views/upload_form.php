@@ -60,6 +60,8 @@
         exit;
     }
 
+    $ContScreenshots = count($jogoDados['screenshots']);
+
     $titulo = 'Upload de imagens';
     require_once '../../public/assets/components/head.php';
 
@@ -67,6 +69,7 @@
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         unset($_SESSION['Jogo']);
+        
         $poster = $_FILES['poster'] ?? null;
         $banner = $_FILES['banner'] ?? null;
         $screenshots = $_FILES['screenshot'] ?? null;
@@ -75,7 +78,8 @@
             idJogo: $idJogo,
             poster: $poster,
             banner: $banner,
-            screenshots: $screenshots
+            screenshots: $screenshots,
+            ordemScreenshots: $ContScreenshots
         );
 
         if (empty($erros)) {
@@ -88,6 +92,8 @@
             exit;
         }
     }
+
+
 ?>
  <!-- configuração  Head -->
 <style>
@@ -147,7 +153,7 @@
                     echo "<p class='red'>Nenhuma screenshot personalizada foi enviada para este jogo.</p>";
                 }
             ?>
-            <a href="DeletarImagem.php?id_imagem=<?= htmlspecialchars($screenshot['id_imagem'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>&deletar_imagem=true&caminho=<?= htmlspecialchars($screenshot['caminho'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>&id=<?= htmlspecialchars($jogoDados['id_jogo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>&ordem=<?= htmlspecialchars($screenshot['ordem_exib'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" >Deletar</a>
+            <a href="DeletarImagem.php?id_imagem=<?=htmlspecialchars($screenshot['id_imagem'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>&deletar_imagem=true">Deletar</a>
         </div>
     <?php endforeach?>
     <form action="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post" enctype="multipart/form-data">
@@ -195,9 +201,11 @@
         }
 
         function AtualizarInputsFotos() {
-            Idteste.innerHTML = ''
+            Idteste.innerHTML = '';
             for (let i = 0; i < Ninputs; i++) {
-                Idteste.innerHTML += '<input type="file" name="screenshot[]" id="screenshot" accept="image/*,video/*"> <br><br>'
+                Idteste.innerHTML += `
+                    <input type="file" name="screenshot[]" id="screenshot" accept="image/*,video/*" class="input-screenshot">
+                    <br><br>`;
             }
         }
     </script>

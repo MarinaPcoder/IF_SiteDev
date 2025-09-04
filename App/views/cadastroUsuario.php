@@ -3,6 +3,7 @@
 
     require_once '../../vendor/autoload.php';
     use App\Controllers\UsuarioController;
+    $usuario = new UsuarioController();
 
     $titulo = 'Registro';
     require_once '../../public/assets/components/head.php';
@@ -26,7 +27,6 @@
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         try {
-            $usuario = new UsuarioController();
             $usuario ->cadastrar(
                 nome: $_POST['nomeusuario'], 
                 email: $_POST['email'], 

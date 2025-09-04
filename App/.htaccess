@@ -1,0 +1,19 @@
+# Ativa o mecanismo de reescrita
+RewriteEngine On
+
+# Redireciona todas as requisições para public/index.php, exceto arquivos e diretórios existentes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Protege o arquivo .htaccess
+<Files .htaccess>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Define o charset padrão
+AddDefaultCharset UTF-8
+
+# Desabilita listagem de diretórios
+Options -Indexes

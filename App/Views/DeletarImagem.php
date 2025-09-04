@@ -19,46 +19,56 @@
         [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
     
         if (!$logado || $tipo_usuario !== 'admin') {
-
-        $_SESSION['Mensagem_redirecionamento'] = "Usuario não existe ou não tem permissão. Redirecionado para ./logout.php";
-
+            
+            $_SESSION['Mensagem_redirecionamento'] = "Usuario não existe ou não tem permissão. Redirecionado para ./logout.php";
+            
             header(header: 'Location: ./logout.php');
             exit;
         }
     }
-
+    
     function PaginaInicial(): never {
         header(header: 'Location: ../../public/index.php');
         exit;
     }
 
-    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-    if ($id === null || $id === false) PaginaInicial();
+    $id_imagem = (int) filter_input(INPUT_GET, 'id_imagem', FILTER_VALIDATE_INT);
+    
+    $jogoDados = $jogo->LerImagem(idImagem: $id_imagem);
 
-    if (!$jogo->ExisteJogo(idJogo: $id)) {
-        header(header: 'Location: ./../../public');
-        exit;
+    if (!$jogoDados) {
+        $_SESSION['Mensagem_redirecionamento'] = "Imagem não encontrada. Redirecionado para ./../../public";
+        PaginaInicial();
+    }
+
+    if ($id_imagem === null || $id_imagem === false) PaginaInicial();
+
+    if (!$jogo->ExisteJogo(idJogo: $jogoDados['id_jogo'])) {
+        $_SESSION['Mensagem_redirecionamento'] = "Jogo não encontrado. Redirecionado para ./../../public";
+        PaginaInicial();
     }
 
     if ($_GET['deletar_imagem'] ?? False) {
         try {
-            if (!isset($_GET['id_imagem'], $_GET['caminho'])) {
+            if ($id_imagem === null || $id_imagem === false) {
                 $_SESSION['Mensagem_redirecionamento'] = "Nenhuma imagem selecionada.";
                 header(header: 'Location: ./upload_form.php');
                 exit;
             }
     
-            $id_imagem = (int) $_GET['id_imagem'];
-    
-            if (!is_int($id_imagem) && $id_imagem >= 0) {
+            if ($id_imagem <= 0) {
                 $_SESSION['Mensagem_redirecionamento'] = "ID de imagem inválido.";
                 header(header: 'Location: ./upload_form.php');
                 exit;
             }
 
-            $caminho_imagem = $_GET['caminho'];
+            // Ler dados da imagem;
 
-            $ordem = $_GET['ordem'];
+            $caminho_imagem = $jogoDados['caminho'];
+
+            $ordem = $jogoDados['ordem_exib'];
+
+            $id = $jogoDados['id_jogo'];
 
             $resultado = $jogo->DeletarImagem(id: $id_imagem, caminho: $caminho_imagem, ordem: $ordem, id_jogo: $id);
 
