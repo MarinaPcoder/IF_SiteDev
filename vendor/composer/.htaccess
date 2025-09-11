@@ -1,0 +1,80 @@
+# Ativa o mecanismo de reescrita
+RewriteEngine On
+
+# Redireciona todas as requisições para public/index.php, exceto arquivos e diretórios existentes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Protege o arquivo .htaccess
+<Files .htaccess>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo .htaccess
+<Files .htaccess>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo autoload_classmap.php
+<Files autoload_classmap.php>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo autoload_namespaces.php
+<Files autoload_namespaces.php>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo autoload_psr4.php
+<Files autoload_psr4.php>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo autoload_real.php
+<Files autoload_real.php>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo autoload_static.php
+<Files autoload_static.php>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo ClassLoader.php
+<Files ClassLoader.php>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo installed.json
+<Files installed.json>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo installed.php
+<Files installed.php>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo InstalledVersions.php
+<Files InstalledVersions.php>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+
+
+# Define o charset padrão
+AddDefaultCharset UTF-8
+
+# Desabilita listagem de diretórios
+Options -Indexes

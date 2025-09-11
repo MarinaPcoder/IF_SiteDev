@@ -87,10 +87,8 @@
             </ul>
         </div>
     <?php endforeach ?>
-<?php 
 
-?>
-    <form action=" <?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> " method="post">
+    <form action="<?=htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post">
         <input type="text" name="titulo" id="titulo" placeholder="Título do jogo" value="<?=htmlspecialchars($dados['titulo'] ?? '')?>">
 
         <label for="genero">Gênero:</label>
@@ -123,7 +121,6 @@
         <input type="url" name="link_compra" id="compra" placeholder="Link de compra" value="<?=htmlspecialchars($dados['link_compra'] ?? '')?>">
         
         <textarea name="descricao" id="descricao"><?= htmlspecialchars($dados['descricao'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></textarea>
-
 
         <input type="submit" value="Cadastrar">
     </form>

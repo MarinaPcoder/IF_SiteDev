@@ -11,17 +11,14 @@ RewriteCond %{REQUEST_FILENAME} !-d
   Deny from all
 </Files>
 
-<Files Controllers>
+# Protege o arquivo Conexao.php
+<Files Conexao.php>
   Order Allow,Deny
   Deny from all
 </Files>
 
-<Files Models>
-  Order Allow,Deny
-  Deny from all
-</Files>
-
-<Files Core>
+# Protege o arquivo Storm.sql
+<Files Storm.sql>
   Order Allow,Deny
   Deny from all
 </Files>

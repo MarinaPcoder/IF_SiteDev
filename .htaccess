@@ -4,10 +4,41 @@ RewriteEngine On
 # Redireciona todas as requisições para public/index.php, exceto arquivos e diretórios existentes
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
 
 # Protege o arquivo .htaccess
 <Files .htaccess>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo .App
+<Files /App>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo .App
+<Files /vendor>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo composer.json
+<Files composer.json>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Protege o arquivo composer.lock
+<Files composer.lock>
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+
+# Protege o arquivo README.md
+<Files README.md>
   Order Allow,Deny
   Deny from all
 </Files>
@@ -19,4 +50,4 @@ AddDefaultCharset UTF-8
 Options -Indexes
 
 # Redireciona se o ocorre um erro
-ErrorDocument 403 http://localhost/IFSiteDev/
+ErrorDocument 403 http://localhost/IFSiteDev/public

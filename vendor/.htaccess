@@ -11,17 +11,8 @@ RewriteCond %{REQUEST_FILENAME} !-d
   Deny from all
 </Files>
 
-<Files Controllers>
-  Order Allow,Deny
-  Deny from all
-</Files>
-
-<Files Models>
-  Order Allow,Deny
-  Deny from all
-</Files>
-
-<Files Core>
+# Protege o arquivo autoload.php
+<Files autoload.php>
   Order Allow,Deny
   Deny from all
 </Files>

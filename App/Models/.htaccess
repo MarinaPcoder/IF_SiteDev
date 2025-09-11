@@ -11,17 +11,17 @@ RewriteCond %{REQUEST_FILENAME} !-d
   Deny from all
 </Files>
 
-<Files Controllers>
+<Files Init_admin.php>
   Order Allow,Deny
   Deny from all
 </Files>
 
-<Files Models>
+<Files JogosCRUD.php>
   Order Allow,Deny
   Deny from all
 </Files>
 
-<Files Core>
+<Files UsuarioCRUD.php>
   Order Allow,Deny
   Deny from all
 </Files>

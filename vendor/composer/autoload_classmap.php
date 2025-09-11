@@ -6,9 +6,11 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Controllers\\AvaliacaoController' => $baseDir . '/App/Controllers/AvaliacaoController.php',
     'App\\Controllers\\JogoController' => $baseDir . '/App/Controllers/JogoController.php',
     'App\\Controllers\\UsuarioController' => $baseDir . '/App/Controllers/UsuarioController.php',
     'App\\Core\\DB\\Conexao' => $baseDir . '/App/Core/DB/Conexao.php',
+    'App\\Models\\AvaliacaoCRUD' => $baseDir . '/App/Models/AvaliacaoCRUD.php',
     'App\\Models\\JogoCRUD' => $baseDir . '/App/Models/JogoCRUD.php',
     'App\\Models\\UsuarioCRUD' => $baseDir . '/App/Models/UsuarioCRUD.php',
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',

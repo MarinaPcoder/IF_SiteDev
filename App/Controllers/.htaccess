@@ -11,17 +11,14 @@ RewriteCond %{REQUEST_FILENAME} !-d
   Deny from all
 </Files>
 
-<Files Controllers>
+# Protege o arquivo JogoController
+<Files JogoController.php>
   Order Allow,Deny
   Deny from all
 </Files>
 
-<Files Models>
-  Order Allow,Deny
-  Deny from all
-</Files>
-
-<Files Core>
+# Protege o arquivo UsurioController
+<Files UsurioController.php>
   Order Allow,Deny
   Deny from all
 </Files>
@@ -31,3 +28,6 @@ AddDefaultCharset UTF-8
 
 # Desabilita listagem de diretórios
 Options -Indexes
+
+# Redireciona se o ocorre um erro
+ErrorDocument 403 http://localhost/IFSiteDev/public

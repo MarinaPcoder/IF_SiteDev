@@ -18,7 +18,7 @@
         exit;
     }
 ?>
-<!-- configuração  Head -->
+    <!-- configuração  Head -->
 
 </head>
 

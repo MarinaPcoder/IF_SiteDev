@@ -3,7 +3,7 @@
     namespace App\Controllers;
 
     use App\Models\JogoCRUD;
-    USE App\Models\UsuarioCRUD;
+    use App\Models\UsuarioCRUD;
     use DateTime;
 
     class JogoController 
