@@ -1,110 +1,210 @@
-* {
-    box-sizing: border-box;
+/* Paleta de cores */
+:root {
+    --azul-marinho: #192230;
+    --cinza-azulado: #3d474e;
+    --cinza-escuro: #2c2f38;
+    --amarelo-vibrante: #ffcd00;
+}
+
+/* Estilos gerais */
+body {
+    font-family: 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
-}
-
-body {
-    display: flex;
-    background-color: #1b1b1d;
+    background-color: var(--cinza-azulado);
     color: #fff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.sidebar {
-    width: 250px;
-    background-color: #141416;
-    padding: 30px 20px;
-    height: 100vh;
-    position: fixed;
-    left: 0;
-    top: 0;
-    overflow-y: auto;
+h1, h2 {
+    color: var(--amarelo-vibrante);
+    margin-bottom: 10px;
 }
 
-.sidebar h2 {
-    margin-bottom: 15px;
-    font-size: 18px;
-    color: #f0f0f0;
-    border-bottom: 1px solid #333;
-    padding-bottom: 5px;
+/* Container principal */
+.main-content {
+    padding: 20px;
 }
 
-.sidebar ul {
-    list-style: none;
+/* Destaque Principal */
+.highlight {
     margin-bottom: 30px;
 }
 
-.sidebar ul li {
-    padding: 8px 0;
-    cursor: pointer;
-    transition: color 0.3s;
+.highlight-banner {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background-color: var(--cinza-escuro);
+    overflow: hidden;
 }
 
-.sidebar ul li:hover {
-    color: #00c3ff;
+.game-banner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.main {
-    margin-left: 250px;
-    width: calc(100% - 250px);
-    padding: 30px;
+.highlight-info {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: #fff;
+    max-width: 600px;
 }
 
-.top-bar {
+.game-title {
+    font-size: 2.5rem;
+    margin: 10px 0;
+}
+
+.game-release,
+.game-genres,
+.game-rating {
+    font-size: 1.1rem;
+    margin: 5px 0;
+}
+
+.game-description {
+    font-size: 1rem;
+    margin: 15px 0;
+}
+
+.highlight-buttons a {
+    display: inline-block;
+    margin-right: 15px;
+    padding: 12px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+    color: #fff;
+}
+
+.btn-gray {
+    background-color: var(--cinza-escuro);
+}
+
+.btn-yellow {
+    background-color: var(--amarelo-vibrante);
+}
+
+/* Carrossel de Destaques */
+.carousel-section {
+    margin-bottom: 40px;
+}
+
+.carousel {
+    position: relative;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
 }
 
-.top-bar h1 {
-    font-size: 28px;
+.carousel-container {
+    display: flex;
+    overflow-x: scroll;
+    gap: 20px;
 }
 
-.search-bar {
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    width: 300px;
-    background-color: #2a2a2d;
+.carousel-item {
+    min-width: 200px;
+    text-align: center;
+}
+
+.carousel-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.carousel-title {
+    margin-top: 10px;
+    font-size: 1.1rem;
     color: #fff;
-    font-size: 14px;
 }
 
-.games-grid {
+.carousel-btn {
+    background-color: var(--cinza-escuro);
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    color: #fff;
+}
+
+.prev-btn {
+    left: 0;
+    transform: translateY(-50%);
+}
+
+.next-btn {
+    right: 0;
+    transform: translateY(-50%);
+}
+
+/* Recém-Adicionados */
+.new-releases {
+    margin-bottom: 40px;
+}
+
+.new-releases-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 25px;
+    gap: 20px;
 }
 
 .game-card {
-    background-color: #2a2a2d;
-    border-radius: 10px;
-    padding: 12px;
-    text-align: center;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.game-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-}
-
-.game-card img {
-    width: 100%;
-    height: 240px;
-    object-fit: cover;
+    background-color: var(--cinza-escuro);
+    padding: 15px;
     border-radius: 8px;
+    text-align: center;
+    overflow: hidden;
 }
 
-.game-card h4 {
-    margin: 10px 0 5px;
-    font-size: 16px;
+.game-card-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.game-card-title {
+    margin-top: 10px;
+    font-size: 1.2rem;
     color: #fff;
 }
 
-.game-card p {
-    font-size: 13px;
+.game-card-release {
+    margin-top: 5px;
+    font-size: 1rem;
     color: #bbb;
+}
+
+/* Paginação */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.pagination-btn {
+    background-color: var(--cinza-escuro);
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1rem;
+    border-radius: 5px;
+}
+
+.pagination-btn:hover {
+    background-color: var(--amarelo-vibrante);
+}
+
+.pagination-btn.active {
+    background-color: var(--amarelo-vibrante);
+    color: var(--cinza-azulado);
 }

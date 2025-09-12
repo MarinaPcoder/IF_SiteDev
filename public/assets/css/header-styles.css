@@ -1,0 +1,120 @@
+/* Paleta de cores */
+:root {
+    --azul-marinho: #192230;
+    --cinza-azulado: #3d474e;
+    --cinza-escuro: #2c2f38;
+    --amarelo-vibrante: #ffcd00;
+}
+
+/* Estilos gerais */
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--cinza-azulado);
+    color: #fff;
+}
+
+header {
+    background-color: var(--azul-marinho);
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 40px;
+    margin-right: 20px;
+}
+
+/* Menu */
+.menu-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+    background-color: var(--cinza-escuro);
+    padding: 20px;
+    transition: left 0.3s ease;
+    z-index: 1000;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar li {
+    padding: 10px 0;
+}
+
+.sidebar li a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+}
+
+/* Submenu */
+.sub-menu {
+    padding-left: 20px;
+}
+
+.sub-menu li {
+    padding: 5px 0;
+}
+
+.search-container {
+    margin-left: 20px;
+    flex-grow: 1;
+    max-width: 300px;
+}
+
+#search-box {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--cinza-escuro);
+    color: #fff;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+}
+
+.login-btn {
+    background-color: var(--amarelo-vibrante);
+    padding: 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: var(--azul-marinho);
+}
+
+.user-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-left: 10px;
+    cursor: pointer;
+}
