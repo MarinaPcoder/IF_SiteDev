@@ -40,9 +40,9 @@
     $GLOBALS['erros'] = [];
 
     // Id do Usuario
-        $id_usuario = (int) ($_GET['id_usuario'] ?? $_SESSION['Usuario']['Id'] ?? null) ?? null;
+        $id_usuario = (int) $_SESSION['Usuario']['Id'] ?? null;
 
-        if (isset($id_usuario) and is_int($id_usuario) and ($id_usuario === $_SESSION['Usuario']['Id'] || $tipo_usuario === 'admin')) {
+        if (isset($id_usuario) and is_int($id_usuario)) {
             $_SESSION['avaliacao']['cadastro']['id_usuario'] = $id_usuario;
         } else {
             $_SESSION['Mensagem_redirecionamento'] = "ID do usuário inválido.";
@@ -58,6 +58,14 @@
             $_SESSION['Mensagem_redirecionamento'] = "ID do jogo inválido. " . $_GET['id_jogo'];
             header(header: "Location: " . CAMINHO_INDEX);
             }
+
+    // Verifica se a avaliação já existe
+        if ($avaliacao->AvaliacaoExiste(id_usuario: $id_usuario, id_jogo: $id_jogo)) {
+            $avaliacaoExistente = $avaliacao->LerPorUsuarioEJogo(id_usuario: $id_usuario, id_jogo: $id_jogo);
+            $_SESSION['Mensagem_redirecionamento'] = "Você já avaliou este jogo.";
+            header(header: "Location: AlterarAvaliacao.php?id=" . $avaliacaoExistente[0]['id_avaliacao']);
+            exit;
+        }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 

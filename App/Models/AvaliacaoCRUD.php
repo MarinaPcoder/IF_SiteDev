@@ -95,6 +95,41 @@
         }
 
         public function Delete($id) {
+            try {
+                $this->pdo->beginTransaction();
 
+                $sqlDelete = "DELETE FROM avaliacao WHERE id_avaliacao = :id";
+                $stmt = $this->pdo->prepare(query: $sqlDelete);
+                $stmt->bindValue(param: ':id', value: $id, type: PDO::PARAM_INT);
+                $sucesso = $stmt->execute();
+
+                if ($sucesso) {
+                    $this->pdo->commit();
+                    return true;
+                } else {
+                    $this->pdo->rollBack();
+                    return false;
+                }
+
+            } catch (PDOException $pe) {
+                $this->pdo->rollBack();
+                throw new \Exception("Erro ao processar solicitação: " . $pe->getMessage(), $pe->getCode(), $pe);
+            }
+        }
+
+        public function ReadByUserAndGame($id_usuario, $id_jogo): array {  
+            try {
+                $sqlRead = "SELECT * FROM avaliacao WHERE id_usuario = :usuario AND id_jogo = :jogo";
+                $stmt = $this->pdo->prepare(query: $sqlRead);
+                $stmt->bindValue(param: ':usuario', value: $id_usuario, type: PDO::PARAM_INT);
+                $stmt->bindValue(param: ':jogo', value: $id_jogo, type: PDO::PARAM_INT);
+                $stmt->execute();
+                $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                return $resultado;
+
+            } catch (PDOException $pe) {
+                throw new \Exception("Erro ao processar solicitação: " . $pe->getMessage(), $pe->getCode(), $pe);
+            }
         }
     }

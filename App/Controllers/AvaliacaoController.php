@@ -54,7 +54,7 @@
             }
         }
 
-        public function Deletar($id) {
+        public function Deletar($id): bool {
             return $this -> avaliacao -> Delete($id);
         }
 
@@ -90,8 +90,15 @@
             return false;
         }
 
-        public function Ler($id) {
+        public function AvaliacaoExiste($id_usuario, $id_jogo): bool {
+            return !empty($this -> avaliacao -> ReadByUserAndGame(id_usuario: $id_usuario, id_jogo: $id_jogo));
+        }
 
+        public function LerPorUsuarioEJogo($id_usuario, $id_jogo) {
+            return $this -> avaliacao -> ReadByUserAndGame(id_usuario: $id_usuario, id_jogo: $id_jogo);
+        }
+
+        public function Ler($id) {
             return $this -> avaliacao -> Read(id: $id);
         }
 

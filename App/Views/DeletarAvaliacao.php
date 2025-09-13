@@ -26,38 +26,43 @@
         }
     }
     
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
-    // Verifica se veio o id da avaliação
-        $id_avaliacao = $_GET['id'] ?? null;
+        // Verifica se veio o id da avaliação
+            $id_avaliacao = $_GET['id'] ?? null;
 
-        if ($id_avaliacao === null || !ctype_digit((string) $id_avaliacao)) {
-            $_SESSION['Mensagem_redirecionamento'] = "ID da avaliação inválido.";
-            header('Location: ' . CAMINHO_INDEX);
-            exit;
-        }
+            if ($id_avaliacao === null || !ctype_digit((string) $id_avaliacao)) {
+                $_SESSION['Mensagem_redirecionamento'] = "ID da avaliação inválido.";
+                header('Location: ' . CAMINHO_INDEX);
+                exit;
+            }
 
-        $id_avaliacao = (int) $id_avaliacao;
+            $id_avaliacao = (int) $id_avaliacao;
 
-        $dadoAvaliacao = $avaliacao->Ler(id: $id_avaliacao);
+            $dadoAvaliacao = $avaliacao->Ler(id: $id_avaliacao);
 
-        if (empty($dadoAvaliacao)) {
-            $_SESSION['Mensagem_redirecionamento'] = "Avaliação não encontrada.";
-            header(header: "Location: " . CAMINHO_INDEX);
-            exit;
-        } else {
-            $_SESSION['avaliacao']['alterar']['id'] = $id_avaliacao;  
-        }
+            if (empty($dadoAvaliacao)) {
+                $_SESSION['Mensagem_redirecionamento'] = "Avaliação não encontrada.";
+                header(header: "Location: " . CAMINHO_INDEX);
+                exit;
+            } else {
+                $_SESSION['avaliacao']['deletar']['id'] = $id_avaliacao;  
+            }
 
-    // Verifica se o usuário tem permissão para alterar a avaliação
-        if ($dadoAvaliacao[0]['id_usuario'] !== $_SESSION['Usuario']['Id'] && $tipo_usuario !== 'admin') {
-            $_SESSION['Mensagem_redirecionamento'] = "Você não tem permissão para alterar esta avaliação.";
-            header(header: "Location: " . CAMINHO_INDEX);
-            exit;
-        }
+        // Verifica se o usuário tem permissão para deletar a avaliação
+            if ($dadoAvaliacao[0]['id_usuario'] !== $_SESSION['Usuario']['Id'] && $tipo_usuario !== 'admin') {
+                $_SESSION['Mensagem_redirecionamento'] = "Você não tem permissão para deletar esta avaliação.";
+                header(header: "Location: " . CAMINHO_INDEX);
+                exit;
+            }
 
-    $avaliacao->deletar($id);
+        $sucesso = $avaliacao->Deletar($id_avaliacao);
 
-    header('Location: /avaliacoes');
-    exit;
+        $sucesso ?    
+            $_SESSION['Mensagem_redirecionamento'] = "Avaliação deletada com sucesso." 
+            :
+            $_SESSION['Mensagem_redirecionamento'] = "Erro ao deletar avaliação. ";
+
+        header('Location: ' . CAMINHO_INDEX);
+        exit;
 }
