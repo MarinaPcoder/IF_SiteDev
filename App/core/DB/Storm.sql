@@ -53,26 +53,6 @@ CREATE TABLE Jogo_Genero (
       REFERENCES Genero(id_genero) ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS Comentario;
-
-CREATE TABLE Comentario (
-  id_comentario INT AUTO_INCREMENT PRIMARY KEY,
-  id_usuario INT NOT NULL,
-  id_jogo INT NOT NULL,
-  texto_comentario TEXT NOT NULL,
-  data_comentario TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  comentario_pai_id INT NULL,
-  CONSTRAINT fk_comentario_usuario
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
-      ON DELETE CASCADE,
-  CONSTRAINT fk_comentario_jogo
-    FOREIGN KEY (id_jogo) REFERENCES Jogo(id_jogo)
-      ON DELETE CASCADE,
-  CONSTRAINT fk_comentario_pai
-    FOREIGN KEY (comentario_pai_id) REFERENCES Comentario(id_comentario)
-      ON DELETE SET NULL
-);
-
 DROP TABLE IF EXISTS Avaliacao;
 
 CREATE TABLE Avaliacao (
