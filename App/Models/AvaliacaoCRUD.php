@@ -70,21 +70,23 @@
 
                 $sqlUpdate = "
                     UPDATE avaliacao SET
-                        id_usuario = :usuario,
-                        id_jogo = :jogo,
                         justificativa = :justificativa,
                         nota = :nota
                     WHERE id_avaliacao = :id";
 
                 $stmt = $this->pdo->prepare(query: $sqlUpdate);
-                $stmt->bindValue(param: ':usuario', value: $avaliacao->GetIdUsuario(), type: PDO::PARAM_INT);
-                $stmt->bindValue(param: ':jogo', value: $avaliacao->GetIdJogo(), type: PDO::PARAM_INT);
                 $stmt->bindValue(param: ':justificativa', value: $avaliacao->GetJustificativa(), type: PDO::PARAM_STR);
                 $stmt->bindValue(param: ':nota', value: $avaliacao->GetNota(), type: PDO::PARAM_INT);
                 $stmt->bindValue(param: ':id', value: $avaliacao->GetId(), type: PDO::PARAM_INT);
-                $stmt->execute();
+                $sucesso = $stmt->execute();
 
-                $this->pdo->commit();
+                if ($sucesso) {
+                    $this->pdo->commit();
+                    return true;
+                } else {
+                    $this->pdo->rollBack();
+                    return false;
+                }
 
             } catch (\Throwable $e) {
                 $this->pdo->rollBack();

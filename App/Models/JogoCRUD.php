@@ -699,4 +699,11 @@
             return $imagem;
         }
 
+        public function ListGenres() {
+            $sql = "SELECT * FROM genero";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
     }

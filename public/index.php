@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catálogo de Jogos</title>
-  <link rel="stylesheet" href="./assets/css/index-styles.css">
-</head>
 <?php 
   session_start();
+  
+  
   require_once '../vendor/autoload.php';
+  $titulo = "Home - Avaliações de Jogos";
+  require_once './assets/components/head.php';
+  require_once './assets/components/header.php';
 
   if (isset($_SESSION['Mensagem_redirecionamento'])) {
       echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
@@ -16,7 +13,9 @@
   }
 ?>
 
-<?php include 'header.php'; ?>
+<head>
+  <link rel="stylesheet" href="./assets/css/index-styles.css">
+</head>
 
 <body>
   <div class="main-content">

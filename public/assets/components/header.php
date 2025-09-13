@@ -1,12 +1,18 @@
-<?php session_start(); ?>
+<?php 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-<!DOCTYPE html>
-<html lang="pt-BR">
+    use App\Controllers\UsuarioController;
+    use App\Controllers\JogoController;
+
+    $usuarioController = new UsuarioController();
+    $jogoController = new JogoController();
+
+?>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nome do Site</title>
-    <link rel="stylesheet" href="/public/assets/css/header-styles.css">
+    <link rel="stylesheet" href="./assets/css/header-styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -26,13 +32,9 @@
                         <li><a href="generos.php">Gêneros</a>
                             <ul class="sub-menu">
                                 <?php
-                                    // Conectar ao banco de dados e recuperar os gêneros
-                                    // Exemplo com MySQL (substitua pelo seu código de conexão)
-                                    $conn = new mysqli('localhost', 'usuario', 'senha', 'banco');
-                                    $result = $conn->query("SELECT nome FROM generos");
-
-                                    while($row = $result->fetch_assoc()) {
-                                        echo "<li><a href='genero.php?nome=" . $row['nome'] . "'>" . $row['nome'] . "</a></li>";
+                                    $generos = $jogoController->ListarGeneros();
+                                    foreach ($generos as $genero) {
+                                        echo '<li><a href="generos.php?genero=' . htmlspecialchars($genero['nome_genero']) . '">' . htmlspecialchars($genero['nome_genero']) . '</a></li>';
                                     }
                                 ?>
                             </ul>

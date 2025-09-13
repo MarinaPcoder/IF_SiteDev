@@ -55,10 +55,10 @@
         }
 
         public function Deletar($id) {
-
+            return $this -> avaliacao -> Delete($id);
         }
 
-        public function Atualizar($id, $id_usuario, $id_jogo, $nota, $justificativa) {
+        public function Atualizar($id, $nota, $justificativa): bool {
 
             if($nota < 0 || $nota > 10) {
                 $GLOBALS['erros']['Nota'][] = "Nota inválida.";
@@ -77,14 +77,17 @@
             }
 
             if (empty($GLOBALS['erros'])) {
+                
                 $this -> SetId($id);
-                $this -> SetIdUsuario($id_usuario);
-                $this -> SetIdJogo($id_jogo);
                 $this -> SetNota($nota);
                 $this -> SetJustificativa($justificativa);
 
-                $this -> avaliacao -> Update($this);
+                $sucesso = $this -> avaliacao -> Update($this);
+
+                return $sucesso;
             }
+
+            return false;
         }
 
         public function Ler($id) {
@@ -134,4 +137,3 @@
         }
 
     }
-    

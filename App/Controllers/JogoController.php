@@ -287,6 +287,10 @@
             return $erros;
         }
 
+        public function ListarGeneros(): array {
+            return $this->jogoCRUD->ListGenres();
+        }
+
         public function LerImagem($idImagem): mixed {
             return $this->jogoCRUD->ReadImage(idImagem: $idImagem);
         }
