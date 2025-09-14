@@ -141,7 +141,7 @@
       <div id="searchResults" class="search__results" role="listbox" aria-label="Resultados da busca"></div>
     </section>
 
-    <!-- Mais pesquisados (sem 'ver mais') -->
+    <!-- Mais pesquisados -->
     <section class="panel reveal popular" aria-label="Mais pesquisados">
       <header class="section__header section__header--tight">
         <h2>Mais pesquisados</h2>
@@ -202,7 +202,7 @@ const storage = {
   set(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch{} }
 };
 
-/* ========================== Tema & Sidebar ========================== */
+/* ============= Tema & Sidebar =============== */
 const ThemeManager=(()=>{const r=document.documentElement,t=$('#themeToggle'),k='storm:theme';
   function apply(x){r.setAttribute('data-theme',x); if(t) t.checked=(x==='dark'); storage.set(k,x);}
   function init(){const s=storage.get(k)||'dark'; apply(s); if(t) t.addEventListener('change',()=>apply(t.checked?'dark':'light'));}
@@ -235,7 +235,7 @@ const DataStore=(()=>{
   };
 })();
 
-/* ============================= Banner ============================= */
+/* =============== Banner =================== */
 const Banner=(()=>{
   const poster=$('#bannerPoster'),title=$('#bannerTitle'),genres=$('#bannerGenres'),
         desc=$('#bannerDesc'),rating=$('#bannerRating'),btn=$('#bannerEvalBtn');
@@ -251,14 +251,14 @@ const Banner=(()=>{
   return{init,set};
 })();
 
-/* ====================== Carrossel genérico ======================= */
+/* ============== Carrossel genérico ============== */
 function makeRail(railEl, items, renderer){
   railEl.innerHTML=''; items.forEach(it=>railEl.appendChild(renderer(it)));
   railEl.addEventListener('wheel',e=>{ if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){ railEl.scrollBy({left:e.deltaY*.7,behavior:'smooth'}); e.preventDefault(); } },{passive:false});
   return railEl;
 }
 
-/* ========================= Cards de jogo ========================= */
+/* ================= Cards de jogo =============== */
 function renderGameCard(game){
   const tpl=$('#tpl-card-game').content.cloneNode(true);
   const root=tpl.querySelector('.card');
@@ -286,7 +286,7 @@ function renderGameCard(game){
   return tpl;
 }
 
-/* =================== Banners largos (lançamentos) =================== */
+/* ======= Banners largos (lançamentos) ============ */
 function renderWideBanner(game){
   const tpl=$('#tpl-wide-banner').content.cloneNode(true);
   tpl.querySelector('.gamewide__img').src=game.cover;
@@ -299,7 +299,7 @@ function renderWideBanner(game){
   return tpl;
 }
 
-/* ====================== Mais pesquisados (aside) ====================== */
+/* ============= Mais pesquisados (aside) =========== */
 function renderPopularItem(game){
   const tpl=$('#tpl-popular-item').content.cloneNode(true);
   tpl.querySelector('.popular__thumb').src=game.cover;
@@ -310,7 +310,7 @@ function renderPopularItem(game){
   return tpl;
 }
 
-/* ============================== Busca ============================== */
+/* ============== Busca ====================== */
 const Search=(()=>{
   const input=$('#searchInput'), clear=$('#clearSearch'), results=$('#searchResults'),
         rail=$('#railRecentes'), asideList=$('#popularList');
@@ -340,7 +340,7 @@ const Search=(()=>{
   return{init,apply};
 })();
 
-/* =================== FX: reveal + teclado no rail =================== */
+/* ======== FX: reveal + teclado no rail =========== */
 const FX=(()=>{
   function revealOnScroll(){
     const io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('show'); io.unobserve(en.target);} }),{threshold:.12});
@@ -355,7 +355,7 @@ const FX=(()=>{
   return{revealOnScroll,keyScroll};
 })();
 
-/* ============================ Init ============================ */
+/* ================= Init ====================== */
 (function initStorm(){
   ThemeManager.init();
   Sidebar.init();
@@ -371,7 +371,7 @@ const FX=(()=>{
   const railBanners=$('#railBanners');
   makeRail(railBanners, DataStore.all(), renderWideBanner);
 
-  // Mais pesquisados (sem botão ver mais)
+  // Mais pesquisados
   const popularList=$('#popularList');
   DataStore.topBySearch(6).forEach(g=>popularList.appendChild(renderPopularItem(g)));
 
