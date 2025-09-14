@@ -1,0 +1,349 @@
+/* ==========================================================================
+   Storm • perfil.html • styles-perfil.css
+   Paleta: #192230 (bg), #2c2f38 (panel), #3d474e (panel-2), #ffcd00 (accent)
+   ========================================================================== */
+
+/* ----------------------------- Tokens / Tema ----------------------------- */
+:root{
+  --bg: #192230;
+  --panel: #2c2f38;
+  --panel-2: #3d474e;
+  --ink: #e9edf4;
+  --muted: #b7c0cc;
+  --stroke: #3a4250;
+
+  --accent: #ffcd00;
+  --accent-ink: #141821;
+
+  --radius: 14px;
+  --radius-lg: 20px;
+
+  --shadow-1: 0 10px 28px rgba(0,0,0,.35);
+  --shadow-2: 0 18px 60px rgba(0,0,0,.45);
+
+  --sidebar-w-compact: 96px;
+  --sidebar-w-expanded: 280px;
+
+  color-scheme: dark;
+}
+
+html[data-theme="light"]{
+  --bg: #f5f7fa;
+  --panel: #ffffff;
+  --panel-2: #edf1f5;
+  --ink: #0f1520;
+  --muted: #566178;
+  --stroke: #d5dde7;
+
+  --accent: #ffcd00;
+  --accent-ink: #0f1520;
+
+  color-scheme: light;
+}
+
+/* ----------------------------- Reset básico ------------------------------ */
+*,
+*::before,
+*::after{ box-sizing: border-box; }
+html,body{ height: 100%; }
+body{
+  margin: 0;
+  font: 500 15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img{ display:block; max-width:100%; height:auto; }
+a{ color: inherit; text-decoration: none; }
+button{ font: inherit; color: inherit; cursor: pointer; background: transparent; border: 0; }
+input,select,textarea,button{ outline: none; }
+.sr-only{ position:absolute !important; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+
+/* =============================== Layout App ============================== */
+.app{
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: auto 1fr 360px;
+  gap: 24px;
+  padding: 24px;
+}
+
+/* =============================== Sidebar ================================= */
+.sidebar{
+  position: sticky; top: 24px; height: calc(100dvh - 48px);
+  width: var(--sidebar-w-compact);
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  display: flex; flex-direction: column; align-items: stretch;
+  transition: width .25s ease;
+  overflow: hidden;
+}
+.sidebar.expanded{ width: var(--sidebar-w-expanded); }
+.sidebar.compact .label{ display:none; }
+
+/* topo da marca */
+.brand{ display:flex; align-items:center; gap:12px; padding:14px 12px 10px; }
+.brand__avatar{
+  width:44px; height:44px; border-radius:999px; display:grid; place-items:center;
+  color:var(--accent); border:2px solid var(--accent);
+  background: color-mix(in oklab, var(--panel-2) 60%, transparent);
+  overflow:hidden;
+}
+.brand__avatar img{ width:100%; height:100%; object-fit:cover; }
+.brand__avatar-fallback{ width:28px; height:28px; color:var(--accent); }
+.brand__title{ font-weight:900; letter-spacing:.2px; color:var(--accent); }
+
+.btn{ border-radius:12px; transition:transform .06s ease, background .2s, color .2s, border-color .2s; }
+.btn:active{ transform: translateY(1px); }
+.btn--icon{ width:42px; height:36px; display:grid; place-items:center; color:var(--muted); border:1px solid transparent; }
+.btn--icon:hover{ color:var(--accent); border-color:var(--stroke); background:var(--panel-2); }
+
+/* navegação */
+.nav{ flex:1; overflow:auto; padding:6px 8px 10px; }
+.nav__group{ padding:8px 4px; }
+.nav__heading{
+  font-size: 11px; letter-spacing:.12em; text-transform:uppercase;
+  color: var(--muted); margin:8px 12px;
+}
+.nav__item{
+  display:flex; align-items:center; gap:14px;
+  color:#cfd6df; border-radius:12px;
+  padding:12px 14px; margin:5px 6px;
+  border:1px solid transparent; background:transparent; text-decoration:none;
+  font-weight:800;
+}
+.nav__item:hover{
+  background: var(--panel-2); color: var(--accent);
+  border-color: var(--stroke);
+}
+.nav__item.active{
+  background: var(--panel-2); color: var(--accent);
+  border-color: var(--stroke);
+  position: relative;
+}
+.nav__item.active::before{
+  content:""; position:absolute; left:0; top:8px; bottom:8px; width:4px;
+  background: var(--accent); border-radius: 0 6px 6px 0;
+}
+.nav__icon{ width:24px; height:24px; display:grid; place-items:center; flex:0 0 auto; }
+.nav__icon svg{ width:100%; height:100%; display:block; }
+.nav__icon svg *{ fill: currentColor; stroke: none; }
+
+/* rodapé da sidebar */
+.sidebar__bottom{
+  padding:12px 12px 16px;
+  border-top:1px solid var(--stroke);
+  background: var(--panel);
+}
+.switch{ display:inline-flex; align-items:center; gap:10px; color:var(--muted); cursor:pointer; }
+.switch input{ display:none; }
+.switch__track{
+  width:46px; height:26px; border-radius:26px; background:var(--panel-2);
+  border:1px solid var(--stroke); position:relative;
+}
+.switch__thumb{
+  position:absolute; top:50%; left:3px; transform:translateY(-50%);
+  width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s;
+}
+.switch input:checked + .switch__track{ background: var(--accent); border-color: var(--accent); }
+.switch input:checked + .switch__track .switch__thumb{ left:23px; }
+
+/* ============================== Main / Perfil ============================ */
+.profile{
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+}
+
+.profile__header{
+  display:flex; align-items:center; justify-content:space-between;
+  background: var(--panel);
+  border:1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-1);
+}
+.profile__title{
+  margin:0; font-weight:900; letter-spacing:.2px;
+  font-size: clamp(20px, 2.2vw, 26px);
+}
+.profile__actions{ display:flex; gap:10px; }
+
+/* ----------------------------- Botões base ------------------------------- */
+.btn{
+  border-radius:12px; padding:12px 18px; border:1px solid var(--stroke);
+  background: var(--panel); color: var(--ink); font-weight:800;
+  transition: transform .06s, filter .2s, background .2s, border-color .2s;
+}
+.btn:active{ transform: translateY(1px); }
+.btn--ghost{ background: var(--panel-2); }
+.btn--ghost:hover{ border-color: var(--accent); }
+.btn--primary{
+  background: var(--accent); color: var(--accent-ink);
+  border-color: color-mix(in oklab, var(--accent) 60%, var(--stroke));
+  box-shadow: 0 10px 22px color-mix(in oklab, var(--accent) 28%, transparent);
+}
+.btn--primary:hover{ filter: brightness(1.03); }
+.btn--danger{
+  background: #e5484d; color:#fff; border-color: #b02b30;
+  box-shadow: 0 10px 22px rgba(229,72,77,.25);
+}
+.btn--danger:hover{ filter: brightness(1.03); }
+.btn--tiny{ padding: 8px 12px; border-radius: 10px; font-size: 13px; }
+
+/* ------------------------------ Reviews ---------------------------------- */
+.reviews__list{
+  display: grid;
+  gap: 14px;
+}
+
+.review-card{
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: 16px;
+  box-shadow: var(--shadow-1);
+  padding: 12px;
+  transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.review-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(0,0,0,.45);
+  border-color: color-mix(in oklab, var(--accent) 50%, var(--stroke));
+}
+
+.review-card__media{ overflow: hidden; border-radius: 12px; }
+.review-card__img{ width: 100%; height: 100%; min-height: 120px; object-fit: cover; }
+
+.review-card__body{ display: grid; gap: 8px; align-content: start; }
+.review-card__header{
+  display:flex; align-items: baseline; justify-content: space-between; gap: 12px;
+}
+.review-card__title{
+  font-weight: 900; letter-spacing: .2px;
+  color: var(--ink);
+}
+.review-card__title:hover{ color: var(--accent); }
+
+.review-card__meta{ display:flex; align-items:center; gap: 12px; color: var(--muted); font-weight: 700; }
+.review-card__score{ color: var(--accent); font-weight: 900; }
+.review-card__date{ color: var(--muted); }
+
+.review-card__text{
+  margin: 2px 0 6px;
+  color: var(--ink);
+}
+
+.review-card__actions{
+  display:flex; gap: 8px; flex-wrap: wrap;
+}
+
+/* ------------------------------ Paginação -------------------------------- */
+.pagination{
+  display:flex; align-items:center; justify-content:center; gap: 10px;
+  margin-top: 6px;
+}
+.pagination__info{ color: var(--muted); }
+
+/* ============================== Aside (User) ============================= */
+.aside{
+  position: sticky; top: 24px; height: calc(100dvh - 48px);
+  display: grid; align-content: start; gap: 16px;
+}
+
+.usercard{
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.usercard__cover{
+  height: 96px;
+  background:
+    linear-gradient(0deg, color-mix(in oklab, var(--accent) 18%, transparent), transparent),
+    radial-gradient(260px 120px at 10% 0%, color-mix(in oklab, var(--accent) 28%, transparent), transparent 70%),
+    radial-gradient(260px 120px at 90% 0%, color-mix(in oklab, var(--accent) 18%, transparent), transparent 70%);
+  border-bottom: 1px solid var(--stroke);
+}
+
+.usercard__header{
+  display:flex; align-items:center; gap: 12px;
+  padding: 0 12px;
+  margin-top: -28px;
+}
+.usercard__avatar{
+  width: 72px; height: 72px; border-radius: 999px;
+  border: 3px solid var(--panel);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  background: #999;
+  object-fit: cover;
+}
+.usercard__id{ display:grid; gap: 2px; }
+.usercard__name{ margin:0; font-size: 18px; font-weight: 900; }
+.usercard__user{ color: var(--muted); font-weight: 700; }
+
+.usercard__bio{
+  margin: 8px 12px 0;
+  color: var(--ink);
+}
+
+.usercard__meta{
+  list-style: none; margin: 10px 12px; padding: 0;
+  display: grid; gap: 8px;
+}
+.usercard__meta li{ display: flex; align-items: center; gap: 10px; color: var(--muted); font-weight: 700; }
+.icon{ width: 18px; height: 18px; display: grid; place-items: center; color: var(--muted); }
+.icon svg{ width: 100%; height: 100%; }
+.icon svg *{ fill: currentColor; }
+
+.usercard__actions{
+  display: grid; gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--stroke);
+}
+.usercard .btn--primary{ justify-self: stretch; }
+.usercard .btn--danger{ justify-self: stretch; }
+.usercard .btn--ghost{ justify-self: stretch; background: var(--panel-2); }
+
+/* ============================== Foco A11y ================================ */
+:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* ============================== Responsivo =============================== */
+@media (max-width: 1200px){
+  .app{ grid-template-columns: auto 1fr 320px; }
+}
+@media (max-width: 1024px){
+  .app{ grid-template-columns: auto 1fr; }
+  .aside{ position: static; height: auto; }
+}
+@media (max-width: 900px){
+  .sidebar{ position: fixed; inset: 16px auto 16px 16px; height: auto; z-index: 20; }
+  .app{ gap: 16px; padding: 16px; }
+}
+@media (max-width: 700px){
+  .review-card{ grid-template-columns: 1fr; }
+  .profile__actions{ flex-wrap: wrap; }
+}
+
+/* ------------------------------ Print clean ----------------------------- */
+@media print{
+  .sidebar, .aside, .profile__actions{ display:none; }
+  .app{ grid-template-columns: 1fr; padding: 0; }
+  .profile__header{ box-shadow:none; }
+  .review-card{ break-inside: avoid; }
+  :root, html[data-theme="dark"], html[data-theme="light"]{
+    --bg:#fff; --panel:#fff; --panel-2:#fff; --ink:#000; --muted:#444; --stroke:#bbb; --accent:#000; --accent-ink:#fff;
+  }
+}

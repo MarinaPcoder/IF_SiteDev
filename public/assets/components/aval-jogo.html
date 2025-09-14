@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Storm — Hollow Knight</title>
+  <meta name="color-scheme" content="dark light" />
+  <link rel="stylesheet" href="styles-aval.css" />
+  <link rel="icon" href="logo-sem-fundo.png" />
+</head>
+<body>
+
+<div class="app" aria-live="polite">
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
+    <div class="brand">
+      <a class="brand__avatar" href="index.html" aria-label="Storm — Homepage">
+        <img id="siteLogo" src="assets/logo-storm.png" alt="Logo Storm"
+             onerror="this.replaceWith(this.nextElementSibling)" />
+        <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="23" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M18 30 30 8l-4 10h8L22 40l4-10z" fill="currentColor"/>
+        </svg>
+      </a>
+
+      <a href="index.html" class="brand__title-wrap">
+        <strong class="brand__title label">Storm.</strong>
+      </a>
+
+      <button id="toggleSidebar" class="btn btn--icon" title="Expandir/Recolher menu"
+              aria-expanded="false" aria-controls="sidebar">
+        <span class="sr-only">Alternar sidebar</span>⟷
+      </button>
+    </div>
+
+    <nav class="nav">
+      <div class="nav__group">
+        <h6 class="nav__heading label">Menu</h6>
+
+        <a class="nav__item" href="index.html">
+          <span class="nav__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3 3 11h2v8a2 2 0 0 0 2 2h4v-6h2v6h4a2 2 0 0 0 2-2v-8h2L12 3z"/></svg>
+          </span>
+          <span class="label">Homepage</span>
+        </a>
+
+        <a class="nav__item" href="suges.html">
+          <span class="nav__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2a7 7 0 0 1 4 12c-.7.6-1 1.1-1 2v1H9v-1c0-.9-.3-1.4-1-2A7 7 0 0 1 12 2zm-3 17h6v2H9v-2z"/></svg>
+          </span>
+          <span class="label">Sugestões de Jogos</span>
+        </a>
+      </div>
+
+      <div class="nav__group">
+        <h6 class="nav__heading label">Social</h6>
+
+        <a class="nav__item" href="perfil.html">
+          <span class="nav__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+          </span>
+          <span class="label">Perfil</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar__bottom">
+      <label class="switch" title="Modo escuro/claro">
+        <input id="themeToggle" type="checkbox" />
+        <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+        <span class="label">Modo Escuro</span>
+      </label>
+    </div>
+  </aside>
+
+  <!-- ============ CONTEÚDO PRINCIPAL ============ -->
+  <main id="main" class="game" tabindex="-1">
+    <!-- HERO -->
+    <section class="hero">
+      <figure class="hero__backdrop">
+        <img id="trailerThumb" src="https://i.ytimg.com/vi/UAO2urG23S4/maxresdefault.jpg" alt="Trailer de Hollow Knight" />
+        <button class="hero__play" id="btnPlay" aria-label="Assistir trailer">
+          <svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="32" r="30" fill="currentColor" opacity=".2"/><path d="M26 20v24l22-12-22-12z" fill="currentColor"/></svg>
+        </button>
+      </figure>
+
+      <!-- Poster sobreposto -->
+      <figure class="poster">
+        <img id="posterImg" src="https://images.igdb.com/igdb/image/upload/t_cover_big/co1n23.jpg" alt="Capa de Hollow Knight" />
+      </figure>
+
+      <!-- Meta básica -->
+      <div class="meta">
+        <h1 class="title">Hollow Knight</h1>
+
+        <ul class="facts">
+          <li><strong>Desenvolvedora:</strong> Team Cherry</li>
+          <li><strong>Lançamento:</strong> 24/02/2017</li>
+          <li class="platforms">
+            <strong>Plataformas:</strong>
+            <span class="pf" title="PC">
+              <svg viewBox="0 0 24 24"><path d="M3 5h18v9H3zM2 16h8v2H2zm10 0h10v2H12z"/></svg>
+            </span>
+            <span class="pf" title="PlayStation">
+              <svg viewBox="0 0 24 24"><path d="M3 17l13-5V5l5 2v12l-5 2v-7L5 21v-3l11-4v-2L3 15z"/></svg>
+            </span>
+            <span class="pf" title="Xbox">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12c0 2.2.7 4.2 1.9 5.8 1.2-3.4 4.1-6.6 8.1-9.4 4 2.7 6.9 6 8.1 9.4A10 10 0 0 0 22 12C22 6.5 17.5 2 12 2z"/></svg>
+            </span>
+            <span class="pf" title="Switch">
+              <svg viewBox="0 0 24 24"><path d="M11 3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h5V3zm2 0v18h5a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3h-5zM8 7.5A1.5 1.5 0 1 1 8 10a1.5 1.5 0 0 1 0-2.5zm8 6A1.5 1.5 0 1 1 16 16a1.5 1.5 0 0 1 0-2.5z"/></svg>
+            </span>
+          </li>
+          <li><strong>Gênero:</strong> Metroidvania, Ação, Indie</li>
+        </ul>
+
+        <p class="desc">
+          Aventurando-se por Hallownest, você enfrentará criaturas corrompidas, fará amizade com insetos excêntricos e descobrirá segredos antigos numa jornada 2D com combate preciso e exploração labiríntica.
+        </p>
+
+        <div class="rating">
+          <div class="rating__avg" title="Média dos usuários">⭐ <b id="avgScore">8.7</b> <span class="muted">/ 10</span></div>
+          <div class="rating__count"><span id="reviewCount">23.450</span> reviews</div>
+          <a class="btn btn--primary" id="buyNow" href="https://store.steampowered.com/app/367520/Hollow_Knight/" target="_blank" rel="noopener">Comprar agora</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- GALERIA -->
+    <section class="section gallery" aria-label="Galeria de mídia">
+      <header class="section__header">
+        <h2>Mídia</h2>
+      </header>
+      <div id="galleryGrid" class="gallery__grid" role="list">
+        <!-- JS insere thumbs -->
+      </div>
+    </section>
+
+    <!-- AVALIAÇÕES / COMENTÁRIOS -->
+    <section class="section reviews" aria-label="Avaliações e Comentários">
+      <header class="section__header reviews__header">
+        <h2>Avaliações e Comentários</h2>
+        <div class="filters">
+          <label>Ordenar:
+            <select id="reviewSort">
+              <option value="recent">Mais recentes</option>
+              <option value="helpful">Mais úteis</option>
+              <option value="high">Notas mais altas</option>
+              <option value="low">Notas mais baixas</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <!-- criar avaliação -->
+      <form id="newReview" class="newreview" autocomplete="off">
+        <div class="stars" id="starInput" aria-label="Sua nota" role="radiogroup">
+          <!-- JS cria 10 estrelas -->
+        </div>
+        <textarea id="reviewText" rows="3" placeholder="Escreva sua avaliação..."></textarea>
+        <div class="newreview__actions">
+          <button type="reset" class="btn btn--ghost">Limpar</button>
+          <button type="submit" class="btn btn--primary">Publicar</button>
+        </div>
+      </form>
+
+      <div id="reviewsList" class="reviews__list" role="list">
+        <!-- JS injeta cards -->
+      </div>
+    </section>
+
+    <!-- RELACIONADOS -->
+    <section class="section related" aria-label="Quem gostou de Hollow Knight também gostou de">
+      <header class="section__header">
+        <h2>Relacionados</h2>
+        <div class="section__controls">
+          <button class="btn btn--icon" id="relPrev" aria-label="Anterior">‹</button>
+          <button class="btn btn--icon" id="relNext" aria-label="Próximo">›</button>
+        </div>
+      </header>
+      <div id="relatedRail" class="rail" role="list" tabindex="0"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ LIGHTBOX (modal de mídia) ============ -->
+<div id="lightbox" class="lightbox" hidden aria-hidden="true" aria-label="Visualizador de mídia" role="dialog">
+  <button class="lightbox__close" id="lbClose" aria-label="Fechar (Esc)">✕</button>
+  <button class="lightbox__nav prev" id="lbPrev" aria-label="Anterior">‹</button>
+  <figure class="lightbox__figure">
+    <img id="lbImage" alt="Mídia em destaque" />
+    <figcaption id="lbCaption" class="sr-only"></figcaption>
+  </figure>
+  <button class="lightbox__nav next" id="lbNext" aria-label="Próximo">›</button>
+</div>
+
+<!-- ======= TEMPLATES ======= -->
+<template id="tpl-review">
+  <article class="review" role="listitem" tabindex="0">
+    <header class="review__header">
+      <div class="review__user">
+        <img class="review__avatar" alt="" />
+        <div class="review__id">
+          <strong class="review__name"></strong>
+          <time class="review__date" datetime=""></time>
+        </div>
+      </div>
+      <div class="review__score" title="Nota do usuário"></div>
+    </header>
+    <p class="review__text"></p>
+    <div class="review__actions">
+      <button class="btn btn--tiny btn--ghost helpful">Útil • <span class="helpful__count">0</span></button>
+      <button class="btn btn--tiny btn--ghost reply">Responder</button>
+      <button class="btn btn--tiny btn--danger delete">Excluir</button>
+    </div>
+  </article>
+</template>
+
+<template id="tpl-related-card">
+  <article class="card" role="listitem" tabindex="0">
+    <div class="card__media">
+      <img class="card__img" alt="" loading="lazy" />
+    </div>
+    <div class="card__body">
+      <h3 class="card__title"></h3>
+      <span class="card__score"></span>
+    </div>
+  </article>
+</template>
+
+<!-- ======= JS ======= -->
+<script>
+/* Helpers */
+const $  = (s, el=document)=>el.querySelector(s);
+const $$ = (s, el=document)=>[...el.querySelectorAll(s)];
+const storage = {
+  get(k,f=null){ try{const v=localStorage.getItem(k); return v?JSON.parse(v):f;}catch{return f;} },
+  set(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch{} }
+};
+const fmtDate = (iso)=> new Date(iso).toLocaleDateString('pt-BR', {day:'2-digit',month:'short',year:'numeric'});
+
+/* Tema */
+(function ThemeManager(){
+  const root = document.documentElement;
+  const toggle = $('#themeToggle');
+  const key = 'storm:theme';
+  function apply(theme){
+    root.setAttribute('data-theme', theme);
+    if (toggle) toggle.checked = theme === 'dark';
+    storage.set(key, theme);
+  }
+  const saved = storage.get(key) || 'dark';
+  apply(saved);
+  toggle?.addEventListener('change', ()=>apply(toggle.checked ? 'dark' : 'light'));
+})();
+
+/* Sidebar */
+(function Sidebar(){
+  const el  = $('#sidebar');
+  const btn = $('#toggleSidebar');
+  const key = 'storm:sidebar';
+  const preferExpanded = () => window.innerWidth > 760;
+  function set(expanded){
+    el.classList.toggle('expanded', expanded);
+    el.classList.toggle('compact', !expanded);
+    btn?.setAttribute('aria-expanded', String(expanded));
+    storage.set(key, expanded ? 'expanded' : 'compact');
+  }
+  const saved = storage.get(key);
+  set(saved ? saved === 'expanded' : preferExpanded());
+  btn?.addEventListener('click', ()=>set(!el.classList.contains('expanded')));
+  addEventListener('resize', ()=>{
+    const shouldExpand = preferExpanded();
+    if (shouldExpand && el.classList.contains('compact')) set(true);
+    if (!shouldExpand && el.classList.contains('expanded')) set(false);
+  });
+})();
+
+/* ------------------ MOCK DATA (substituir por API) ------------------ */
+const MEDIA = [
+  {src:'https://images7.alphacoders.com/909/909235.jpg', alt:'Arte oficial 1'},
+  {src:'https://images7.alphacoders.com/909/909228.jpg', alt:'Arte oficial 2'},
+  {src:'https://images6.alphacoders.com/909/909236.png', alt:'Gameplay 1'},
+  {src:'https://images7.alphacoders.com/909/909229.jpg', alt:'Gameplay 2'},
+  {src:'https://images7.alphacoders.com/909/909232.jpg', alt:'Arte 3'},
+  {src:'https://images5.alphacoders.com/909/909233.jpg', alt:'Boss fight'},
+];
+
+const REVIEWS = [
+  {id:1, user:'Marina Prado', avatar:'https://i.pravatar.cc/96?img=15', date:'2025-02-01', score:9, text:'Atmosfera e trilha sonora impecáveis. A exploração sempre recompensa, mesmo quando você erra a rota.' , helpful:23},
+  {id:2, user:'Rafael Lima',  avatar:'https://i.pravatar.cc/96?img=12', date:'2025-01-18', score:8, text:'Dificuldade puxa para o alto, mas a sensação de dominar o combate é maravilhosa.', helpful:12},
+  {id:3, user:'Aline Costa',  avatar:'https://i.pravatar.cc/96?img=5',  date:'2025-01-05', score:10,text:'Meu metroidvania favorito. Level design que conversa com você sem falar nada.', helpful:31},
+  {id:4, user:'Diego Souza',  avatar:'https://i.pravatar.cc/96?img=25', date:'2024-12-28', score:7, text:'Mapa confuso no começo, mas melhora com os itens certos.', helpful:4},
+];
+
+/* ---------------------- HERO (Trailer) ---------------------- */
+$('#btnPlay')?.addEventListener('click', ()=>{
+  // mock: você pode trocar por um modal de player (YouTube embed)
+  window.open('https://www.youtube.com/watch?v=UAO2urG23S4', '_blank', 'noopener');
+});
+
+/* ---------------------- GALERIA + LIGHTBOX ---------------------- */
+(function Gallery(){
+  const grid = $('#galleryGrid');
+  MEDIA.forEach((m, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'gallery__item';
+    btn.innerHTML = `<img src="${m.src}" alt="${m.alt}">`;
+    btn.addEventListener('click', ()=>Lightbox.open(i));
+    grid.appendChild(btn);
+  });
+})();
+
+const Lightbox = (()=>{
+  const root = $('#lightbox');
+  const img  = $('#lbImage');
+  const cap  = $('#lbCaption');
+  let index = 0;
+
+  function show(i){
+    index = (i + MEDIA.length) % MEDIA.length;
+    const m = MEDIA[index];
+    img.src = m.src;
+    img.alt = m.alt;
+    cap.textContent = m.alt;
+  }
+
+  function open(i=0){
+    show(i);
+    root.hidden = false;
+    root.setAttribute('aria-hidden','false');
+    document.body.style.overflow = 'hidden';
+    $('#lbClose').focus();
+  }
+  function close(){
+    root.hidden = true;
+    root.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+  }
+  function next(){ show(index+1); }
+  function prev(){ show(index-1); }
+
+  $('#lbClose')?.addEventListener('click', close);
+  $('#lbNext')?.addEventListener('click', next);
+  $('#lbPrev')?.addEventListener('click', prev);
+  root?.addEventListener('click', (e)=>{ if(e.target===root) close(); });
+  window.addEventListener('keydown', (e)=>{
+    if(root.hidden) return;
+    if(e.key==='Escape') close();
+    if(e.key==='ArrowRight') next();
+    if(e.key==='ArrowLeft') prev();
+  });
+
+  return { open, close, next, prev };
+})();
+
+/* ---------------------- AVALIAÇÕES ---------------------- */
+// render estrelas interativas (0..10 em passos de 0.5 se quiser, aqui 10 inteiras)
+(function StarInput(){
+  const wrap = $('#starInput');
+  for(let i=1;i<=10;i++){
+    const b = document.createElement('button');
+    b.type='button';
+    b.className='star';
+    b.dataset.value = i;
+    b.innerHTML = `<svg viewBox="0 0 24 24"><path d="m12 2 2.9 6.1 6.7.9-4.8 4.6 1.2 6.7L12 17.9 6 20.3l1.2-6.7L2.4 9l6.7-.9L12 2z"/></svg>`;
+    wrap.appendChild(b);
+  }
+  let current = 0;
+  const update = (n)=>{
+    current = n;
+    $$('.star', wrap).forEach((el,idx)=>{
+      el.classList.toggle('is-on', idx < n);
+    });
+  };
+  wrap.addEventListener('mouseover', e=>{
+    const v = +e.target.closest('.star')?.dataset.value || 0;
+    if(v) update(v);
+  });
+  wrap.addEventListener('mouseleave', ()=>update(current));
+  wrap.addEventListener('click', e=>{
+    const v = +e.target.closest('.star')?.dataset.value || 0;
+    if(v) current = v;
+  });
+  wrap.dataset.get = ()=>current;
+})();
+
+// render lista
+function renderReview(r){
+  const tpl = $('#tpl-review').content.cloneNode(true);
+  const root = tpl.querySelector('.review');
+  tpl.querySelector('.review__avatar').src = r.avatar;
+  tpl.querySelector('.review__avatar').alt = `Avatar de ${r.user}`;
+  tpl.querySelector('.review__name').textContent = r.user;
+  const time = tpl.querySelector('.review__date');
+  time.textContent = fmtDate(r.date);
+  time.dateTime = r.date;
+  tpl.querySelector('.review__score').textContent = `⭐ ${r.score}/10`;
+  tpl.querySelector('.review__text').textContent = r.text;
+  tpl.querySelector('.helpful__count').textContent = r.helpful;
+
+  // ações
+  tpl.querySelector('.helpful').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    r.helpful++; e.currentTarget.querySelector('.helpful__count').textContent = r.helpful;
+  });
+  tpl.querySelector('.reply').addEventListener('click', ()=> alert('Resposta ao comentário — em breve.'));
+  tpl.querySelector('.delete').addEventListener('click', ()=>{
+    if (confirm('Excluir este comentário?')) {
+      const i = REVIEWS.findIndex(x=>x.id===r.id);
+      if(i>=0){ REVIEWS.splice(i,1); loadReviews(); }
+    }
+  });
+
+  return tpl;
+}
+
+function sortReviews(mode){
+  const data = [...REVIEWS];
+  if(mode==='recent')  data.sort((a,b)=> new Date(b.date)-new Date(a.date));
+  if(mode==='helpful') data.sort((a,b)=> b.helpful-a.helpful);
+  if(mode==='high')    data.sort((a,b)=> b.score-a.score);
+  if(mode==='low')     data.sort((a,b)=> a.score-b.score);
+  return data;
+}
+
+function loadReviews(){
+  const list = $('#reviewsList');
+  const mode = $('#reviewSort').value;
+  const items = sortReviews(mode);
+  list.innerHTML = '';
+  items.forEach(r=> list.appendChild(renderReview(r)));
+}
+$('#reviewSort')?.addEventListener('change', loadReviews);
+
+// novo review
+$('#newReview')?.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const score = +($('#starInput').dataset.get?.() || 0);
+  const text  = $('#reviewText').value.trim();
+  if(!score) return alert('Escolha uma nota (estrelas).');
+  if(!text)  return alert('Escreva seu comentário.');
+
+  const item = {
+    id: Date.now(),
+    user: 'Você',
+    avatar: 'https://i.pravatar.cc/96?img=68',
+    date: new Date().toISOString().slice(0,10),
+    score, text, helpful: 0
+  };
+  REVIEWS.unshift(item);
+  $('#reviewText').value = '';
+  loadReviews();
+
+  // recalcula média
+  const avg = REVIEWS.reduce((s,r)=>s+r.score,0)/REVIEWS.length;
+  $('#avgScore').textContent = avg.toFixed(1);
+  $('#reviewCount').textContent = REVIEWS.length.toLocaleString('pt-BR');
+});
+
+loadReviews();
+
+/* ---------------------- RELACIONADOS (carrossel) ---------------------- */
+const RELATED = [
+  {title:'Ori and the Blind Forest', cover:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1s6o.jpg', score:9.1},
+  {title:'Dead Cells', cover:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1vfy.jpg', score:8.8},
+  {title:'Blasphemous', cover:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1r2p.jpg', score:8.2},
+  {title:'Celeste', cover:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1r0b.jpg', score:9.3},
+  {title:'Ori and the Will of the Wisps', cover:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1s6p.jpg', score:9.2},
+  {title:'Shovel Knight', cover:'https://images.igdb.com/igdb/image/upload/t_cover_big/co2m8y.jpg', score:8.0},
+];
+
+function renderRelatedCard(g){
+  const tpl = $('#tpl-related-card').content.cloneNode(true);
+  tpl.querySelector('.card__img').src = g.cover;
+  tpl.querySelector('.card__img').alt = `Capa de ${g.title}`;
+  tpl.querySelector('.card__title').textContent = g.title;
+  tpl.querySelector('.card__score').textContent = `⭐ ${g.score.toFixed(1)}`;
+  tpl.querySelector('.card').addEventListener('click', ()=> {
+    window.open(`aval-jogo.html?jogo=${encodeURIComponent(g.title)}`, '_blank', 'noopener');
+  });
+  return tpl;
+}
+
+(function RelatedRail(){
+  const rail = $('#relatedRail');
+  RELATED.forEach(g=> rail.appendChild(renderRelatedCard(g)));
+
+  const prev = $('#relPrev');
+  const next = $('#relNext');
+  const scroll = (x)=> rail.scrollBy({left:x, behavior:'smooth'});
+  prev.addEventListener('click', ()=>scroll(-400));
+  next.addEventListener('click', ()=>scroll( 400));
+  rail.addEventListener('wheel', (e)=>{
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      scroll(e.deltaY * .7);
+    }
+  }, {passive:false});
+})();
+</script>
+
+</body>
+</html>
