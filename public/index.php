@@ -1,89 +1,391 @@
-<?php 
-  session_start();
-  
-  
-  require_once '../vendor/autoload.php';
-  $titulo = "Home - Avaliações de Jogos";
-  require_once './assets/components/head.php';
-  require_once './assets/components/header.php';
-
-  if (isset($_SESSION['Mensagem_redirecionamento'])) {
-      echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
-      unset($_SESSION['Mensagem_redirecionamento']);
-  }
-?>
-
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
 <head>
-  <link rel="stylesheet" href="./assets/css/index-styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Storm — Homepage</title>
+  <link rel="stylesheet" href="./assets/css/index.css" />
+  <meta name="color-scheme" content="dark light" />
+  <link rel="icon" href="./assets/img/logo-sem-fundo.png">
 </head>
-
 <body>
-  <div class="main-content">
-    <!-- Destaque Principal -->
-    <section class="highlight">
-      <div class="highlight-banner">
-        <img src="path/to/zelda-art.jpg" alt="The Legend of Zelda: Tears of the Kingdom" class="game-banner">
-        <div class="highlight-info">
-          <h1 class="game-title">The Legend of Zelda: Tears of the Kingdom</h1>
-          <p class="game-release">2023</p>
-          <p class="game-genres">Ação, Aventura</p>
-          <p class="game-rating">Avaliação Média: 9.5/10</p>
-          <p class="game-description">Embarque em uma jornada épica por Hyrule com Link e explore novas terras em busca de mistérios e desafios para salvar o reino.</p>
-          <div class="highlight-buttons">
-            <a href="detalhes.php" class="btn btn-gray">Ver Detalhes</a>
-            <a href="avaliar.php" class="btn btn-yellow">Avaliar Agora</a>
-          </div>
+<div id="app" class="app" aria-live="polite">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
+    <div class="brand">
+      <a class="brand__avatar" href="index.html" aria-label="Storm — Homepage">
+        <img id="siteLogo" src="logo-sem-fundo.png" alt="Logo Storm"
+             onerror="this.replaceWith(this.nextElementSibling)" />
+        <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="23" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M18 30 30 8l-4 10h8L22 40l4-10z" fill="currentColor"/>
+        </svg>
+      </a>
+
+      <a href="index.php" class="brand__title-wrap">
+        <strong class="brand__title label">Storm.</strong>
+      </a>
+
+      <button id="toggleSidebar" class="btn btn--icon" title="Expandir/Recolher menu" aria-expanded="false" aria-controls="sidebar">
+        <span class="sr-only">Alternar sidebar</span>⟷
+      </button>
+    </div>
+
+    <nav class="nav">
+      <div class="nav__group">
+        <h6 class="nav__heading label">Menu</h6>
+
+        <!-- SVGs no lugar dos emojis -->
+        <a class="nav__item active" href="index.php">
+          <span class="nav__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3 3 11h2v8a2 2 0 0 0 2 2h4v-6h2v6h4a2 2 0 0 0 2-2v-8h2L12 3z"/></svg>
+          </span>
+          <span class="label">Homepage</span>
+        </a>
+
+        <a class="nav__item" href="suges.php">
+          <span class="nav__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2a7 7 0 0 1 4 12c-.7.6-1 1.1-1 2v1H9v-1c0-.9-.3-1.4-1-2A7 7 0 0 1 12 2zm-3 17h6v2H9v-2z"/></svg>
+          </span>
+          <span class="label">Sugestões de Jogos</span>
+        </a>
+      </div>
+
+      <div class="nav__group">
+        <h6 class="nav__heading label">Social</h6>
+
+        <a class="nav__item" href="perfil.php">
+          <span class="nav__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+          </span>
+          <span class="label">Perfil</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar__bottom">
+      <label class="switch" title="Modo escuro/claro">
+        <input id="themeToggle" type="checkbox" />
+        <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+        <span class="label">Modo Escuro</span>
+      </label>
+    </div>
+  </aside>
+
+  <!-- ============ CONTEÚDO PRINCIPAL ============ -->
+  <main id="main" class="main" tabindex="-1">
+
+    <!-- Banner destaque (JOGOS) -->
+    <section id="banner" class="banner reveal" aria-label="Destaque do jogo">
+      <figure class="banner__media">
+        <img id="bannerPoster" class="banner__poster" src="" alt="Capa do jogo em destaque" />
+        <figcaption class="sr-only" id="bannerCaption">Capa do jogo em destaque</figcaption>
+      </figure>
+
+      <div class="banner__meta">
+        <div id="bannerRating" class="badge" aria-label="Nota Storm">⭐ 0.0 • 0 votos</div>
+
+        <header>
+          <h1 id="bannerTitle" class="banner__title">Nome do Jogo</h1>
+          <p id="bannerGenres" class="banner__genres">Gêneros</p>
+        </header>
+
+        <p id="bannerDesc" class="banner__desc">Descrição curta do jogo (preenchida via JavaScript).</p>
+
+        <div class="banner__cta">
+          <a id="bannerEvalBtn" class="btn btn--primary" href="aval-jogo.php">Ver detalhes e avaliar</a>
         </div>
+      </div>
+
+      <div class="banner__bg-decor" aria-hidden="true"></div>
+    </section>
+
+    <!-- Carrossel dos MAIS POPULARES -->
+    <section class="section reveal" aria-label="Mais populares">
+      <header class="section__header">
+        <h2>Mais populares</h2>
+        <div class="section__controls">
+          <button class="btn btn--icon" id="recentPrev" aria-label="Voltar">◀</button>
+          <button class="btn btn--icon" id="recentNext" aria-label="Avançar">▶</button>
+        </div>
+      </header>
+
+      <div id="railRecentes" class="rail" role="list" tabindex="0" aria-roledescription="carrossel">
+        <!-- JS injeta <article class="card"> -->
       </div>
     </section>
 
-    <!-- Carrossel de Destaques -->
-    <section class="carousel-section">
-      <h2>Jogos em Destaque</h2>
-      <div class="carousel">
-        <button class="carousel-btn prev-btn">&#8592;</button>
-        <div class="carousel-container" id="carouselContainer">
-          <div class="carousel-item">
-            <img src="path/to/game1.jpg" alt="Jogo 1" class="carousel-image">
-            <p class="carousel-title">Jogo 1</p>
-          </div>
-          <div class="carousel-item">
-            <img src="path/to/game2.jpg" alt="Jogo 2" class="carousel-image">
-            <p class="carousel-title">Jogo 2</p>
-          </div>
-          <!-- Adicionar mais jogos aqui -->
-        </div>
-        <button class="carousel-btn next-btn">&#8594;</button>
+    <!-- Destaques & Lançamentos (substitui TopStars) -->
+    <section class="section reveal" aria-label="Destaques & Lançamentos">
+      <header class="section__header">
+        <h2>Destaques & Lançamentos</h2>
+        <p class="muted">Cards largos com mini-avaliação e data de lançamento</p>
+      </header>
+
+      <div id="railBanners" class="rail rail--wide" role="list" tabindex="0">
+        <!-- JS injeta banners de jogos -->
       </div>
     </section>
+  </main>
 
-    <!-- Recém-Adicionados -->
-    <section class="new-releases">
-      <h2>Recém-Adicionados</h2>
-      <div class="new-releases-grid" id="newReleasesGrid">
-        <div class="game-card">
-          <img src="path/to/new-game1.jpg" alt="Novo Jogo 1" class="game-card-img">
-          <p class="game-card-title">Novo Jogo 1</p>
-          <p class="game-card-release">2023</p>
-        </div>
-        <div class="game-card">
-          <img src="path/to/new-game2.jpg" alt="Novo Jogo 2" class="game-card-img">
-          <p class="game-card-title">Novo Jogo 2</p>
-          <p class="game-card-release">2023</p>
-        </div>
-        <!-- Adicionar mais jogos recém-adicionados -->
+  <!-- ============ LATERAL DIREITA ============ -->
+  <aside class="aside" aria-label="Utilidades">
+    <!-- Busca -->
+    <section class="panel reveal" aria-label="Busca">
+      <div class="search">
+        <span class="search__icon" aria-hidden="true">🔎</span>
+        <input id="searchInput" class="search__input" type="search" placeholder="Pesquisar jogos..." autocomplete="off" aria-label="Pesquisar jogos" />
+        <button id="clearSearch" class="btn btn--icon" aria-label="Limpar busca">✕</button>
       </div>
+      <div id="searchResults" class="search__results" role="listbox" aria-label="Resultados da busca"></div>
     </section>
 
-    <!-- Paginação -->
-    <section class="pagination">
-      <button class="pagination-btn">1</button>
-      <button class="pagination-btn">2</button>
-      <button class="pagination-btn">3</button>
-      <!-- Adicionar botões de página conforme necessário -->
+    <!-- Mais pesquisados -->
+    <section class="panel reveal popular" aria-label="Mais pesquisados">
+      <header class="section__header section__header--tight">
+        <h2>Mais pesquisados</h2>
+      </header>
+      <div id="popularList" class="popular__list" role="list"></div>
     </section>
-  </div>
+  </aside>
+</div>
 
-  <script src="./assets/js/index-script.js"></script>
+<!-- ======= TEMPLATES ======= -->
+<template id="tpl-card-game">
+  <article class="card" role="listitem" tabindex="0">
+    <div class="card__media">
+      <img class="card__img" alt="" loading="lazy" />
+      <button class="card__fav btn btn--icon" title="Salvar" aria-label="Salvar">＋</button>
+    </div>
+    <div class="card__body">
+      <header class="card__header">
+        <h3 class="card__title"></h3>
+        <span class="imdb"><b>Storm</b> <i class="imdb__score">0.0</i></span>
+      </header>
+      <p class="card__sub muted"></p>
+    </div>
+    <button class="card__action btn btn--ghost">Detalhes</button>
+  </article>
+</template>
+
+<template id="tpl-popular-item">
+  <button class="popular__item" role="listitem">
+    <img class="popular__thumb" alt="" width="48" height="64" loading="lazy" />
+    <div class="popular__meta">
+      <div class="popular__title"></div>
+      <div class="popular__note muted"><span class="search-count">0</span> buscas</div>
+    </div>
+    <span class="popular__chev" aria-hidden="true">›</span>
+  </button>
+</template>
+
+<template id="tpl-wide-banner">
+  <article class="gamewide" role="listitem" tabindex="0">
+    <img class="gamewide__img" alt="" loading="lazy" />
+    <div class="gamewide__meta">
+      <h3 class="gamewide__title"></h3>
+      <p class="gamewide__extra"><span class="mini-score">0.0</span> • <span class="release"></span></p>
+      <a class="btn btn--tiny gamewide__btn" target="_blank" rel="noopener">Detalhes</a>
+    </div>
+  </article>
+</template>
+
+<!-- ======= JAVASCRIPT ======= -->
+<script>
+/* ============================== Utils ============================== */
+const $  = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const fmt = (n)=>new Intl.NumberFormat('pt-BR').format(n);
+const storage = {
+  get(k,f=null){ try{const v=localStorage.getItem(k); return v?JSON.parse(v):f;}catch{return f;} },
+  set(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch{} }
+};
+
+/* ============= Tema & Sidebar =============== */
+const ThemeManager=(()=>{const r=document.documentElement,t=$('#themeToggle'),k='storm:theme';
+  function apply(x){r.setAttribute('data-theme',x); if(t) t.checked=(x==='dark'); storage.set(k,x);}
+  function init(){const s=storage.get(k)||'dark'; apply(s); if(t) t.addEventListener('change',()=>apply(t.checked?'dark':'light'));}
+  return{init};
+})();
+const Sidebar=(()=>{const el=$('#sidebar'),btn=$('#toggleSidebar'),k='storm:sidebar',pref=()=>innerWidth>760;
+  function set(e){el.classList.toggle('expanded',e);el.classList.toggle('compact',!e);btn&&btn.setAttribute('aria-expanded',String(e));storage.set(k,e?'expanded':'compact');}
+  function init(){const s=storage.get(k); set(s?s==='expanded':pref()); btn&&btn.addEventListener('click',()=>set(!el.classList.contains('expanded')));
+    addEventListener('resize',()=>{const t=pref(); if(t&&el.classList.contains('compact'))set(true); if(!t&&el.classList.contains('expanded'))set(false);});}
+  return{init};
+})();
+
+/* ============================== Data ============================== */
+/* mock de JOGOS: nota Storm, votos, data de lançamento, contagem de buscas */
+const DataStore=(()=>{
+  const GAMES=[
+    {id:1,title:"Hollow Knight",year:2017,release:"24/02/2017",rating:9.1,votes:14821,genres:["Metroidvania","Aventura"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co1n23.jpg",searchCount:7421,desc:"Explore Hallownest, um reino subterrâneo em ruínas, dominando artes de combate e navegação."},
+    {id:2,title:"The Witcher 3: Wild Hunt",year:2015,release:"18/05/2015",rating:9.4,votes:31245,genres:["RPG","Mundo Aberto"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co1r16.jpg",searchCount:9530,desc:"Geralt parte em busca de Ciri enquanto o continente mergulha em guerra, monstros e intrigas."},
+    {id:3,title:"Celeste",year:2018,release:"25/01/2018",rating:8.9,votes:10211,genres:["Plataforma","Indie"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co2lmr.jpg",searchCount:5340,desc:"Uma escalada difícil e comovente sobre ansiedade, superação e muita precisão no salto."},
+    {id:4,title:"Elden Ring",year:2022,release:"25/02/2022",rating:9.2,votes:40112,genres:["RPG","Soulslike"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.jpg",searchCount:19873,desc:"A Terra Intermediária chama os Maculados. Explore livremente, combine builds e sofra com estilo."},
+    {id:5,title:"Baldur's Gate 3",year:2023,release:"03/08/2023",rating:9.6,votes:28740,genres:["RPG","Tático"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co6f9k.jpg",searchCount:22011,desc:"Campanha D&D gigante com escolhas absurdamente ramificadas e improviso digno de mesa de RPG."},
+    {id:6,title:"Hades",year:2020,release:"17/09/2020",rating:9.0,votes:16788,genres:["Roguelike","Ação"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg",searchCount:8722,desc:"Escape do Submundo no tapa, morrendo muito e ficando cada vez mais forte."}
+  ];
+  return{
+    all(){return [...GAMES];},
+    topByRating(n=12){return [...GAMES].sort((a,b)=>b.rating-a.rating).slice(0,n);},
+    topBySearch(n=6){return [...GAMES].sort((a,b)=>b.searchCount-a.searchCount).slice(0,n);},
+    byQuery(q){q=q.trim().toLowerCase(); if(!q) return [...GAMES]; return GAMES.filter(g=>g.title.toLowerCase().includes(q)||g.genres.join(' ').toLowerCase().includes(q));},
+    getFirst(){return GAMES[0];}
+  };
+})();
+
+/* =============== Banner =================== */
+const Banner=(()=>{
+  const poster=$('#bannerPoster'),title=$('#bannerTitle'),genres=$('#bannerGenres'),
+        desc=$('#bannerDesc'),rating=$('#bannerRating'),btn=$('#bannerEvalBtn');
+  function set(game){
+    poster.src=game.cover; poster.alt=`Capa do jogo ${game.title}`;
+    title.textContent=game.title;
+    genres.textContent=game.genres.join(' • ');
+    desc.textContent=game.desc;
+    rating.textContent=`⭐ ${game.rating.toFixed(1)} • ${fmt(game.votes)} voto${game.votes===1?'':'s'}`;
+    btn.href=`aval-jogo.php?jogo=${encodeURIComponent(game.title)}`;
+  }
+  function init(){ set(DataStore.getFirst()); }
+  return{init,set};
+})();
+
+/* ============== Carrossel genérico ============== */
+function makeRail(railEl, items, renderer){
+  railEl.innerHTML=''; items.forEach(it=>railEl.appendChild(renderer(it)));
+  railEl.addEventListener('wheel',e=>{ if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){ railEl.scrollBy({left:e.deltaY*.7,behavior:'smooth'}); e.preventDefault(); } },{passive:false});
+  return railEl;
+}
+
+/* ================= Cards de jogo =============== */
+function renderGameCard(game){
+  const tpl=$('#tpl-card-game').content.cloneNode(true);
+  const root=tpl.querySelector('.card');
+  const img =tpl.querySelector('.card__img');
+  const title=tpl.querySelector('.card__title');
+  const sub =tpl.querySelector('.card__sub');
+  const score=tpl.querySelector('.imdb__score');
+
+  img.src=game.cover; img.alt=`Capa: ${game.title}`;
+  title.textContent=game.title;
+  sub.textContent=game.genres.join(' • ');
+  score.textContent=game.rating.toFixed(1);
+
+  // Banner rápido ao clicar na área do card
+  root.addEventListener('click',()=>Banner.set(game));
+  // Favorito
+  root.querySelector('.card__fav').addEventListener('click',e=>{
+    e.stopPropagation(); root.classList.toggle('is-faved'); root.setAttribute('aria-pressed',root.classList.contains('is-faved'));
+  });
+  // Detalhes -> abre avaliação em nova aba
+  root.querySelector('.card__action').addEventListener('click',e=>{
+    e.stopPropagation();
+    window.open(`aval-jogo.php?jogo=${encodeURIComponent(game.title)}`,'_blank','noopener');
+  });
+  return tpl;
+}
+
+/* ======= Banners largos (lançamentos) ============ */
+function renderWideBanner(game){
+  const tpl=$('#tpl-wide-banner').content.cloneNode(true);
+  tpl.querySelector('.gamewide__img').src=game.cover;
+  tpl.querySelector('.gamewide__img').alt=`Arte: ${game.title}`;
+  tpl.querySelector('.gamewide__title').textContent=game.title;
+  tpl.querySelector('.mini-score').textContent=game.rating.toFixed(1);
+  tpl.querySelector('.release').textContent=`Lançamento: ${game.release}`;
+  const btn=tpl.querySelector('.gamewide__btn');
+  btn.textContent='Detalhes'; btn.href=`aval-jogo.php?jogo=${encodeURIComponent(game.title)}`;
+  return tpl;
+}
+
+/* ============= Mais pesquisados (aside) =========== */
+function renderPopularItem(game){
+  const tpl=$('#tpl-popular-item').content.cloneNode(true);
+  tpl.querySelector('.popular__thumb').src=game.cover;
+  tpl.querySelector('.popular__thumb').alt=`Capa mini: ${game.title}`;
+  tpl.querySelector('.popular__title').textContent=game.title;
+  tpl.querySelector('.search-count').textContent=fmt(game.searchCount);
+  tpl.querySelector('.popular__item').addEventListener('click',()=>Banner.set(game));
+  return tpl;
+}
+
+/* ============== Busca ====================== */
+const Search=(()=>{
+  const input=$('#searchInput'), clear=$('#clearSearch'), results=$('#searchResults'),
+        rail=$('#railRecentes'), asideList=$('#popularList');
+  function renderResults(q){
+    const data=DataStore.byQuery(q).slice(0,6);
+    results.innerHTML='';
+    data.forEach(g=>{
+      const b=document.createElement('button');
+      b.className='search__item'; b.setAttribute('role','option');
+      b.innerHTML=`<img src="${g.cover}" alt="" width="36" height="52" loading="lazy"/><span>${g.title}</span><em class="muted">${g.genres[0]}</em>`;
+      b.addEventListener('click',()=>{ Banner.set(g); input.value=g.title; apply(q); results.hidden=true; });
+      results.appendChild(b);
+    });
+    results.hidden=data.length===0||!q;
+  }
+  function apply(q){
+    const filtered=DataStore.byQuery(q);
+    rail.innerHTML=''; filtered.sort((a,b)=>b.rating-a.rating).forEach(g=>rail.appendChild(renderGameCard(g)));
+    asideList.innerHTML=''; DataStore.topBySearch(6).forEach(g=>asideList.appendChild(renderPopularItem(g)));
+  }
+  function init(){
+    input.addEventListener('input',e=>{const q=e.target.value; renderResults(q); apply(q);});
+    clear.addEventListener('click',()=>{input.value=''; input.focus(); renderResults(''); apply('');});
+    input.addEventListener('keydown',e=>{ if(e.key==='Escape'){ clear.click(); results.hidden=true; }});
+    document.addEventListener('click',e=>{ if(!results.contains(e.target)&&e.target!==input) results.hidden=true; });
+  }
+  return{init,apply};
+})();
+
+/* ======== FX: reveal + teclado no rail =========== */
+const FX=(()=>{
+  function revealOnScroll(){
+    const io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('show'); io.unobserve(en.target);} }),{threshold:.12});
+    $$('.reveal').forEach(el=>io.observe(el));
+  }
+  function keyScroll(el){
+    el.addEventListener('keydown',e=>{
+      if(e.key==='ArrowRight') el.scrollBy({left:220,behavior:'smooth'});
+      if(e.key==='ArrowLeft')  el.scrollBy({left:-220,behavior:'smooth'});
+    });
+  }
+  return{revealOnScroll,keyScroll};
+})();
+
+/* ================= Init ====================== */
+(function initStorm(){
+  ThemeManager.init();
+  Sidebar.init();
+  Banner.init();
+
+  // Carrossel: mais populares por nota
+  const railRecentes=$('#railRecentes');
+  makeRail(railRecentes, DataStore.topByRating(20), renderGameCard);
+  $('#recentPrev').addEventListener('click',()=>railRecentes.scrollBy({left:-400,behavior:'smooth'}));
+  $('#recentNext').addEventListener('click',()=>railRecentes.scrollBy({left: 400,behavior:'smooth'}));
+
+  // Lançamentos & destaques (pode adicionar quantos jogos quiser no DataStore)
+  const railBanners=$('#railBanners');
+  makeRail(railBanners, DataStore.all(), renderWideBanner);
+
+  // Mais pesquisados
+  const popularList=$('#popularList');
+  DataStore.topBySearch(6).forEach(g=>popularList.appendChild(renderPopularItem(g)));
+
+  // Busca
+  Search.init();
+
+  // FX
+  FX.revealOnScroll();
+  FX.keyScroll(railRecentes);
+  FX.keyScroll(railBanners);
+})();
+</script>
+
+<!-- região de live-messages para A11y -->
+<div class="sr-only" aria-live="assertive" id="sr-live"></div>
 </body>
 </html>

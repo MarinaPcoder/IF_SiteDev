@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Storm — Hollow Knight</title>
   <meta name="color-scheme" content="dark light" />
-  <link rel="stylesheet" href="../css/styles-aval.css" />
-  <link rel="icon" href="../Favicon/logo-sem-fundo.png" />
+  <link rel="stylesheet" href="./assets/css/styles-aval.css" />
+  <link rel="icon" href="./assets/img/logo-sem-fundo.png" />
 </head>
 <body>
 
@@ -15,7 +15,7 @@
   <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
     <div class="brand">
       <a class="brand__avatar" href="index.html" aria-label="Storm — Homepage">
-        <img id="siteLogo" src="../Favicon/logo-sem-fundo.png" alt="Logo Storm"
+        <img id="siteLogo" src="./assets/img/logo-sem-fundo.png" alt="Logo Storm"
              onerror="this.replaceWith(this.nextElementSibling)" />
         <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
           <circle cx="24" cy="24" r="23" fill="none" stroke="currentColor" stroke-width="2"/>
