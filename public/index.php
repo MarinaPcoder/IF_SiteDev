@@ -6,15 +6,21 @@
   <title>Storm — Homepage</title>
   <link rel="stylesheet" href="./assets/css/index.css" />
   <meta name="color-scheme" content="dark light" />
-  <link rel="icon" href="./assets/img/logo-sem-fundo.png">
+  <link rel="icon" href="./assets/Favicon/logo-sem-fundo.png">
 </head>
 <body>
+<?php 
+  // inicia a sessão
+    session_start();
+
+  const CAMINHO_VIEWS = './../App/Views/';
+?>
 <div id="app" class="app" aria-live="polite">
 
   <!-- ============ SIDEBAR ============ -->
   <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
     <div class="brand">
-      <a class="brand__avatar" href="index.html" aria-label="Storm — Homepage">
+      <a class="brand__avatar" href="index.php" aria-label="Storm — Homepage">
         <img id="siteLogo" src="logo-sem-fundo.png" alt="Logo Storm"
              onerror="this.replaceWith(this.nextElementSibling)" />
         <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
@@ -44,7 +50,7 @@
           <span class="label">Homepage</span>
         </a>
 
-        <a class="nav__item" href="suges.php">
+        <a class="nav__item" href="<?= CAMINHO_VIEWS ?>FormSugestao.php">
           <span class="nav__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2a7 7 0 0 1 4 12c-.7.6-1 1.1-1 2v1H9v-1c0-.9-.3-1.4-1-2A7 7 0 0 1 12 2zm-3 17h6v2H9v-2z"/></svg>
           </span>

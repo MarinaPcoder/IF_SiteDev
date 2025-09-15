@@ -9,12 +9,17 @@
   <link rel="icon" href="./assets/img/logo-sem-fundo.png" />
 </head>
 <body>
+<?php 
+  // inicia a sessão
+    session_start();
 
+  const CAMINHO_VIEWS = './../App/Views/';
+?>
 <div class="app" aria-live="polite">
   <!-- ============ SIDEBAR ============ -->
   <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
     <div class="brand">
-      <a class="brand__avatar" href="index.html" aria-label="Storm — Homepage">
+      <a class="brand__avatar" href="index.php" aria-label="Storm — Homepage">
         <img id="siteLogo" src="./assets/img/logo-sem-fundo.png" alt="Logo Storm"
              onerror="this.replaceWith(this.nextElementSibling)" />
         <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
@@ -23,7 +28,7 @@
         </svg>
       </a>
 
-      <a href="index.html" class="brand__title-wrap">
+      <a href="index.php" class="brand__title-wrap">
         <strong class="brand__title label">Storm.</strong>
       </a>
 
@@ -37,14 +42,14 @@
       <div class="nav__group">
         <h6 class="nav__heading label">Menu</h6>
 
-        <a class="nav__item" href="index.html">
+        <a class="nav__item" href="index.php">
           <span class="nav__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3 3 11h2v8a2 2 0 0 0 2 2h4v-6h2v6h4a2 2 0 0 0 2-2v-8h2L12 3z"/></svg>
           </span>
           <span class="label">Homepage</span>
         </a>
 
-        <a class="nav__item" href="suges.html">
+        <a class="nav__item" href="<?= CAMINHO_VIEWS ?>FormSugestao.php">
           <span class="nav__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2a7 7 0 0 1 4 12c-.7.6-1 1.1-1 2v1H9v-1c0-.9-.3-1.4-1-2A7 7 0 0 1 12 2zm-3 17h6v2H9v-2z"/></svg>
           </span>
@@ -55,7 +60,7 @@
       <div class="nav__group">
         <h6 class="nav__heading label">Social</h6>
 
-        <a class="nav__item" href="perfil.html">
+        <a class="nav__item" href="perfil.php">
           <span class="nav__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
           </span>
@@ -476,7 +481,7 @@ function renderRelatedCard(g){
   tpl.querySelector('.card__title').textContent = g.title;
   tpl.querySelector('.card__score').textContent = `⭐ ${g.score.toFixed(1)}`;
   tpl.querySelector('.card').addEventListener('click', ()=> {
-    window.open(`aval-jogo.html?jogo=${encodeURIComponent(g.title)}`, '_blank', 'noopener');
+    window.open(`aval-jogo.php?jogo=${encodeURIComponent(g.title)}`, '_blank', 'noopener');
   });
   return tpl;
 }

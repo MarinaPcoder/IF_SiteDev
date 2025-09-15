@@ -1,22 +1,96 @@
-<!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Storm — Sugerir Jogo</title>
+<?php 
+
+    session_start();
+
+    require_once '../../vendor/autoload.php';
+
+    if (isset($_SESSION['Mensagem_redirecionamento'])) {
+        echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
+        unset($_SESSION['Mensagem_redirecionamento']);
+    }
+    
+    use App\Controllers\UsuarioController;
+    use App\Controllers\JogoController;
+    $usuario = new UsuarioController;
+    $jogo = new JogoController;
+
+    const CAMINHO_PUBLIC = './../../public/';
+    CONST CAMINHO_INDEX = './../../public/index.php';
+
+    if (empty($_SESSION['Usuario'])) {
+        header(header: 'Location: ./loginUsuario.php');
+        exit;
+    } else {
+        [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
+    
+        if (!$logado) {
+            $_SESSION['Mensagem_redirecionamento'] = "Usuario não existe ou não tem permissão. Redirecionado para ./logout.php";
+            header(header: "Location: ./logout.php");
+            exit;
+        }
+    }
+
+    $titulo = 'Storm — Sugerir Jogo';
+    require_once '../../public/assets/components/head.php';
+    
+?>
+ <!-- configuração  Head -->
   <meta name="color-scheme" content="dark light" />
-  <link rel="stylesheet" href="../css/styles-suges.css">
-  <link rel="icon" href="../Favicon/logo-sem-fundo.png">
+  <link rel="stylesheet" href="<?= CAMINHO_PUBLIC ?>assets/css/styles-suges.css">
+  <link rel="icon" href="<?= CAMINHO_PUBLIC ?>assets/Favicon/logo-sem-fundo.png">
 </head>
+
+<?php
+
+    $dadoUsuario = ($usuario -> getUsuario(id: $_SESSION['Usuario']['Id']))[0];
+
+    $GLOBALS['erros'] = [];
+
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        var_dump($_POST);
+
+            // Dados do formulário
+            $para = "projetostormsugestoes@gmail.com";
+            $gameTitle = $_POST['gameTitle'];
+            $corpo = $_POST['reason'] . "
+
+- Enviado por: " . $_SESSION['Usuario']['Email'];
+
+            $headers = "From:projetostormsugestoes@gmail.com" . "\r\n" .
+                       "Reply-To: " . $_SESSION['Usuario']['Email'] . "\r\n";
+
+            // Validação simples
+            if (empty($gameTitle)) {
+                $GLOBALS['erros']['gameTitle'][] = "O campo título do jogo é obrigatório.";
+            }
+            if (empty($corpo)) {
+                $GLOBALS['erros']['Mensagem'][] = "O campo mensagem é obrigatório.";
+            }
+
+            if (empty($GLOBALS['erros'])) {
+                // Enviar e-mail
+                if (mail($para, $gameTitle, $corpo, $headers)) {
+                    $_SESSION['Mensagem_redirecionamento'] = "E-mail enviado com sucesso.";
+                    header("Location: " . CAMINHO_INDEX);
+                    exit;
+                } else {
+                    $_SESSION['Mensagem_redirecionamento'] = "Falha ao enviar o e-mail.";
+                    header("Location: " . CAMINHO_INDEX);
+                    exit;
+                }
+            }
+    }
+?>
+
 <body>
 
-  <!-- ======= LAYOUT APP (sidebar + conteúdo) ======= -->
+      <!-- ======= LAYOUT APP (sidebar + conteúdo) ======= -->
   <div class="app" aria-live="polite">
     <!-- ============ SIDEBAR ============ -->
     <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
       <div class="brand">
         <!-- Avatar circular para LOGO -->
-        <a class="brand__avatar" href="index.html" aria-label="Storm — Homepage">
+        <a class="brand__avatar" href="<?= CAMINHO_PUBLIC ?>index.php" aria-label="Storm — Homepage">
           <img id="siteLogo" src="../Favicon/logo-sem-fundo.png" alt="Logo Storm"
                onerror="this.replaceWith(this.nextElementSibling)" />
           <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
@@ -25,7 +99,7 @@
           </svg>
         </a>
 
-        <a href="index.html" class="brand__title-wrap">
+        <a href="<?= CAMINHO_PUBLIC ?>index.php" class="brand__title-wrap">
           <strong class="brand__title label">Storm.</strong>
         </a>
 
@@ -41,7 +115,7 @@
           <h6 class="nav__heading label">Menu</h6>
 
           <!-- Homepage -->
-          <a class="nav__item" href="index.html">
+          <a class="nav__item" href="<?= CAMINHO_PUBLIC ?>index.php">
             <span class="nav__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="22" height="22">
                 <path d="M12 3 3 11h2v8a2 2 0 0 0 2 2h4v-6h2v6h4a2 2 0 0 0 2-2v-8h2L12 3z"/>
@@ -51,7 +125,7 @@
           </a>
 
           <!-- Sugestões (página atual) -->
-          <a class="nav__item active" href="suges.html">
+          <a class="nav__item active" href="">
             <span class="nav__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="22" height="22">
                 <path d="M12 2a7 7 0 0 1 4 12c-.7.6-1 1.1-1 2v1H9v-1c0-.9-.3-1.4-1-2A7 7 0 0 1 12 2zm-3 17h6v2H9v-2z"/>
@@ -63,7 +137,7 @@
 
         <div class="nav__group">
           <h6 class="nav__heading label">Social</h6>
-          <a class="nav__item" href="perfil.html">
+          <a class="nav__item" href="<?= CAMINHO_PUBLIC ?>perfil.php">
             <span class="nav__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="22" height="22">
                 <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/>
@@ -88,24 +162,22 @@
       <div class="bg-orbs" aria-hidden="true"></div>
 
       <section class="card" role="form" aria-labelledby="title">
-        <!-- topo com etapas -->
-        <header class="card__header">
-          <div class="steps" aria-label="Etapas">
-            <div class="step is-active"><span class="step__dot">1</span><span>Detalhes do Jogo</span></div>
-            <div class="step"><span class="step__dot">2</span><span>Contato (opcional)</span></div>
-            <div class="step"><span class="step__dot">3</span><span>Confirmação</span></div>
-          </div>
 
-          <div class="auth-hint">
-            <span>Já é membro?</span>
-            <a href="perfil.html" class="link">Entrar</a>
-          </div>
-        </header>
 
         <h1 id="title" class="card__title">Sugerir um Jogo</h1>
 
         <!-- Formulário -->
-        <form id="suggestForm" class="form" action="#" method="post" novalidate enctype="multipart/form-data">
+        <form id="suggestForm" class="form" action="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post" novalidate enctype="multipart/form-data">
+            <?php foreach ($GLOBALS['erros'] as $chave => $msgs): ?>
+              <div class="erro">
+                  <strong><?= $chave ?>:</strong>
+                  <ul>
+                      <?php foreach ($msgs as $msg): ?>
+                          <li><?= htmlspecialchars(string: $msg, flags: ENT_QUOTES) ?></li>
+                      <?php endforeach ?>
+                  </ul>
+              </div>
+            <?php endforeach ?>
           <!-- coluna esquerda -->
           <div class="form__grid">
             <div class="col col--main">
@@ -115,7 +187,7 @@
                 <!-- Nome do jogo -->
                 <label class="field">
                   <span class="field__label">Nome do Jogo <b title="obrigatório">*</b></span>
-                  <input type="text" name="gameTitle" id="gameTitle" placeholder="Digite o nome exato do jogo" required />
+                  <input type="text" name="gameTitle" id="gameTitle" placeholder="Digite o nome exato do jogo" required value="<?= htmlspecialchars(string: $_POST['gameTitle'] ?? '') ?>"/>
                   <small class="hint">Ex.: “Hades”, “The Witcher 3: Wild Hunt”</small>
                 </label>
 
@@ -161,7 +233,7 @@
                 <!-- Motivo -->
                 <label class="field">
                   <span class="field__label">Motivo da Sugestão <small class="muted">(opcional)</small></span>
-                  <textarea name="reason" id="reason" rows="4" placeholder="Conte por que esse jogo merece entrar no Storm..."></textarea>
+                  <textarea name="reason" id="reason" rows="4" placeholder="Conte por que esse jogo merece entrar no Storm..."><?= htmlspecialchars(string: $_POST['reason'] ?? '') ?></textarea>
                   <small class="hint"><span id="reasonCount">0</span>/400</small>
                 </label>
 
@@ -173,22 +245,6 @@
                 </label>
               </fieldset>
 
-              <!-- Upload de imagens -->
-              <fieldset class="fieldset">
-                <legend class="legend">Imagens do jogo <small class="muted">(banner ou gameplay)</small></legend>
-                <div class="uploader">
-                  <label class="upload-drop" for="images">
-                    <span class="upload-icon" aria-hidden="true">
-                      <!-- ícone câmera -->
-                      <svg viewBox="0 0 24 24" width="28" height="28"><path fill="currentColor" d="M9.8 5h4.4l1 1.6H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8.6A2 2 0 0 1 5 6.6h3.1L9.8 5Zm2.2 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-2.2a1.8 1.8 0 1 1 0-3.6 1.8 1.8 0 0 1 0 3.6Z"/></svg>
-                    </span>
-                    <strong>Adicionar fotos</strong>
-                    <small class="muted">PNG, JPG até 10MB. Você pode selecionar várias.</small>
-                  </label>
-                  <input id="images" name="images" type="file" accept="image/*" multiple hidden>
-                  <div id="preview" class="upload-preview" aria-live="polite"></div>
-                </div>
-              </fieldset>
             </div>
 
             <!-- coluna direita -->

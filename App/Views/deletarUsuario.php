@@ -32,6 +32,7 @@
 </head>
 
 <?php 
+
     $dado = ($usuario -> getUsuario(id: $_SESSION['Usuario']['Id']))[0];
 
     $erros = [];
