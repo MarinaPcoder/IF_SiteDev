@@ -50,9 +50,16 @@
 
             // Dados do formulário
             $para = "projetostormsugestoes@gmail.com";
-            $gameTitle = $_POST['gameTitle'];
-            $corpo = $_POST['reason'];
+            $gameTitle = $_POST['gameTitle'] ?? false;
+            $corpo = $_POST['reason'] ?? false;
 
+            // Validação simples
+            if (empty($gameTitle)) {
+                $GLOBALS['erros']['gameTitle'][] = "O campo título do jogo é obrigatório.";
+            }
+            if (empty($corpo)) {
+                $GLOBALS['erros']['Mensagem'][] = "O campo mensagem é obrigatório.";
+            }
 
             if (isset($_POST['nick']) && !empty(trim($_POST['nick']))) {
                 $corpo .= " (Nome no crédito: " . trim($_POST['nick']) . ")";
@@ -67,13 +74,7 @@
                        "Reply-To: " . trim($_POST['email']) . "\r\n";
             }
 
-            // Validação simples
-            if (empty($gameTitle)) {
-                $GLOBALS['erros']['gameTitle'][] = "O campo título do jogo é obrigatório.";
-            }
-            if (empty($corpo)) {
-                $GLOBALS['erros']['Mensagem'][] = "O campo mensagem é obrigatório.";
-            }
+
 
             if (empty($GLOBALS['erros'])) {
                 // Enviar e-mail

@@ -11,10 +11,6 @@ RewriteCond %{REQUEST_FILENAME} !-d
   Deny from all
 </Files>
 
-<Files Init_admin.php>
-  Order Allow,Deny
-  Deny from all
-</Files>
 
 <Files JogosCRUD.php>
   Order Allow,Deny
