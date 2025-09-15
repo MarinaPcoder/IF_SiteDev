@@ -1,3 +1,150 @@
+<?php
+// public/perfil.php
+declare(strict_types=1);
+
+session_start();
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Core\DB\Conexao;
+
+// URLs de views para links/redirects
+const CAMINHO_VIEWS = './../App/Views/';
+
+// ---------- Guard: precisa estar logado ----------
+if (empty($_SESSION['Usuario']['Id'])) {
+  header('Location: ' . CAMINHO_VIEWS . 'loginUsuario.php');
+  exit;
+}
+
+$pdo = Conexao::getInstancia();
+$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+$userId = (int) $_SESSION['Usuario']['Id'];
+
+// ---------- Ações POST (editar/excluir avaliação, logout, excluir conta) ----------
+$flash = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $action = $_POST['action'] ?? '';
+  try {
+    if ($action === 'logout') {
+      unset($_SESSION['Usuario']);
+      header('Location: ' . CAMINHO_VIEWS . 'loginUsuario.php');
+      exit;
+    }
+
+    if ($action === 'delete') {
+      header('Location: ' . CAMINHO_VIEWS . 'deletarUsuario.php');
+      exit;   
+    }
+
+    if ($action === 'delete_review') {
+      $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+      if ($id > 0) {
+        $stmt = $pdo->prepare("DELETE FROM Avaliacao WHERE id_avaliacao = :id AND id_usuario = :u");
+        $stmt->execute([':id'=>$id, ':u'=>$userId]);
+        $flash = $stmt->rowCount() ? 'Avaliação excluída.' : 'Avaliação não encontrada.';
+      }
+    }
+
+    if ($action === 'edit_review') {
+      $id   = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+      $nota = isset($_POST['nota']) ? (float)$_POST['nota'] : -1;
+      $just = trim((string)($_POST['just'] ?? ''));
+      if ($id > 0 && $nota >= 0 && $nota <= 10) {
+        $stmt = $pdo->prepare("
+          UPDATE Avaliacao 
+          SET nota = :n, justificativa = :j 
+          WHERE id_avaliacao = :id AND id_usuario = :u
+        ");
+        $stmt->execute([':n'=>$nota, ':j'=>$just, ':id'=>$id, ':u'=>$userId]);
+        $flash = 'Avaliação atualizada.';
+      } else {
+        $flash = 'Dados inválidos para editar.';
+      }
+    }
+
+    if ($action === 'delete_account') {
+      $senha = (string)($_POST['senha'] ?? '');
+      if ($senha === '') { $flash = 'Informe sua senha para excluir a conta.'; }
+      else {
+        // valida a senha e apaga; ON DELETE CASCADE cuidará das dependências
+        $stmt = $pdo->prepare("SELECT senha FROM Usuario WHERE id_usuario = :id");
+        $stmt->execute([':id'=>$userId]);
+        $hash = $stmt->fetchColumn();
+        if ($hash && $hash === md5($senha)) {
+          $del = $pdo->prepare("DELETE FROM Usuario WHERE id_usuario = :id");
+          $del->execute([':id'=>$userId]);
+          unset($_SESSION['Usuario']);
+          header('Location: ' . CAMINHO_VIEWS . 'cadastroUsuario.php');
+          exit;
+        } else {
+          $flash = 'Senha incorreta.';
+        }
+      }
+    }
+  } catch (\Throwable $e) {
+    $flash = 'Erro: ' . $e->getMessage();
+  }
+}
+
+// ---------- Lê dados do usuário ----------
+$stmtU = $pdo->prepare("SELECT id_usuario, nome_usuario, email, criado_em, bio FROM Usuario WHERE id_usuario = :id LIMIT 1");
+$stmtU->execute([':id'=>$userId]);
+$user = $stmtU->fetch(\PDO::FETCH_ASSOC) ?: ['nome_usuario'=>'', 'email'=>'', 'criado_em'=>date('Y-m-d H:i:s'), 'bio'=>''];
+
+// ---------- Lê avaliações do usuário (com poster do jogo) ----------
+$sqlPosterSub = "
+  SELECT ji1.id_jogo, ji1.caminho
+  FROM Jogo_Imagem ji1
+  WHERE ji1.tipo = 'poster'
+";
+$sqlReviews = "
+  SELECT 
+    a.id_avaliacao AS id,
+    a.nota,
+    a.justificativa,
+    a.data_avaliacao,
+    j.id_jogo,
+    j.titulo,
+    COALESCE(p.caminho, 'assets/img/poster.png') AS poster
+  FROM Avaliacao a
+  INNER JOIN Jogo j ON j.id_jogo = a.id_jogo
+  LEFT JOIN ($sqlPosterSub) p ON p.id_jogo = j.id_jogo
+  WHERE a.id_usuario = :u
+  ORDER BY a.data_avaliacao DESC, a.id_avaliacao DESC
+";
+$stmtR = $pdo->prepare($sqlReviews);
+$stmtR->execute([':u'=>$userId]);
+$rows = $stmtR->fetchAll(\PDO::FETCH_ASSOC);
+
+// normaliza caminhos respeitando subpasta
+$basePath   = rtrim(str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'])), '/');
+$basePrefix = $basePath === '' ? '' : $basePath;
+$toWeb = function (?string $p) use ($basePrefix): string {
+  $p = (string)($p ?? '');
+  if ($p === '') return '';
+  if (preg_match('#^https?://#i', $p)) return $p;
+  $p = ltrim($p, '/');
+  return ($basePrefix ? $basePrefix.'/' : '/') . $p;
+};
+
+$reviews = [];
+foreach ($rows as $r) {
+  $reviews[] = [
+    'id'    => (int)$r['id'],
+    'game'  => (string)$r['titulo'],
+    'gameId'=> (int)$r['id_jogo'],
+    'cover' => $toWeb($r['poster'] ?? 'assets/img/poster.png'),
+    'rating'=> (float)$r['nota'],
+    'date'  => (new \DateTime($r['data_avaliacao']))->format('Y-m-d'),
+    'comment'=> (string)($r['justificativa'] ?? '')
+  ];
+}
+
+$reviewsCount = count($reviews);
+$username     = explode('@', (string)($user['email'] ?? ''))[0] ?? '';
+$memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('M/Y');
+?>
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
@@ -10,20 +157,19 @@
 </head>
 <body>
 
-<?php 
-  // inicia a sessão
-    session_start();
-
-  const CAMINHO_VIEWS = './../App/Views/';
-?>
+<?php if ($flash): ?>
+  <div class="toast" role="status" aria-live="polite" style="position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;background:#222;color:#fff;padding:.6rem 1rem;border-radius:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.35)">
+    <?= htmlspecialchars($flash, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') ?>
+  </div>
+  <script>setTimeout(()=>document.querySelector('.toast')?.remove(), 4200);</script>
+<?php endif; ?>
 
 <div class="app" aria-live="polite">
   <!-- ============ SIDEBAR ============ -->
   <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
     <div class="brand">
-      <!-- Logo circular -->
       <a class="brand__avatar" href="index.php" aria-label="Storm — Homepage">
-        <img id="siteLogo" src="../Favicon/logo-sem-fundo.png" alt="Logo Storm"
+        <img id="siteLogo" src="./assets/Favicon/logo-sem-fundo.png" alt="Logo Storm"
              onerror="this.replaceWith(this.nextElementSibling)" />
         <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
           <circle cx="24" cy="24" r="23" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -83,20 +229,16 @@
 
   <!-- ============ CONTEÚDO PRINCIPAL ============ -->
   <main id="main" class="profile" tabindex="-1">
-    <!-- cabeçalho opcional do perfil -->
     <header class="profile__header">
       <h1 class="profile__title">Minhas Avaliações</h1>
-      <div class="profile__actions">
-      </div>
+      <div class="profile__actions"></div>
     </header>
 
-    <!-- lista de avaliações -->
     <section class="reviews" aria-label="Lista de avaliações do usuário">
       <div id="reviewList" class="reviews__list" role="list" tabindex="0">
         <!-- JS injeta <article class="review-card"> -->
       </div>
 
-      <!-- paginação simples (opcional) -->
       <nav class="pagination" aria-label="Paginação" hidden>
         <button class="btn btn--ghost" id="pgPrev">Anterior</button>
         <span class="pagination__info" id="pgInfo">1 / 1</span>
@@ -108,49 +250,62 @@
   <!-- ============ PAINEL À DIREITA (perfil resumido) ============ -->
   <aside class="aside" aria-label="Painel do usuário">
     <section class="usercard" aria-labelledby="uc-name">
-      <div class="usercard__cover" aria-hidden="true">
-        <!-- Imagem de capa opcional via CSS -->
-      </div>
+      <div class="usercard__cover" aria-hidden="true"></div>
 
       <div class="usercard__header">
-        <img class="usercard__avatar" id="uc-avatar" src="https://i.pravatar.cc/200?img=5" alt="Foto de perfil" />
+
         <div class="usercard__id">
-          <h2 id="uc-name" class="usercard__name">Marina Prado</h2>
-          <div class="usercard__user">@marinaprado</div>
+          <h2 id="uc-name" class="usercard__name"><?= htmlspecialchars($user['nome_usuario'] ?? '', ENT_QUOTES) ?></h2>
+          <div class="usercard__user">@<?= htmlspecialchars($username, ENT_QUOTES) ?></div>
         </div>
       </div>
 
-      <p class="usercard__bio">Amante de RPGs e jogos indies</p>
+      <p class="usercard__bio"><?= htmlspecialchars($user['bio'] ?: 'Sem bio ainda.', ENT_QUOTES) ?></p>
 
       <ul class="usercard__meta">
         <li>
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
           </span>
-          <span id="uc-loc">São Paulo, BR</span>
+          <span id="uc-loc">—</span>
         </li>
         <li>
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M7 4h10v2H7V4zm-3 4h16v2H4V8zm3 4h10v2H7v-2zm-3 4h16v2H4v-2z"/></svg>
           </span>
-          <span id="uc-since">Membro desde jan/2023</span>
+          <span id="uc-since">Membro desde <?= htmlspecialchars(strtolower($memberSince), ENT_QUOTES) ?></span>
         </li>
         <li>
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M3 4h18v2H3V4zm2 4h14l-1 12H6L5 8zm5 2v8h2v-8H10zm-3 0 1 8h2l-1-8H7zm8 0-1 8h2l1-8h-2z"/></svg>
           </span>
-          <span id="uc-count">54 avaliações</span>
+          <span id="uc-count"><?= (int)$reviewsCount ?> avaliação<?= $reviewsCount===1?'':'es' ?></span>
         </li>
       </ul>
 
       <div class="usercard__actions">
-        <button class="btn btn--primary" id="btnEditProfile">Editar Perfil</button>
-        <button class="btn btn--ghost" id="btnLogout">Sair da conta atual</button>
-        <button class="btn btn--danger" id="btnDelete">Excluir conta</button>
+        <a class="btn btn--primary" id="btnEditProfile" href="<?= CAMINHO_VIEWS ?>alterarUsuario.php">Editar Perfil</a>
+        <form id="logoutForm" method="post" style="display:inline">
+          <input type="hidden" name="action" value="logout">
+          <button type="submit" class="btn btn--ghost">Sair da conta atual</button>
+        </form>
+        <form id="DeleteForm" method="post" style="display:inline">
+          <input type="hidden" name="action" value="delete">
+          <button type="submit" class="btn btn--danger" id="btnDelete">Excluir conta</button>
+        </form>
       </div>
     </section>
   </aside>
 </div>
+
+<!-- ======= FORM SECRETO PARA AÇÕES JS ======= -->
+<form id="actionForm" method="post" style="display:none">
+  <input type="hidden" name="action" value="">
+  <input type="hidden" name="id" value="">
+  <input type="hidden" name="nota" value="">
+  <input type="hidden" name="just" value="">
+  <input type="password" name="senha" value="">
+</form>
 
 <!-- ======= TEMPLATES ======= -->
 <template id="tpl-review-card">
@@ -186,6 +341,11 @@
     </div>
   </article>
 </template>
+
+<!-- ======= DADOS DO BACK-END ======= -->
+<script>
+  window.STORM_REVIEWS = <?= json_encode($reviews, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+</script>
 
 <!-- ======= JS ======= -->
 <script>
@@ -235,39 +395,14 @@ const fmtDate = (iso)=> new Date(iso).toLocaleDateString('pt-BR', {day:'2-digit'
   });
 })();
 
-/* Mock de avaliações do usuário (substituir por API) */
-const ReviewsStore = (()=>{
-  const items = [
-    {
-      id: 1,
-      game: "Hollow Knight",
-      cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1n23.jpg",
-      rating: 9.0,
-      date: "2024-07-18",
-      comment: "Level design impecável, trilha sonora hipnótica e uma curva de desafio justa. O mapa poderia ser mais acessível no começo."
-    },
-    {
-      id: 2,
-      game: "Elden Ring",
-      cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.jpg",
-      rating: 9.3,
-      date: "2024-06-02",
-      comment: "Exploração que recompensa curiosidade. Combates memoráveis e builds muito variadas."
-    },
-    {
-      id: 3,
-      game: "Baldur's Gate 3",
-      cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co6f9k.jpg",
-      rating: 9.6,
-      date: "2024-08-05",
-      comment: "Roleplay absurdo de bom. Quase tudo tem consequência. Melhor campanha de D&D digital."
-    }
-  ];
+/* Store baseado no back-end */
+const ReviewsStore = (()=> {
+  const items = Array.isArray(window.STORM_REVIEWS) ? window.STORM_REVIEWS : [];
   return {
     all(){ return [...items]; },
-    remove(id){ const i=items.findIndex(x=>x.id===id); if(i>=0) items.splice(i,1); },
     get(id){ return items.find(x=>x.id===id); },
-    update(id, patch){ const it=this.get(id); if(it) Object.assign(it, patch); }
+    update(id, patch){ const it=this.get(id); if(it) Object.assign(it, patch); },
+    remove(id){ const i=items.findIndex(x=>x.id===id); if(i>=0) items.splice(i,1); }
   };
 })();
 
@@ -285,12 +420,12 @@ function renderReviewCard(model){
 
   img.src = model.cover; img.alt = `Capa de ${model.game}`;
   title.textContent = model.game;
-  title.href = `aval-jogo.php?jogo=${encodeURIComponent(model.game)}`;
+  title.href = `aval-jogo.php?id=${encodeURIComponent(model.gameId)}`;
 
   score.textContent = `⭐ ${Number(model.rating).toFixed(1)}/10`;
   date.textContent  = fmtDate(model.date);
   date.dateTime     = model.date;
-  text.textContent  = model.comment;
+  text.textContent  = model.comment || '';
 
   // ações
   tpl.querySelector('.edit').addEventListener('click', (e)=>{
@@ -298,16 +433,14 @@ function renderReviewCard(model){
     const newRating = prompt(`Nova nota para "${model.game}" (0-10):`, model.rating);
     if (newRating === null) return;
     const val = Math.max(0, Math.min(10, parseFloat(newRating)));
-    ReviewsStore.update(model.id, { rating: val });
-    score.textContent = `⭐ ${val.toFixed(1)}/10`;
+    const newJust = prompt(`Novo comentário (opcional):`, model.comment || '');
+    submitAction('edit_review', {id:model.id, nota:val, just:newJust ?? ''});
   });
 
   tpl.querySelector('.delete').addEventListener('click', (e)=>{
     e.stopPropagation();
     if (confirm(`Excluir sua avaliação de "${model.game}"? Esta ação não pode ser desfeita.`)) {
-      ReviewsStore.remove(model.id);
-      root.remove();
-      updateCounters();
+      submitAction('delete_review', {id:model.id});
     }
   });
 
@@ -321,35 +454,27 @@ function renderReviewCard(model){
 function loadReviews(){
   const list = $('#reviewList');
   list.innerHTML = '';
-  ReviewsStore.all().forEach(r => list.appendChild(renderReviewCard(r)));
-  updateCounters();
-}
-
-/* Painel do usuário: atualiza o total */
-function updateCounters(){
-  const total = ReviewsStore.all().length;
-  $('#uc-count').textContent = `${total} avaliação${total===1?'':'es'}`;
-}
-
-/* Botões do cabeçalho / usercard */
-$('#btnNew')?.addEventListener('click', ()=>{
-  alert('A criação de avaliação direta será implementada. Por enquanto, use a página do jogo para avaliar.');
-});
-$('#btnExport')?.addEventListener('click', ()=>{
-  const data = JSON.stringify(ReviewsStore.all(), null, 2);
-  const blob = new Blob([data], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'storm-minhas-avaliacoes.json'; a.click();
-  URL.revokeObjectURL(url);
-});
-$('#btnEditProfile')?.addEventListener('click', ()=> alert('Tela de edição de perfil em construção.'));
-$('#btnLogout')?.addEventListener('click', ()=> alert('Você saiu da conta. (mock)'));
-$('#btnDelete')?.addEventListener('click', ()=>{
-  if (confirm('Tem certeza que deseja excluir sua conta? Esta ação é irreversível.')) {
-    alert('Conta excluída. (mock)');
+  const data = ReviewsStore.all();
+  if (!data.length) {
+    list.innerHTML = '<p class="muted" style="padding:1rem">Você ainda não avaliou nenhum jogo.</p>';
+    return;
   }
-});
+  data.forEach(r => list.appendChild(renderReviewCard(r)));
+}
+
+/* Submissões POST invisíveis */
+function submitAction(action, fields){
+  const f = $('#actionForm');
+  f.reset();
+  f.action.value = action;
+  if ('id' in fields)   f.id.value   = fields.id;
+  if ('nota' in fields) f.nota.value = fields.nota;
+  if ('just' in fields) f.just.value = fields.just;
+  if ('senha' in fields) f.senha.value = fields.senha;
+  f.submit();
+}
+
+
 
 /* Init */
 loadReviews();
