@@ -1,3 +1,105 @@
+<?php
+// public/index.php
+declare(strict_types=1);
+
+session_start();
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Core\DB\Conexao;
+
+// Mantido do seu arquivo original
+const CAMINHO_VIEWS = './../App/Views/';
+
+// ===== Conexão =====
+$pdo = Conexao::getInstancia();
+$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+/**
+ * Busca jogos com poster, gêneros e (se houver) média de notas / total de avaliações.
+ * Alinhado ao seu esquema:
+ *  - Tabelas: Jogo, Genero, Jogo_Genero, Avaliacao, Jogo_Imagem
+ *  - Coluna do gênero: Genero.nome_genero
+ *  - Na HOME usamos apenas o POSTER (banner é só na página específica do jogo)
+ */
+function fetchGames(\PDO $pdo): array {
+    $sql = "
+        SELECT
+            j.id_jogo                                   AS id,
+            j.titulo                                    AS title,
+            j.descricao                                 AS descricao,
+            j.desenvolvedora                            AS desenvolvedora,
+            j.data_lancamento                           AS data_lancamento,
+            COALESCE(p.caminho, 'assets/img/poster.png') AS poster,
+            GROUP_CONCAT(DISTINCT g.nome_genero ORDER BY g.nome_genero SEPARATOR ' • ') AS genres_str,
+            ROUND(AVG(a.nota), 1)                       AS rating,
+            COUNT(a.id_avaliacao)                       AS votes
+        FROM Jogo j
+        LEFT JOIN Jogo_Imagem p  ON p.id_jogo = j.id_jogo AND p.tipo = 'poster'
+        LEFT JOIN Jogo_Genero jg ON jg.id_jogo = j.id_jogo
+        LEFT JOIN Genero g       ON g.id_genero = jg.id_genero
+        LEFT JOIN Avaliacao a    ON a.id_jogo = j.id_jogo
+        GROUP BY j.id_jogo
+        ORDER BY COALESCE(ROUND(AVG(a.nota),1),0) DESC, j.id_jogo DESC
+        LIMIT 100
+    ";
+
+    $rows = $pdo->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+
+    // Base para normalizar caminhos relativos respeitando subpasta (ex.: /IFsitedev/public)
+    $basePath   = rtrim(str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'])), '/');
+    $basePrefix = $basePath === '' ? '' : $basePath;
+    $toWeb = function (?string $p) use ($basePrefix): string {
+        $p = (string)($p ?? '');
+        if ($p === '') return '';
+        if (preg_match('#^https?://#i', $p)) return $p; // externo
+        $p = ltrim($p, '/');                              // remove barra inicial problemática
+        return ($basePrefix ? $basePrefix.'/' : '/') . $p;
+    };
+
+    $games = [];
+    foreach ($rows as $r) {
+        $genresStr = (string)($r['genres_str'] ?? '');
+        $genresArr = $genresStr !== '' ? array_map('trim', explode('•', $genresStr)) : [];
+
+        $rating = is_null($r['rating']) ? 0.0 : (float)$r['rating'];
+        $votes  = (int)($r['votes'] ?? 0);
+
+        $release = '';
+        if (!empty($r['data_lancamento']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $r['data_lancamento'])) {
+            $dt = \DateTime::createFromFormat('Y-m-d', $r['data_lancamento']);
+            if ($dt) $release = $dt->format('d/m/Y');
+        }
+
+        $desc = trim((string)($r['descricao'] ?? ''));
+        if ($desc !== '' && mb_strlen($desc) > 220) {
+            $desc = mb_substr($desc, 0, 220) . '…';
+        }
+
+        $games[] = [
+            'id'      => (int)$r['id'],
+            'title'   => (string)$r['title'],
+            'year'    => $release ? (int)substr($r['data_lancamento'], 0, 4) : null,
+            'release' => $release ?: '—',
+            'rating'  => $rating,
+            'votes'   => $votes,
+            'genres'  => $genresArr,
+            // HOME usa poster
+            'cover'   => $toWeb($r['poster'] ?? 'assets/img/poster.png'),
+            'desc'    => ($desc !== '' ? $desc : 'Sem descrição disponível.')
+        ];
+    }
+
+    return $games;
+}
+
+$games = fetchGames($pdo);
+$featured = $games[0] ?? null;
+
+// Mensagem de sessão (se houver)
+$flash = $_SESSION['Mensagem_redirecionamento'] ?? null;
+unset($_SESSION['Mensagem_redirecionamento']);
+?>
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
@@ -9,19 +111,20 @@
   <link rel="icon" href="./assets/Favicon/logo-sem-fundo.png">
 </head>
 <body>
-<?php 
-  // inicia a sessão
-    session_start();
+<?php if ($flash): ?>
+  <div class="toast toast--info" role="status" aria-live="polite" style="position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;background:#222;color:#fff;padding:.6rem 1rem;border-radius:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.35)">
+    <?= htmlspecialchars($flash, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') ?>
+  </div>
+  <script>setTimeout(()=>document.querySelector('.toast')?.remove(), 4200);</script>
+<?php endif; ?>
 
-  const CAMINHO_VIEWS = './../App/Views/';
-?>
 <div id="app" class="app" aria-live="polite">
 
   <!-- ============ SIDEBAR ============ -->
   <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
     <div class="brand">
       <a class="brand__avatar" href="index.php" aria-label="Storm — Homepage">
-        <img id="siteLogo" src="logo-sem-fundo.png" alt="Logo Storm"
+        <img id="siteLogo" src="./assets/Favicon/logo-sem-fundo.png" alt="Logo Storm"
              onerror="this.replaceWith(this.nextElementSibling)" />
         <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
           <circle cx="24" cy="24" r="23" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -42,7 +145,6 @@
       <div class="nav__group">
         <h6 class="nav__heading label">Menu</h6>
 
-        <!-- SVGs no lugar dos emojis -->
         <a class="nav__item active" href="index.php">
           <span class="nav__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3 3 11h2v8a2 2 0 0 0 2 2h4v-6h2v6h4a2 2 0 0 0 2-2v-8h2L12 3z"/></svg>
@@ -85,22 +187,44 @@
     <!-- Banner destaque (JOGOS) -->
     <section id="banner" class="banner reveal" aria-label="Destaque do jogo">
       <figure class="banner__media">
-        <img id="bannerPoster" class="banner__poster" src="" alt="Capa do jogo em destaque" />
+        <!-- HOME usa POSTER -->
+        <img
+          id="bannerPoster"
+          class="banner__poster"
+          src="<?= htmlspecialchars($featured['cover'] ?? './assets/img/poster.png', ENT_QUOTES) ?>"
+          alt="Capa do jogo em destaque" />
         <figcaption class="sr-only" id="bannerCaption">Capa do jogo em destaque</figcaption>
       </figure>
 
       <div class="banner__meta">
-        <div id="bannerRating" class="badge" aria-label="Nota Storm">⭐ 0.0 • 0 votos</div>
+        <div id="bannerRating" class="badge" aria-label="Nota Storm">
+          <?php
+            $fr = $featured;
+            $r = isset($fr['rating']) ? number_format((float)$fr['rating'], 1, ',', '') : '0,0';
+            $v = isset($fr['votes']) ? (int)$fr['votes'] : 0;
+            echo "⭐ {$r} • " . number_format($v, 0, ',', '.') . " voto" . ($v===1 ? '' : 's');
+          ?>
+        </div>
 
         <header>
-          <h1 id="bannerTitle" class="banner__title">Nome do Jogo</h1>
-          <p id="bannerGenres" class="banner__genres">Gêneros</p>
+          <h1 id="bannerTitle" class="banner__title"><?= htmlspecialchars($featured['title'] ?? 'Sem jogos cadastrados', ENT_QUOTES) ?></h1>
+          <p id="bannerGenres" class="banner__genres">
+            <?= isset($featured['genres']) && $featured['genres']
+                ? htmlspecialchars(implode(' • ', $featured['genres']), ENT_QUOTES)
+                : '—' ?>
+          </p>
         </header>
 
-        <p id="bannerDesc" class="banner__desc">Descrição curta do jogo (preenchida via JavaScript).</p>
+        <p id="bannerDesc" class="banner__desc">
+          <?= htmlspecialchars($featured['desc'] ?? 'Cadastre jogos para ver destaques por aqui.', ENT_QUOTES) ?>
+        </p>
 
         <div class="banner__cta">
-          <a id="bannerEvalBtn" class="btn btn--primary" href="aval-jogo.php">Ver detalhes e avaliar</a>
+          <?php if ($featured): ?>
+            <a id="bannerEvalBtn" class="btn btn--primary" href="aval-jogo.php?id=<?= (int)$featured['id'] ?>">Ver detalhes e avaliar</a>
+          <?php else: ?>
+            <a class="btn btn--primary" href="<?= CAMINHO_VIEWS ?>CadastrarJogo.php">Cadastrar primeiro jogo</a>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -118,11 +242,11 @@
       </header>
 
       <div id="railRecentes" class="rail" role="list" tabindex="0" aria-roledescription="carrossel">
-        <!-- JS injeta <article class="card"> -->
+        <!-- JS injeta cards -->
       </div>
     </section>
 
-    <!-- Destaques & Lançamentos (substitui TopStars) -->
+    <!-- Destaques & Lançamentos -->
     <section class="section reveal" aria-label="Destaques & Lançamentos">
       <header class="section__header">
         <h2>Destaques & Lançamentos</h2>
@@ -130,7 +254,7 @@
       </header>
 
       <div id="railBanners" class="rail rail--wide" role="list" tabindex="0">
-        <!-- JS injeta banners de jogos -->
+        <!-- JS injeta banners de jogos (usando POSTER na HOME) -->
       </div>
     </section>
   </main>
@@ -147,7 +271,7 @@
       <div id="searchResults" class="search__results" role="listbox" aria-label="Resultados da busca"></div>
     </section>
 
-    <!-- Mais pesquisados -->
+    <!-- Mais pesquisados (proxy: top por votos) -->
     <section class="panel reveal popular" aria-label="Mais pesquisados">
       <header class="section__header section__header--tight">
         <h2>Mais pesquisados</h2>
@@ -180,7 +304,7 @@
     <img class="popular__thumb" alt="" width="48" height="64" loading="lazy" />
     <div class="popular__meta">
       <div class="popular__title"></div>
-      <div class="popular__note muted"><span class="search-count">0</span> buscas</div>
+      <div class="popular__note muted"><span class="search-count">0</span> votos</div>
     </div>
     <span class="popular__chev" aria-hidden="true">›</span>
   </button>
@@ -188,6 +312,7 @@
 
 <template id="tpl-wide-banner">
   <article class="gamewide" role="listitem" tabindex="0">
+    <!-- HOME usa POSTER aqui também -->
     <img class="gamewide__img" alt="" loading="lazy" />
     <div class="gamewide__meta">
       <h3 class="gamewide__title"></h3>
@@ -196,6 +321,11 @@
     </div>
   </article>
 </template>
+
+<!-- ======= DADOS INJETADOS DO BACK-END ======= -->
+<script>
+  window.STORM_DATA = <?= json_encode($games, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+</script>
 
 <!-- ======= JAVASCRIPT ======= -->
 <script>
@@ -221,23 +351,30 @@ const Sidebar=(()=>{const el=$('#sidebar'),btn=$('#toggleSidebar'),k='storm:side
   return{init};
 })();
 
-/* ============================== Data ============================== */
-/* mock de JOGOS: nota Storm, votos, data de lançamento, contagem de buscas */
+/* ============================== Data (BACK-END) ============================== */
 const DataStore=(()=>{
-  const GAMES=[
-    {id:1,title:"Hollow Knight",year:2017,release:"24/02/2017",rating:9.1,votes:14821,genres:["Metroidvania","Aventura"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co1n23.jpg",searchCount:7421,desc:"Explore Hallownest, um reino subterrâneo em ruínas, dominando artes de combate e navegação."},
-    {id:2,title:"The Witcher 3: Wild Hunt",year:2015,release:"18/05/2015",rating:9.4,votes:31245,genres:["RPG","Mundo Aberto"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co1r16.jpg",searchCount:9530,desc:"Geralt parte em busca de Ciri enquanto o continente mergulha em guerra, monstros e intrigas."},
-    {id:3,title:"Celeste",year:2018,release:"25/01/2018",rating:8.9,votes:10211,genres:["Plataforma","Indie"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co2lmr.jpg",searchCount:5340,desc:"Uma escalada difícil e comovente sobre ansiedade, superação e muita precisão no salto."},
-    {id:4,title:"Elden Ring",year:2022,release:"25/02/2022",rating:9.2,votes:40112,genres:["RPG","Soulslike"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.jpg",searchCount:19873,desc:"A Terra Intermediária chama os Maculados. Explore livremente, combine builds e sofra com estilo."},
-    {id:5,title:"Baldur's Gate 3",year:2023,release:"03/08/2023",rating:9.6,votes:28740,genres:["RPG","Tático"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co6f9k.jpg",searchCount:22011,desc:"Campanha D&D gigante com escolhas absurdamente ramificadas e improviso digno de mesa de RPG."},
-    {id:6,title:"Hades",year:2020,release:"17/09/2020",rating:9.0,votes:16788,genres:["Roguelike","Ação"],cover:"https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg",searchCount:8722,desc:"Escape do Submundo no tapa, morrendo muito e ficando cada vez mais forte."}
-  ];
+  const G = Array.isArray(window.STORM_DATA) ? window.STORM_DATA : [];
+  const norm = g => ({
+    id: g.id,
+    title: g.title,
+    year: g.year ?? null,
+    release: g.release ?? '—',
+    rating: typeof g.rating==='number' ? g.rating : 0,
+    votes: typeof g.votes==='number' ? g.votes : 0,
+    genres: Array.isArray(g.genres) ? g.genres : [],
+    cover: g.cover || 'assets/img/poster.png', // HOME usa poster
+    desc: g.desc || 'Sem descrição disponível.'
+  });
+  const ALL = G.map(norm);
   return{
-    all(){return [...GAMES];},
-    topByRating(n=12){return [...GAMES].sort((a,b)=>b.rating-a.rating).slice(0,n);},
-    topBySearch(n=6){return [...GAMES].sort((a,b)=>b.searchCount-a.searchCount).slice(0,n);},
-    byQuery(q){q=q.trim().toLowerCase(); if(!q) return [...GAMES]; return GAMES.filter(g=>g.title.toLowerCase().includes(q)||g.genres.join(' ').toLowerCase().includes(q));},
-    getFirst(){return GAMES[0];}
+    all(){return [...ALL];},
+    topByRating(n=12){return [...ALL].sort((a,b)=> (b.rating-a.rating) || (b.votes-a.votes)).slice(0,n);},
+    topByVotes(n=6){return [...ALL].sort((a,b)=> (b.votes-a.votes) || (b.rating-a.rating)).slice(0,n);},
+    byQuery(q){q=(q||'').trim().toLowerCase();
+      if(!q) return [...ALL];
+      return ALL.filter(g=> g.title.toLowerCase().includes(q) || g.genres.join(' ').toLowerCase().includes(q));
+    },
+    getFirst(){return ALL[0] || null;}
   };
 })();
 
@@ -246,14 +383,18 @@ const Banner=(()=>{
   const poster=$('#bannerPoster'),title=$('#bannerTitle'),genres=$('#bannerGenres'),
         desc=$('#bannerDesc'),rating=$('#bannerRating'),btn=$('#bannerEvalBtn');
   function set(game){
-    poster.src=game.cover; poster.alt=`Capa do jogo ${game.title}`;
+    if(!game) return;
+    poster.src = game.cover; poster.alt=`Capa do jogo ${game.title}`;
     title.textContent=game.title;
-    genres.textContent=game.genres.join(' • ');
+    genres.textContent=game.genres.length?game.genres.join(' • '):'—';
     desc.textContent=game.desc;
     rating.textContent=`⭐ ${game.rating.toFixed(1)} • ${fmt(game.votes)} voto${game.votes===1?'':'s'}`;
-    btn.href=`aval-jogo.php?jogo=${encodeURIComponent(game.title)}`;
+    if(btn){ btn.href = `aval-jogo.php?id=${encodeURIComponent(game.id)}`; }
   }
-  function init(){ set(DataStore.getFirst()); }
+  function init(){
+    const first = DataStore.getFirst();
+    if(first) set(first);
+  }
   return{init,set};
 })();
 
@@ -275,19 +416,16 @@ function renderGameCard(game){
 
   img.src=game.cover; img.alt=`Capa: ${game.title}`;
   title.textContent=game.title;
-  sub.textContent=game.genres.join(' • ');
+  sub.textContent=game.genres.length?game.genres.join(' • '):'—';
   score.textContent=game.rating.toFixed(1);
 
-  // Banner rápido ao clicar na área do card
   root.addEventListener('click',()=>Banner.set(game));
-  // Favorito
   root.querySelector('.card__fav').addEventListener('click',e=>{
     e.stopPropagation(); root.classList.toggle('is-faved'); root.setAttribute('aria-pressed',root.classList.contains('is-faved'));
   });
-  // Detalhes -> abre avaliação em nova aba
   root.querySelector('.card__action').addEventListener('click',e=>{
     e.stopPropagation();
-    window.open(`aval-jogo.php?jogo=${encodeURIComponent(game.title)}`,'_blank','noopener');
+    window.open(`aval-jogo.php?id=${encodeURIComponent(game.id)}`,'_blank','noopener');
   });
   return tpl;
 }
@@ -295,23 +433,24 @@ function renderGameCard(game){
 /* ======= Banners largos (lançamentos) ============ */
 function renderWideBanner(game){
   const tpl=$('#tpl-wide-banner').content.cloneNode(true);
+  // HOME: usa POSTER
   tpl.querySelector('.gamewide__img').src=game.cover;
   tpl.querySelector('.gamewide__img').alt=`Arte: ${game.title}`;
   tpl.querySelector('.gamewide__title').textContent=game.title;
   tpl.querySelector('.mini-score').textContent=game.rating.toFixed(1);
   tpl.querySelector('.release').textContent=`Lançamento: ${game.release}`;
   const btn=tpl.querySelector('.gamewide__btn');
-  btn.textContent='Detalhes'; btn.href=`aval-jogo.php?jogo=${encodeURIComponent(game.title)}`;
+  btn.textContent='Detalhes'; btn.href=`aval-jogo.php?id=${encodeURIComponent(game.id)}`;
   return tpl;
 }
 
-/* ============= Mais pesquisados (aside) =========== */
+/* ============= Mais pesquisados (proxy: top por votos) =========== */
 function renderPopularItem(game){
   const tpl=$('#tpl-popular-item').content.cloneNode(true);
   tpl.querySelector('.popular__thumb').src=game.cover;
   tpl.querySelector('.popular__thumb').alt=`Capa mini: ${game.title}`;
   tpl.querySelector('.popular__title').textContent=game.title;
-  tpl.querySelector('.search-count').textContent=fmt(game.searchCount);
+  tpl.querySelector('.search-count').textContent=fmt(game.votes);
   tpl.querySelector('.popular__item').addEventListener('click',()=>Banner.set(game));
   return tpl;
 }
@@ -326,7 +465,7 @@ const Search=(()=>{
     data.forEach(g=>{
       const b=document.createElement('button');
       b.className='search__item'; b.setAttribute('role','option');
-      b.innerHTML=`<img src="${g.cover}" alt="" width="36" height="52" loading="lazy"/><span>${g.title}</span><em class="muted">${g.genres[0]}</em>`;
+      b.innerHTML=`<img src="${g.cover}" alt="" width="36" height="52" loading="lazy"/><span>${g.title}</span><em class="muted">${g.genres[0]||''}</em>`;
       b.addEventListener('click',()=>{ Banner.set(g); input.value=g.title; apply(q); results.hidden=true; });
       results.appendChild(b);
     });
@@ -335,7 +474,7 @@ const Search=(()=>{
   function apply(q){
     const filtered=DataStore.byQuery(q);
     rail.innerHTML=''; filtered.sort((a,b)=>b.rating-a.rating).forEach(g=>rail.appendChild(renderGameCard(g)));
-    asideList.innerHTML=''; DataStore.topBySearch(6).forEach(g=>asideList.appendChild(renderPopularItem(g)));
+    asideList.innerHTML=''; DataStore.topByVotes(6).forEach(g=>asideList.appendChild(renderPopularItem(g)));
   }
   function init(){
     input.addEventListener('input',e=>{const q=e.target.value; renderResults(q); apply(q);});
@@ -367,19 +506,29 @@ const FX=(()=>{
   Sidebar.init();
   Banner.init();
 
-  // Carrossel: mais populares por nota
+  // Carrossel: mais populares por nota (desempate por votos)
   const railRecentes=$('#railRecentes');
-  makeRail(railRecentes, DataStore.topByRating(20), renderGameCard);
+  const allTop = DataStore.topByRating(20);
+  if(allTop.length){
+    allTop.forEach(g=>railRecentes.appendChild(renderGameCard(g)));
+  } else {
+    railRecentes.innerHTML = '<p class="muted" style="padding:1rem">Sem jogos cadastrados ainda.</p>';
+  }
   $('#recentPrev').addEventListener('click',()=>railRecentes.scrollBy({left:-400,behavior:'smooth'}));
   $('#recentNext').addEventListener('click',()=>railRecentes.scrollBy({left: 400,behavior:'smooth'}));
 
-  // Lançamentos & destaques (pode adicionar quantos jogos quiser no DataStore)
+  // Lançamentos & destaques (HOME usa poster)
   const railBanners=$('#railBanners');
-  makeRail(railBanners, DataStore.all(), renderWideBanner);
+  const all = DataStore.all();
+  if(all.length){
+    all.forEach(g=>railBanners.appendChild(renderWideBanner(g)));
+  } else {
+    railBanners.innerHTML = '<p class="muted" style="padding:1rem">Cadastre jogos para ver destaques aqui.</p>';
+  }
 
-  // Mais pesquisados
+  // Mais pesquisados (proxy por votos)
   const popularList=$('#popularList');
-  DataStore.topBySearch(6).forEach(g=>popularList.appendChild(renderPopularItem(g)));
+  DataStore.topByVotes(6).forEach(g=>popularList.appendChild(renderPopularItem(g)));
 
   // Busca
   Search.init();

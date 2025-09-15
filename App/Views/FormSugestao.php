@@ -52,6 +52,11 @@
             $para = "projetostormsugestoes@gmail.com";
             $gameTitle = $_POST['gameTitle'] ?? false;
             $corpo = $_POST['reason'] ?? false;
+            $platforms = $_POST['platforms'] ?? [];
+            $platformOther = $_POST['platformOther'] ?? '';
+            $genero = $_POST['genre'] ?? false;
+            $link = $_POST['link'] ?? false;
+            $consent = $_POST['consent'] ?? false;
 
             // Validação simples
             if (empty($gameTitle)) {
@@ -61,20 +66,37 @@
                 $GLOBALS['erros']['Mensagem'][] = "O campo mensagem é obrigatório.";
             }
 
+            if (strlen($corpo) > 400) {
+                $GLOBALS['erros']['Mensagem'][] = "O campo mensagem não pode ter mais de 400 caracteres.";
+            }
+
             if (isset($_POST['nick']) && !empty(trim($_POST['nick']))) {
                 $corpo .= " (Nome no crédito: " . trim($_POST['nick']) . ")";
+            }
 
+            if (!empty($platforms)) {
+                $corpo .= " (Plataformas: " . implode(", ", $platforms) . ")";
+            }
+
+            if (isset($_POST['platformOther']) && !empty(trim($_POST['platformOther']))) {
+                $corpo .= " (Outra plataforma: " . trim($_POST['platformOther']) . ")";
+            }
+
+            if (isset($_POST['genre']) && !empty(trim($_POST['genre']))) {
+                $corpo .= " (Gênero: " . trim($_POST['genre']) . ")";
+            }
+
+            if (isset($_POST['link']) && !empty(trim($_POST['link']))) {
+                $corpo .= " (Link: " . trim($_POST['link']) . ")";
             }
 
             $headers = "From:projetostormsugestoes@gmail.com";
                        
-            if (isset($_POST['email']) && !empty(trim($_POST['email']))) {
+            if (isset($_POST['email']) && !empty(trim($_POST['email'])) && $consent) {
                 $corpo .= " (E-mail para contato: " . trim($_POST['email']) . ")";
                 $headers .= "\r\n" .
                        "Reply-To: " . trim($_POST['email']) . "\r\n";
             }
-
-
 
             if (empty($GLOBALS['erros'])) {
                 // Enviar e-mail
@@ -176,7 +198,7 @@
         <h1 id="title" class="card__title">Sugerir um Jogo</h1>
 
         <!-- Formulário -->
-        <form id="suggestForm" class="form" action="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post" novalidate enctype="multipart/form-data">
+        <form id="suggestForm" class="form" action="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post" enctype="multipart/form-data">
             <?php foreach ($GLOBALS['erros'] as $chave => $msgs): ?>
               <div class="erro">
                   <strong><?= $chave ?>:</strong>
@@ -204,13 +226,13 @@
                 <div class="field">
                   <span class="field__label">Plataforma(s) <b title="obrigatório">*</b></span>
                   <div class="checks checks--grid" role="group" aria-label="Plataformas">
-                    <label class="check"><input type="checkbox" name="platforms" value="PC" required /><i></i><span>PC</span></label>
-                    <label class="check"><input type="checkbox" name="platforms" value="PlayStation" /><i></i><span>PlayStation</span></label>
-                    <label class="check"><input type="checkbox" name="platforms" value="Xbox" /><i></i><span>Xbox</span></label>
-                    <label class="check"><input type="checkbox" name="platforms" value="Switch" /><i></i><span>Switch</span></label>
-                    <label class="check"><input type="checkbox" name="platforms" value="Mobile" /><i></i><span>Mobile</span></label>
-                    <label class="check"><input type="checkbox" name="platforms" value="Mac" /><i></i><span>Mac</span></label>
-                    <label class="check"><input type="checkbox" name="platforms" value="Linux" /><i></i><span>Linux</span></label>
+                    <label class="check"><input type="checkbox" name="platforms[]" value="PC" required /><i></i><span>PC</span></label>
+                    <label class="check"><input type="checkbox" name="platforms[]" value="PlayStation" /><i></i><span>PlayStation</span></label>
+                    <label class="check"><input type="checkbox" name="platforms[]" value="Xbox" /><i></i><span>Xbox</span></label>
+                    <label class="check"><input type="checkbox" name="platforms[]" value="Switch" /><i></i><span>Switch</span></label>
+                    <label class="check"><input type="checkbox" name="platforms[]" value="Mobile" /><i></i><span>Mobile</span></label>
+                    <label class="check"><input type="checkbox" name="platforms[]" value="Mac" /><i></i><span>Mac</span></label>
+                    <label class="check"><input type="checkbox" name="platforms[]" value="Linux" /><i></i><span>Linux</span></label>
                     <label class="check check--other">
                       <input type="checkbox" id="platformOtherToggle" />
                       <i></i><span>Outro</span>
@@ -224,18 +246,13 @@
                   <span class="field__label">Gênero <b title="obrigatório">*</b></span>
                   <select name="genre" id="genre" required>
                     <option value="" selected disabled>Selecione um gênero</option>
-                    <option>Ação</option>
-                    <option>Aventura</option>
-                    <option>RPG</option>
-                    <option>Estratégia</option>
-                    <option>Tiro</option>
-                    <option>Indie</option>
-                    <option>Esporte</option>
-                    <option>Corrida</option>
-                    <option>Simulação</option>
-                    <option>Plataforma</option>
-                    <option>Puzzle</option>
-                    <option>Terror</option>
+                    <option value="Ação e combate" <?=(isset($_POST['genre']) && $_POST['genre'] === 'Ação e combate') ? 'selected' : ''?>>Ação e combate</option>
+                    <option value="Esportes e competição" <?=(isset($_POST['genre']) && $_POST['genre'] === 'Esportes e competição') ? 'selected' : ''?>>Esportes e competição</option>
+                    <option value="Exploração e aventura" <?=(isset($_POST['genre']) && $_POST['genre'] === 'Exploração e aventura') ? 'selected' : ''?>>Exploração e aventura</option>
+                    <option value="Música e partygames" <?=(isset($_POST['genre']) && $_POST['genre'] === 'Música e partygames') ? 'selected' : ''?>>Música e partygames</option>
+                    <option value="Plataforma e indie" <?=(isset($_POST['genre']) && $_POST['genre'] === 'Plataforma e indie') ? 'selected' : ''?>>Plataforma e indie</option>
+                    <option value="Simulação e construção" <?=(isset($_POST['genre']) && $_POST['genre'] === 'Simulação e construção') ? 'selected' : ''?>>Simulação e construção</option>
+                    <option value="Terror e mistério" <?=(isset($_POST['genre']) && $_POST['genre'] === 'Terror e mistério') ? 'selected' : ''?>>Terror e mistério</option>
                   </select>
                 </label>
 
@@ -272,7 +289,7 @@
                 </label>
 
                 <label class="check check--consent">
-                  <input type="checkbox" id="consent" />
+                  <input name="consent" type="checkbox" id="consent" />
                   <i></i>
                   <span>Quero receber atualizações por e-mail sobre essa sugestão.</span>
                 </label>
@@ -283,7 +300,7 @@
           <!-- Ações -->
           <footer class="form__actions">
             <button type="reset" class="btn btn--ghost">Limpar</button>
-            <button type="submit" class="btn btn--primary">Salvar &amp; Continuar</button>
+            <input type="submit" value="Enviar"  class="btn btn--primary"/>
           </footer>
         </form>
       </section>
@@ -379,22 +396,19 @@
     });
 
     const form = document.getElementById('suggestForm');
-    form?.addEventListener('submit', (e) => {
-      const title = document.getElementById('gameTitle');
-      const genre = document.getElementById('genre');
-      const platforms = [...document.querySelectorAll('input[name="platforms"]:checked')];
+      form?.addEventListener('submit', (e) => {
+        const title = document.getElementById('gameTitle');
+        const genre = document.getElementById('genre');
+        const platforms = [...document.querySelectorAll('input[name="platforms[]"]:checked')];
 
-      let ok = true;
-      if (!title.value.trim()) { ok = false; title.focus(); }
-      else if (!platforms.length && !toggleOther?.checked) { ok = false; alert('Selecione ao menos uma plataforma.'); }
-      else if (genre.selectedIndex === 0) { ok = false; alert('Selecione um gênero.'); }
+        let ok = true;
+        if (!title.value.trim()) { ok = false; title.focus(); }
+        else if (!platforms.length && !toggleOther?.checked) { ok = false; alert('Selecione ao menos uma plataforma.'); }
+        else if (genre.selectedIndex === 0) { ok = false; alert('Selecione um gênero.'); }
 
-      if (!ok) e.preventDefault();
-      else {
-        e.preventDefault();
-        alert('Sugestão registrada! (envio real será implementado)');
-      }
-    });
+        if (!ok) e.preventDefault();      // só bloqueia se tiver erro
+        // se estiver ok, NÃO chama preventDefault → o POST acontece
+      });
   </script>
 </body>
 </html>

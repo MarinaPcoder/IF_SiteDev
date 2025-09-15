@@ -5,7 +5,7 @@
     use App\Controllers\JogoController;
     use App\Core\DB\Conexao;
     use PDO;
-    use PDOException;
+    use PDOException;   
 
     class JogoCRUD {
 
