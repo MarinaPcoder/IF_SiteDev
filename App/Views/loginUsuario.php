@@ -23,6 +23,9 @@
     $usuario = new UsuarioController;
     
 ?>
+
+<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/login.css'?>">
+
 </head>
 
 <?php 
@@ -56,8 +59,7 @@
     }
 
 ?>
-<body>
-<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/login.css'?>">
+<body></body>
 
     <?php foreach ($erros as $chave => $msgs): ?>
         <div class="erro">
