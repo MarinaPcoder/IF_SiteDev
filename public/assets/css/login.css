@@ -1,0 +1,228 @@
+/* ==========================================================================
+   Storm • Login • styles-login.css
+   Layout com painel de mídia à esquerda e formulário à direita
+   Paleta: #192230 | #2c2f38 | #3d474e | #ffcd00
+   ========================================================================== */
+
+:root{
+  --bg: #192230;
+  --panel: #ffffff;          /* painel do formulário (claro p/ contraste) */
+  --ink: #0f1520;            /* texto principal no painel claro */
+  --muted: #5d6979;          /* texto secundário */
+  --stroke: #e5e9f0;         /* borda suave no claro */
+
+  --panel-dark: #2c2f38;     /* bloco de mídia (escuro) */
+  --panel-dark-2: #3d474e;
+
+  --accent: #ffcd00;
+  --accent-ink: #141821;
+
+  --radius: 26px;
+  --radius-sm: 14px;
+
+  --shadow-1: 0 12px 40px rgba(0,0,0,.18);
+  --shadow-2: 0 22px 70px rgba(0,0,0,.22);
+
+  --input-bg: #f6f8fb;
+  --input-border: #d9e1ec;
+
+  --google-border: #d9d9d9;
+
+  --maxw: 1080px;
+  --gutter: clamp(16px, 3vw, 28px);
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after{ box-sizing: border-box; }
+
+html,body{ height:100%; }
+body{
+  margin:0;
+  font: 500 15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell;
+  background: var(--bg);
+}
+
+/* =============================== Shell =================================== */
+.auth-shell{
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding: clamp(16px, 4vw, 40px);
+}
+
+/* Card principal que contém mídia + form */
+.auth-card{
+  width:min(var(--maxw), 100%);
+  display:grid;
+  grid-template-columns: 1.05fr 1fr;
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+}
+
+/* ============================== Painel Mídia ============================= */
+.auth-media{
+  position:relative;
+  background: var(--panel-dark);
+  isolation:isolate;
+}
+
+/* espaço para a imagem — você define via inline style no PHP (background-image) */
+.auth-media__bg{
+  position:absolute; inset:0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.05) contrast(.98);
+  opacity: .96;
+}
+
+/* moldura interna arredondada como na referência */
+.auth-media__frame{
+  position:absolute; inset: clamp(14px, 2.2vw, 22px);
+  border-radius: calc(var(--radius) - 12px);
+  border: 8px solid rgba(255,255,255,.92);
+  pointer-events: none;
+}
+
+/* topo/ações leves (opcional) */
+.auth-media__top{
+  position:absolute; left: clamp(22px,3vw,28px); right: clamp(22px,3vw,28px); top: clamp(22px,3vw,28px);
+  display:flex; align-items:center; justify-content:space-between;
+  z-index:1; color:#fff; text-shadow:0 2px 14px rgba(0,0,0,.35);
+  font-weight:900; letter-spacing:.2px;
+}
+
+/* rodapé/autor (opcional) */
+.auth-media__bottom{
+  position:absolute; left: clamp(22px,3vw,28px); right: clamp(22px,3vw,28px); bottom: clamp(22px,3vw,28px);
+  display:flex; align-items:center; justify-content:space-between; gap:12px; color:#fff; z-index:1;
+}
+.auth-media__author{
+  display:flex; align-items:center; gap:10px;
+  padding:8px 10px; border-radius:999px; background: rgba(0,0,0,.35); backdrop-filter: blur(3px);
+}
+.auth-media__author img{ width:32px; height:32px; border-radius:999px; border:2px solid rgba(255,255,255,.85); }
+
+/* ============================== Painel Form ============================== */
+.auth-panel{
+  padding: clamp(18px, 3.2vw, 36px);
+  display:grid; align-content:start; gap: 18px;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.brand-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.brand-row .lang{ border:1px solid var(--stroke); padding:8px 12px; border-radius:999px; background:#fff; color:var(--ink); font-weight:800; }
+
+.auth-title{
+  margin: 6px 0 0;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: .2px;
+}
+
+.auth-sub{ color: var(--muted); margin-top: -2px; }
+
+/* formulário */
+.auth-form{ display:grid; gap: 12px; }
+.form-field{ display:grid; gap:6px; }
+.form-field label{ font-weight:800; color: var(--ink); }
+
+.input{
+  width:100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--ink);
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.input:focus{
+  border-color: color-mix(in oklab, var(--accent) 65%, var(--input-border));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 24%, transparent);
+}
+.input.is-invalid{
+  border-color: #e5484d;
+  box-shadow: 0 0 0 3px rgba(229,72,77,.18);
+}
+
+.field-row{ display:flex; align-items:center; justify-content:space-between; }
+a.link{ color: var(--ink); text-decoration: none; font-weight: 800; }
+a.link:hover{ text-decoration: underline; }
+
+/* divisor "ou" */
+.divider{
+  display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; gap:10px;
+  color: var(--muted); font-weight:700;
+}
+.divider::before, .divider::after{
+  content:""; height:1px; background: var(--stroke);
+}
+
+/* botões */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  border-radius: 999px; padding: 12px 16px; border:1px solid var(--stroke);
+  background: #fff; color: var(--ink); font-weight:900; cursor:pointer;
+  transition: transform .06s, filter .2s, box-shadow .2s, border-color .2s;
+}
+.btn:active{ transform: translateY(1px); }
+.btn--primary{
+  background: var(--accent); color: var(--accent-ink);
+  border-color: color-mix(in oklab, var(--accent) 60%, var(--stroke));
+  box-shadow: 0 12px 26px color-mix(in oklab, var(--accent) 32%, transparent);
+}
+.btn--primary:hover{ filter:brightness(1.03); }
+.btn--google{
+  background:#fff; border-color: var(--google-border);
+}
+.btn--ghost{
+  background: transparent; border-color: var(--stroke);
+}
+
+/* linha de ações/rodapé */
+.auth-footer{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; color: var(--muted); }
+.auth-footer .social{ display:flex; gap:10px; }
+.social a{
+  width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
+  border:1px solid var(--stroke); background:#fff; color:var(--ink);
+}
+.social a:hover{ box-shadow: var(--shadow-1); transform: translateY(-1px); }
+
+/* helper p/ ícone dentro do input (exibir/ocultar senha) */
+.input-wrap{
+  position:relative;
+}
+.input-wrap .toggle-pass{
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  display:grid; place-items:center; width:36px; height:36px; border-radius:10px;
+  color:#7a8798; background:transparent; border:0;
+}
+.input-wrap .toggle-pass:hover{ color:#111; }
+
+/* ============================== Responsivo =============================== */
+@media (max-width: 1000px){
+  .auth-card{ grid-template-columns: 1fr; }
+  .auth-media{ height: 40vh; min-height: 320px; }
+  .auth-media__frame{ border-width: 6px; }
+}
+
+@media (max-width: 520px){
+  .auth-panel{ padding: var(--gutter); }
+  .auth-title{ font-size: clamp(24px, 9vw, 34px); }
+}
+
+/* ============================== A11y / Focus ============================= */
+:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
