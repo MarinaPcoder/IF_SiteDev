@@ -26,7 +26,7 @@
         }
     }
 
-    $titulo = 'Edição';
+    $titulo = 'Storm — Edição de Perfil';
     require_once '../../public/assets/components/head.php';
 ?>
  <!-- configuração  Head -->
