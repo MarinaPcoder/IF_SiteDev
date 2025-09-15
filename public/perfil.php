@@ -143,7 +143,7 @@ foreach ($rows as $r) {
 
 $reviewsCount = count($reviews);
 $username     = explode('@', (string)($user['email'] ?? ''))[0] ?? '';
-$memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('M/Y');
+$memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('d/m/Y');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
@@ -263,12 +263,7 @@ $memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('M/Y');
       <p class="usercard__bio"><?= htmlspecialchars($user['bio'] ?: 'Sem bio ainda.', ENT_QUOTES) ?></p>
 
       <ul class="usercard__meta">
-        <li>
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-          </span>
-          <span id="uc-loc">—</span>
-        </li>
+
         <li>
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M7 4h10v2H7V4zm-3 4h16v2H4V8zm3 4h10v2H7v-2zm-3 4h16v2H4v-2z"/></svg>
