@@ -14,8 +14,8 @@
     $usuario = new UsuarioController;
     $jogo = new JogoController;
 
-    const CAMINHO_PUBLIC = './../../public/';
-    CONST CAMINHO_INDEX = './../../public/index.php';
+      const CAMINHO_PUBLIC = './../../public/';
+      const CAMINHO_INDEX = './../../public/index.php';
 
     if (empty($_SESSION['Usuario'])) {
         header(header: 'Location: ./loginUsuario.php');
@@ -47,17 +47,25 @@
     $GLOBALS['erros'] = [];
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        var_dump($_POST);
 
             // Dados do formulário
             $para = "projetostormsugestoes@gmail.com";
             $gameTitle = $_POST['gameTitle'];
-            $corpo = $_POST['reason'] . "
+            $corpo = $_POST['reason'];
 
-- Enviado por: " . $_SESSION['Usuario']['Email'];
 
-            $headers = "From:projetostormsugestoes@gmail.com" . "\r\n" .
-                       "Reply-To: " . $_SESSION['Usuario']['Email'] . "\r\n";
+            if (isset($_POST['nick']) && !empty(trim($_POST['nick']))) {
+                $corpo .= " (Nome no crédito: " . trim($_POST['nick']) . ")";
+
+            }
+
+            $headers = "From:projetostormsugestoes@gmail.com";
+                       
+            if (isset($_POST['email']) && !empty(trim($_POST['email']))) {
+                $corpo .= " (E-mail para contato: " . trim($_POST['email']) . ")";
+                $headers .= "\r\n" .
+                       "Reply-To: " . trim($_POST['email']) . "\r\n";
+            }
 
             // Validação simples
             if (empty($gameTitle)) {
@@ -254,12 +262,12 @@
 
                 <label class="field">
                   <span class="field__label">Nome ou Apelido</span>
-                  <input type="text" name="nick" id="nick" placeholder="Como quer aparecer no crédito?" />
+                  <input type="text" name="nick" id="nick" placeholder="Como quer aparecer no crédito?" value="<?= htmlspecialchars(string: $_POST['nick'] ?? $dadoUsuario['nome_usuario']) ?>"/>
                 </label>
 
                 <label class="field">
                   <span class="field__label">E-mail <small class="muted">(opcional)</small></span>
-                  <input type="email" name="email" id="email" placeholder="voce@exemplo.com" disabled />
+                  <input type="email" name="email" id="email" placeholder="voce@exemplo.com" disabled value="<?= htmlspecialchars(string: $_POST['email'] ?? $dadoUsuario['email']) ?>"/>
                 </label>
 
                 <label class="check check--consent">

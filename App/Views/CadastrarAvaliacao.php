@@ -9,7 +9,8 @@
     $jogo = new JogoController;
     $avaliacao = new AvaliacaoController;
 
-    CONST CAMINHO_INDEX = './../../public/index.php';
+    const CAMINHO_PUBLIC = './../../public/';
+    const CAMINHO_INDEX = './../../public/index.php';
 
     if (isset($_SESSION['Mensagem_redirecionamento'])) {
         echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";

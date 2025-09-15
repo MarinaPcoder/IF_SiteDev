@@ -14,6 +14,9 @@
     $usuario = new UsuarioController;
     $jogo = new JogoController;
 
+    const CAMINHO_PUBLIC = './../../public/';
+    const CAMINHO_INDEX = './../../public/index.php';
+    
     if (empty($_SESSION['Usuario'])) {
         header(header: 'Location: ./loginUsuario.php');
         exit;
