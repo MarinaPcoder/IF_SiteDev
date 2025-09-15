@@ -25,8 +25,8 @@ try {
     }
 
     $sql = "
-        INSERT INTO Usuario (nome_usuario, email, senha, tipo_perfil, status_ativo)
-        VALUES (:nome, :email, :senha, 'admin', 1)
+        INSERT INTO Usuario (nome_usuario, email, senha, tipo_perfil)
+        VALUES (:nome, :email, :senha, 'admin')
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
