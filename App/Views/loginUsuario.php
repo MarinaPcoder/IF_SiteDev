@@ -54,11 +54,10 @@
             
         }
     }
+
 ?>
-
 <body>
-
-<link rel="stylesheet" href="../">
+<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/login.css'?>">
 
     <?php foreach ($erros as $chave => $msgs): ?>
         <div class="erro">
@@ -78,17 +77,16 @@
     </form>
 
 <script>
-// Storm • Login UI helpers (não altera o PHP existente)
 (function(){
-  const SIGNUP_URL = 'signup.php'; // ajuste se a sua rota for outra
+  const SIGNUP_URL = 'signup.php'; 
 
-  // ===== Mostrar/ocultar senha =====
+
   const passInput = document.querySelector('input[type="password"], #password, [name="password"]');
   if (passInput) {
-    // cria o botão se não existir
+    
     let wrap = passInput.closest('.input-wrap');
     if (!wrap) {
-      // envolve sem quebrar layouts existentes
+     
       wrap = document.createElement('div');
       wrap.className = 'input-wrap';
       passInput.parentNode.insertBefore(wrap, passInput);
