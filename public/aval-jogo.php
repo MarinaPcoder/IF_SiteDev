@@ -7,239 +7,192 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\DB\Conexao;
 
+// URLs de views para links/redirects
 const CAMINHO_VIEWS = './../App/Views/';
 
-// ----------------- valida id -----------------
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-if ($id <= 0) {
+// util simples de escape
+function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+
+// ---------- Obtém ID do jogo ----------
+$idJogo = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$idJogo || $idJogo <= 0) {
   header('Location: index.php');
   exit;
 }
 
+// ---------- Conexão ----------
 $pdo = Conexao::getInstancia();
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-// helper pra montar caminho web respeitando subpasta
-$basePath   = rtrim(str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'])), '/');
-$toWeb = function (?string $p) use ($basePath): string {
-  $p = (string)($p ?? '');
-  if ($p === '') return '';
-  if (preg_match('#^https?://#i', $p)) return $p;         // url absoluta
-  $p = ltrim($p, '/');                                    // ex: uploads/...
-  // se app está na raiz "/", não duplica a barra
-  $prefix = $basePath ? $basePath.'/' : '/';
-  return $prefix . $p;
-};
-
-// ----------------- ações POST (nova avaliação / deletar a própria) -----------------
-$flash = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $action  = $_POST['action'] ?? '';
-  $userId  = (int)($_SESSION['Usuario']['Id'] ?? 0);
-
-  try {
-    if ($action === 'new_review') {
-      if (!$userId) {
-        $flash = 'Faça login para avaliar.';
-      } else {
-        $nota = isset($_POST['nota']) ? (float)$_POST['nota'] : -1;
-        $just = trim((string)($_POST['just'] ?? ''));
-        if ($nota < 0 || $nota > 10) {
-          $flash = 'Nota inválida (0–10).';
-        } elseif (mb_strlen($just) < 3) {
-          $flash = 'Escreva um comentário (mín. 3 caracteres).';
-        } else {
-          // se já existe avaliação do usuário para o jogo, atualiza; senão, insere
-          $stmt = $pdo->prepare("SELECT id_avaliacao FROM Avaliacao WHERE id_usuario = :u AND id_jogo = :j LIMIT 1");
-          $stmt->execute([':u'=>$userId, ':j'=>$id]);
-          $existing = (int)($stmt->fetchColumn() ?: 0);
-
-          if ($existing) {
-            $up = $pdo->prepare("UPDATE Avaliacao SET nota = :n, justificativa = :t, data_avaliacao = NOW() WHERE id_avaliacao = :id");
-            $up->execute([':n'=>$nota, ':t'=>$just, ':id'=>$existing]);
-            $flash = 'Avaliação atualizada.';
-          } else {
-            $ins = $pdo->prepare("INSERT INTO Avaliacao (id_usuario, id_jogo, justificativa, nota) VALUES (:u, :j, :t, :n)");
-            $ins->execute([':u'=>$userId, ':j'=>$id, ':t'=>$just, ':n'=>$nota]);
-            $flash = 'Avaliação publicada.';
-          }
-        }
-      }
-    }
-
-    if ($action === 'delete_review') {
-      if (!$userId) {
-        $flash = 'Você precisa estar logado.';
-      } else {
-        $rid = (int)($_POST['rid'] ?? 0);
-        if ($rid > 0) {
-          $del = $pdo->prepare("DELETE FROM Avaliacao WHERE id_avaliacao = :id AND id_usuario = :u AND id_jogo = :j");
-          $del->execute([':id'=>$rid, ':u'=>$userId, ':j'=>$id]);
-          $flash = $del->rowCount() ? 'Avaliação excluída.' : 'Avaliação não encontrada.';
-        }
-      }
-    }
-  } catch (Throwable $e) {
-    $flash = 'Erro: ' . $e->getMessage();
-  }
-
-  // PRG (post-redirect-get) pra evitar re-envio
-  $_SESSION['flash'] = $flash;
-  header('Location: aval-jogo.php?id=' . $id);
-  exit;
-}
-
-// captura e exibe flash
-if (isset($_SESSION['flash'])) {
-  $flash = $_SESSION['flash'];
-  unset($_SESSION['flash']);
-}
-
-// ----------------- lê dados do jogo -----------------
-$stmt = $pdo->prepare("
-  SELECT id_jogo, titulo, descricao, desenvolvedora, data_lancamento, link_compra, plataforma
-  FROM Jogo
-  WHERE id_jogo = :id
-  LIMIT 1
-");
-$stmt->execute([':id'=>$id]);
-$game = $stmt->fetch(PDO::FETCH_ASSOC);
+// ---------- Lê o jogo + gêneros ----------
+$sqlJogo = "
+  SELECT 
+    j.id_jogo,
+    j.titulo,
+    j.descricao,
+    j.desenvolvedora,
+    j.data_lancamento,
+    j.link_compra,
+    j.plataforma,
+    GROUP_CONCAT(g.nome_genero ORDER BY g.nome_genero SEPARATOR ', ') AS generos
+  FROM Jogo j
+  LEFT JOIN Jogo_Genero jg ON jg.id_jogo = j.id_jogo
+  LEFT JOIN Genero g       ON g.id_genero = jg.id_genero
+  WHERE j.id_jogo = :id
+  GROUP BY j.id_jogo
+";
+$stmt = $pdo->prepare($sqlJogo);
+$stmt->execute([':id' => $idJogo]);
+$game = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 if (!$game) {
-  http_response_code(404);
-  echo "<!doctype html><meta charset='utf-8'><style>body{font-family:system-ui;background:#0b0b0c;color:#eee;padding:3rem}</style><h1>Jogo não encontrado</h1><p><a href='index.php' style='color:#ffd300'>Voltar</a></p>";
+  header('Location: index.php');
   exit;
 }
 
-// gêneros
-$genresStmt = $pdo->prepare("
-  SELECT g.nome_genero
-  FROM Jogo_Genero jg
-  JOIN Genero g ON g.id_genero = jg.id_genero
-  WHERE jg.id_jogo = :id
-  ORDER BY g.nome_genero
-");
-$genresStmt->execute([':id'=>$id]);
-$genres = array_map(fn($r)=>$r['nome_genero'], $genresStmt->fetchAll(PDO::FETCH_ASSOC));
-
-// imagens
+// ---------- Imagens (poster, banner, screenshots) ----------
 $poster = $pdo->prepare("SELECT caminho FROM Jogo_Imagem WHERE id_jogo = :id AND tipo = 'poster' ORDER BY ordem_exib LIMIT 1");
-$poster->execute([':id'=>$id]);
-$posterPath = $poster->fetchColumn() ?: 'assets/img/poster.png';
+$poster->execute([':id' => $idJogo]);
+$posterPath = $poster->fetchColumn() ?: '/assets/img/poster.png';
 
 $banner = $pdo->prepare("SELECT caminho FROM Jogo_Imagem WHERE id_jogo = :id AND tipo = 'banner' ORDER BY ordem_exib LIMIT 1");
-$banner->execute([':id'=>$id]);
-$bannerPath = $banner->fetchColumn() ?: $posterPath;
+$banner->execute([':id' => $idJogo]);
+$bannerPath = $banner->fetchColumn() ?: '/assets/img/banner.png';
 
-$shots = $pdo->prepare("SELECT id_imagem, caminho, ordem_exib FROM Jogo_Imagem WHERE id_jogo = :id AND tipo = 'screenshot' ORDER BY ordem_exib ASC, id_imagem ASC");
-$shots->execute([':id'=>$id]);
-$screens = $shots->fetchAll(PDO::FETCH_ASSOC);
+$shots = $pdo->prepare("SELECT caminho FROM Jogo_Imagem WHERE id_jogo = :id AND tipo = 'screenshot' ORDER BY ordem_exib");
+$shots->execute([':id' => $idJogo]);
+$screens = $shots->fetchAll(\PDO::FETCH_COLUMN);
 
-// média/contagem
-$avgStmt = $pdo->prepare("SELECT COUNT(*) AS c, AVG(nota) AS a FROM Avaliacao WHERE id_jogo = :id");
-$avgStmt->execute([':id'=>$id]);
-$stats = $avgStmt->fetch(PDO::FETCH_ASSOC);
-$reviewsCount = (int)($stats['c'] ?? 0);
-$avgScore     = $reviewsCount ? round((float)$stats['a'], 1) : 0.0;
+// ---------- Média e contagem de avaliações ----------
+$stats = $pdo->prepare("SELECT ROUND(AVG(nota),1) AS media, COUNT(*) AS total FROM Avaliacao WHERE id_jogo = :id");
+$stats->execute([':id' => $idJogo]);
+$mediaAv = (float)($stats->fetch(\PDO::FETCH_ASSOC)['media'] ?? 0);
+$countAv = (int)($stats->fetch(\PDO::FETCH_ASSOC)['total'] ?? 0); // cuidado: fetch já foi feito
+// corrigindo a leitura dupla: refaz a consulta de forma segura
+$stats->execute([':id' => $idJogo]);
+$rowStats = $stats->fetch(\PDO::FETCH_ASSOC) ?: ['media'=>null,'total'=>0];
+$mediaAv = $rowStats['media'] !== null ? (float)$rowStats['media'] : 0.0;
+$countAv = (int)$rowStats['total'];
 
-// avaliações (com usuário)
-$revStmt = $pdo->prepare("
+// ---------- Lista de avaliações (com usuário) ----------
+$sqlReviews = "
   SELECT 
     a.id_avaliacao   AS id,
-    a.nota           AS nota,
-    a.justificativa  AS texto,
-    a.data_avaliacao AS data,
-    u.id_usuario     AS uid,
-    u.nome_usuario   AS nome
+    a.nota           AS score,
+    a.justificativa  AS text,
+    a.data_avaliacao AS dt,
+    u.nome_usuario   AS user,
+    u.id_usuario     AS uid
   FROM Avaliacao a
-  JOIN Usuario u ON u.id_usuario = a.id_usuario
+  INNER JOIN Usuario u ON u.id_usuario = a.id_usuario
   WHERE a.id_jogo = :id
   ORDER BY a.data_avaliacao DESC, a.id_avaliacao DESC
-");
-$revStmt->execute([':id'=>$id]);
-$rawReviews = $revStmt->fetchAll(PDO::FETCH_ASSOC);
+";
+$stmtR = $pdo->prepare($sqlReviews);
+$stmtR->execute([':id' => $idJogo]);
+$reviewRows = $stmtR->fetchAll(\PDO::FETCH_ASSOC);
 
-// prepara dados p/ JS
-$MEDIA = array_map(fn($r)=>[
-  'src' => $toWeb($r['caminho']),
-  'alt' => 'Screenshot'
-], $screens);
+// ---------- “Relacionados”: outros jogos (ordenados pela média, depois id) ----------
+$sqlRelated = "
+  SELECT 
+    j.id_jogo,
+    j.titulo,
+    COALESCE(p.caminho, '/assets/img/poster.png') AS poster,
+    m.media
+  FROM Jogo j
+  LEFT JOIN (
+    SELECT id_jogo, ROUND(AVG(nota),1) AS media
+    FROM Avaliacao
+    GROUP BY id_jogo
+  ) m ON m.id_jogo = j.id_jogo
+  LEFT JOIN (
+    SELECT id_jogo, caminho
+    FROM Jogo_Imagem
+    WHERE tipo = 'poster'
+    GROUP BY id_jogo
+  ) p ON p.id_jogo = j.id_jogo
+  WHERE j.id_jogo <> :id
+  ORDER BY (m.media IS NULL), m.media DESC, j.id_jogo DESC
+  LIMIT 12
+";
+$stmtRel = $pdo->prepare($sqlRelated);
+$stmtRel->execute([':id' => $idJogo]);
+$relatedRows = $stmtRel->fetchAll(\PDO::FETCH_ASSOC);
 
-// avatar mockado (não há coluna de avatar na tabela)
-$REVIEWS = array_map(function($r){
-  $avatarSeed = 10 + ((int)$r['uid'] % 60);
+// ---------- Helpers de caminho web ----------
+$basePath   = rtrim(str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'])), '/');
+$basePrefix = $basePath === '' ? '' : $basePath;
+$toWeb = function (?string $p) use ($basePrefix): string {
+  $p = (string)($p ?? '');
+  if ($p === '') return '';
+  if (preg_match('#^https?://#i', $p)) return $p;
+  $p = ltrim($p, '/');
+  return ($basePrefix ? $basePrefix.'/' : '/') . $p;
+};
+
+// Dados para o front
+$MEDIA = array_map(fn($c) => ['src' => $toWeb($c), 'alt' => 'Screenshot'], $screens ?: []);
+$REVIEWS = array_map(function(array $r) {
+  // avatar dummy estável por usuário
+  $avatar = 'https://i.pravatar.cc/96?u=' . urlencode((string)$r['uid']);
+  $iso = (new DateTime($r['dt']))->format('Y-m-d');
   return [
     'id'     => (int)$r['id'],
-    'user'   => (string)$r['nome'],
-    'avatar' => "https://i.pravatar.cc/96?img={$avatarSeed}",
-    'date'   => (new DateTime($r['data']))->format('Y-m-d'),
-    'score'  => (float)$r['nota'],
-    'text'   => (string)($r['texto'] ?? ''),
-    'helpful'=> 0,
-    'mine'   => isset($_SESSION['Usuario']['Id']) && (int)$_SESSION['Usuario']['Id'] === (int)$r['uid'],
+    'user'   => (string)$r['user'],
+    'avatar' => $avatar,
+    'date'   => $iso,
+    'score'  => (float)$r['score'],
+    'text'   => (string)($r['text'] ?? ''),
   ];
-}, $rawReviews);
+}, $reviewRows);
 
-// relacionados: outros jogos que compartilham algum gênero
-$relStmt = $pdo->prepare("
-  SELECT 
-    j2.id_jogo,
-    j2.titulo,
-    COALESCE(p.caminho, 'assets/img/poster.png') AS poster,
-    ROUND(COALESCE(AVG(a2.nota),0),1) AS media
-  FROM Jogo j2
-  JOIN Jogo_Genero jg2 ON jg2.id_jogo = j2.id_jogo
-  LEFT JOIN Jogo_Imagem p ON p.id_jogo = j2.id_jogo AND p.tipo = 'poster'
-  LEFT JOIN Avaliacao a2 ON a2.id_jogo = j2.id_jogo
-  WHERE jg2.id_genero IN (SELECT id_genero FROM Jogo_Genero WHERE id_jogo = :id)
-    AND j2.id_jogo <> :id
-  GROUP BY j2.id_jogo, j2.titulo, p.caminho
-  ORDER BY media DESC, j2.titulo ASC
-  LIMIT 12
-");
-$relStmt->execute([':id'=>$id]);
-$RELATED = array_map(fn($r)=>[
-  'id'    => (int)$r['id_jogo'],
-  'title' => (string)$r['titulo'],
-  'cover' => $toWeb($r['poster']),
-  'score' => (float)$r['media'],
-], $relStmt->fetchAll(PDO::FETCH_ASSOC));
+$RELATED = array_map(function(array $r) use ($toWeb) {
+  return [
+    'id'    => (int)$r['id_jogo'],
+    'title' => (string)$r['titulo'],
+    'cover' => $toWeb((string)$r['poster']),
+    'score' => isset($r['media']) ? (float)$r['media'] : null
+  ];
+}, $relatedRows);
 
-// dados básicos pra página
-$title         = (string)$game['titulo'];
-$desc          = (string)($game['descricao'] ?? '');
-$dev           = (string)($game['desenvolvedora'] ?? '');
-$releaseStr    = $game['data_lancamento'] ? (new DateTime($game['data_lancamento']))->format('d/m/Y') : '—';
-$buyLink       = (string)($game['link_compra'] ?: '');
-$platformLabel = (string)($game['plataforma'] ?: '');
-$posterURL     = $toWeb($posterPath);
-$bannerURL     = $toWeb($bannerPath);
+// Campos do jogo para exibir
+$titulo         = (string)$game['titulo'];
+$descricao      = (string)($game['descricao'] ?? '');
+$desenvolvedora = (string)($game['desenvolvedora'] ?? '');
+$dataLanc       = $game['data_lancamento'] ? (new DateTime($game['data_lancamento']))->format('d/m/Y') : '—';
+$linkCompra     = (string)($game['link_compra'] ?? '');
+$plataforma     = strtolower(trim((string)($game['plataforma'] ?? '')));
+$generos        = (string)($game['generos'] ?? '');
+
+$posterWeb = $toWeb($posterPath);
+$bannerWeb = $toWeb($bannerPath);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Storm — <?= htmlspecialchars($title, ENT_QUOTES) ?></title>
+  <title>Storm — <?= e($titulo) ?></title>
   <meta name="color-scheme" content="dark light" />
   <link rel="stylesheet" href="./assets/css/styles-aval.css" />
-  <link rel="icon" href="./assets/Favicon/logo-sem-fundo.png" />
+  <link rel="icon" href="./assets/img/logo-sem-fundo.png" />
+  <style>
+    /* Centralização do bloco Plataforma (label + ícone + nome) */
+    .facts .platforms{
+      display:flex; align-items:center; justify-content:center; gap:.5rem; text-align:center; flex-wrap:wrap;
+    }
+    .facts .platforms .pf{ width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; }
+    .facts .platforms .pf svg{ width:20px; height:20px; display:block; }
+    .facts .platforms em{ font-style:normal; opacity:.8; }
+  </style>
 </head>
 <body>
-
-<?php if ($flash): ?>
-  <div class="toast" role="status" aria-live="polite" style="position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;background:#222;color:#fff;padding:.6rem 1rem;border-radius:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.35)">
-    <?= htmlspecialchars($flash, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') ?>
-  </div>
-  <script>setTimeout(()=>document.querySelector('.toast')?.remove(), 4200);</script>
-<?php endif; ?>
-
 <div class="app" aria-live="polite">
   <!-- ============ SIDEBAR ============ -->
   <aside id="sidebar" class="sidebar compact" aria-label="Navegação principal">
     <div class="brand">
       <a class="brand__avatar" href="index.php" aria-label="Storm — Homepage">
-        <img id="siteLogo" src="./assets/Favicon/logo-sem-fundo.png" alt="Logo Storm"
+        <img id="siteLogo" src="./assets/img/logo-sem-fundo.png" alt="Logo Storm"
              onerror="this.replaceWith(this.nextElementSibling)" />
         <svg class="brand__avatar-fallback" viewBox="0 0 48 48" aria-hidden="true">
           <circle cx="24" cy="24" r="23" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -302,41 +255,43 @@ $bannerURL     = $toWeb($bannerPath);
     <!-- HERO -->
     <section class="hero">
       <figure class="hero__backdrop">
-        <img id="trailerThumb" src="<?= htmlspecialchars($bannerURL, ENT_QUOTES) ?>" alt="Banner de <?= htmlspecialchars($title, ENT_QUOTES) ?>" />
+        <img id="trailerThumb" src="<?= e($bannerWeb) ?>" alt="Banner de <?= e($titulo) ?>" />
       </figure>
 
       <!-- Poster sobreposto -->
       <figure class="poster">
-        <img id="posterImg" src="<?= htmlspecialchars($posterURL, ENT_QUOTES) ?>" alt="Capa de <?= htmlspecialchars($title, ENT_QUOTES) ?>" />
+        <img id="posterImg" src="<?= e($posterWeb) ?>" alt="Capa de <?= e($titulo) ?>" />
       </figure>
 
       <!-- Meta básica -->
       <div class="meta">
-        <h1 class="title"><?= htmlspecialchars($title, ENT_QUOTES) ?></h1>
+        <h1 class="title"><?= e($titulo) ?></h1>
 
         <ul class="facts">
-          <li><strong>Desenvolvedora:</strong> <?= htmlspecialchars($dev ?: '—', ENT_QUOTES) ?></li>
-          <li><strong>Lançamento:</strong> <?= htmlspecialchars($releaseStr, ENT_QUOTES) ?></li>
+          <li><strong>Desenvolvedora:</strong> <?= e($desenvolvedora ?: '—') ?></li>
+          <li><strong>Lançamento:</strong> <?= e($dataLanc) ?></li>
           <li class="platforms">
             <strong>Plataforma:</strong>
-            <span class="pf" title="PC" aria-hidden="true">
+            <span class="pf" title="<?= e($plataforma ?: '—') ?>" aria-hidden="true">
+              <!-- Ícone genérico de PC/monitor; ajuste se quiser mapear por plataforma -->
               <svg viewBox="0 0 24 24"><path d="M3 5h18v9H3zM2 16h8v2H2zm10 0h10v2H12z"></path></svg>
             </span>
-            <em class="muted">pc</em>
+            <em class="muted"><?= e($plataforma ?: '—') ?></em>
           </li>
-          <li><strong>Gênero:</strong> <?= htmlspecialchars(implode(', ', $genres) ?: '—', ENT_QUOTES) ?></li>
+          <li><strong>Gênero:</strong> <?= e($generos ?: '—') ?></li>
         </ul>
 
         <p class="desc">
-          <?= nl2br(htmlspecialchars($desc ?: 'Sem descrição.', ENT_QUOTES)) ?>
+          <?= nl2br(e($descricao ?: 'Sem descrição.')) ?>
         </p>
 
         <div class="rating">
-          <div class="rating__avg" title="Média dos usuários">⭐ <b id="avgScore"><?= number_format($avgScore, 1, '.', '') ?></b> <span class="muted">/ 10</span></div>
-          <div class="rating__count"><span id="reviewCount"><?= number_format($reviewsCount, 0, '', '.') ?></span> reviews</div>
-          <?php if ($buyLink): ?>
-            <a class="btn btn--primary" id="buyNow" href="<?= htmlspecialchars($buyLink, ENT_QUOTES) ?>" target="_blank" rel="noopener">Comprar agora</a>
+          <div class="rating__avg" title="Média dos usuários">⭐ <b id="avgScore"><?= number_format($mediaAv, 1, ',', '') ?></b> <span class="muted">/ 10</span></div>
+          <div class="rating__count"><span id="reviewCount"><?= number_format($countAv, 0, ',', '.') ?></span> reviews</div>
+          <?php if ($linkCompra): ?>
+            <a class="btn btn--ghost" id="buyNow" href="<?= e($linkCompra) ?>" target="_blank" rel="noopener">Comprar agora</a>
           <?php endif; ?>
+          <a class="btn btn--primary" id="btnDoReview" href="<?= CAMINHO_VIEWS . 'CadastrarAvaliacao.php?id_jogo=' . (int)$idJogo ?>">Faça sua avaliação</a>
         </div>
       </div>
     </section>
@@ -346,13 +301,15 @@ $bannerURL     = $toWeb($bannerPath);
       <header class="section__header">
         <h2>Mídia</h2>
       </header>
-      <div id="galleryGrid" class="gallery__grid" role="list"></div>
+      <div id="galleryGrid" class="gallery__grid" role="list">
+        <!-- JS insere thumbs -->
+      </div>
     </section>
 
-    <!-- AVALIAÇÕES / COMENTÁRIOS -->
+    <!-- AVALIAÇÕES (somente listagem) -->
     <section class="section reviews" aria-label="Avaliações e Comentários">
       <header class="section__header reviews__header">
-        <h2>Avaliações e Comentários</h2>
+        <h2>Avaliações</h2>
         <div class="filters">
           <label>Ordenar:
             <select id="reviewSort">
@@ -364,26 +321,13 @@ $bannerURL     = $toWeb($bannerPath);
         </div>
       </header>
 
-      <!-- criar avaliação -->
-      <form id="newReview" class="newreview" method="post" autocomplete="off">
-        <input type="hidden" name="action" value="new_review">
-        <input type="hidden" name="nota" id="notaInput" value="">
-        <div class="stars" id="starInput" aria-label="Sua nota" role="radiogroup"></div>
-        <textarea id="reviewText" name="just" rows="3" placeholder="Escreva sua avaliação..."></textarea>
-        <div class="newreview__actions">
-          <button type="reset" class="btn btn--ghost">Limpar</button>
-          <button type="submit" class="btn btn--primary" <?= empty($_SESSION['Usuario']['Id']) ? 'disabled title="Entre para avaliar"' : '' ?>>Publicar</button>
-        </div>
-        <?php if (empty($_SESSION['Usuario']['Id'])): ?>
-          <small class="muted">Você precisa <a href="<?= CAMINHO_VIEWS ?>loginUsuario.php">entrar</a> para avaliar.</small>
-        <?php endif; ?>
-      </form>
-
-      <div id="reviewsList" class="reviews__list" role="list"></div>
+      <div id="reviewsList" class="reviews__list" role="list">
+        <!-- JS injeta cards -->
+      </div>
     </section>
 
     <!-- RELACIONADOS -->
-    <section class="section related" aria-label="Quem gostou de <?= htmlspecialchars($title, ENT_QUOTES) ?> também gostou de">
+    <section class="section related" aria-label="Relacionados">
       <header class="section__header">
         <h2>Relacionados</h2>
         <div class="section__controls">
@@ -396,7 +340,7 @@ $bannerURL     = $toWeb($bannerPath);
   </main>
 </div>
 
-<!-- ============ LIGHTBOX ============ -->
+<!-- ============ LIGHTBOX (modal de mídia) ============ -->
 <div id="lightbox" class="lightbox" hidden aria-hidden="true" aria-label="Visualizador de mídia" role="dialog">
   <button class="lightbox__close" id="lbClose" aria-label="Fechar (Esc)">✕</button>
   <button class="lightbox__nav prev" id="lbPrev" aria-label="Anterior">‹</button>
@@ -421,13 +365,6 @@ $bannerURL     = $toWeb($bannerPath);
       <div class="review__score" title="Nota do usuário"></div>
     </header>
     <p class="review__text"></p>
-    <div class="review__actions">
-      <form class="deleteForm" method="post" style="display:none">
-        <input type="hidden" name="action" value="delete_review">
-        <input type="hidden" name="rid" value="">
-      </form>
-      <button class="btn btn--tiny btn--danger delete">Excluir</button>
-    </div>
   </article>
 </template>
 
@@ -443,11 +380,16 @@ $bannerURL     = $toWeb($bannerPath);
   </article>
 </template>
 
-<!-- ======= DADOS PARA JS ======= -->
+<!-- ======= DADOS DO BACK-END ======= -->
 <script>
-  window.MEDIA   = <?= json_encode($MEDIA,   JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
-  window.REVIEWS = <?= json_encode($REVIEWS, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
-  window.RELATED = <?= json_encode($RELATED, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+  window.STORM = {
+    media: <?= json_encode($MEDIA,   JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>,
+    reviews: <?= json_encode($REVIEWS, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>,
+    related: <?= json_encode($RELATED, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>,
+    avg: <?= json_encode($mediaAv) ?>,
+    count: <?= json_encode($countAv) ?>,
+    title: <?= json_encode($titulo, JSON_UNESCAPED_UNICODE) ?>
+  };
 </script>
 
 <!-- ======= JS ======= -->
@@ -498,13 +440,19 @@ const fmtDate = (iso)=> new Date(iso).toLocaleDateString('pt-BR', {day:'2-digit'
   });
 })();
 
-/* ---------- Galeria + Lightbox ---------- */
+/* ---------------------- GALERIA + LIGHTBOX ---------------------- */
+const MEDIA = Array.isArray(window.STORM?.media) ? window.STORM.media : [];
+
 (function Gallery(){
   const grid = $('#galleryGrid');
-  (window.MEDIA||[]).forEach((m, i)=>{
+  if (!MEDIA.length) {
+    grid.innerHTML = '<p class="muted">Sem mídia cadastrada.</p>';
+    return;
+  }
+  MEDIA.forEach((m, i)=>{
     const btn = document.createElement('button');
     btn.className = 'gallery__item';
-    btn.innerHTML = `<img src="${m.src}" alt="${m.alt}">`;
+    btn.innerHTML = `<img src="${m.src}" alt="${m.alt||'Mídia'}">`;
     btn.addEventListener('click', ()=>Lightbox.open(i));
     grid.appendChild(btn);
   });
@@ -515,19 +463,17 @@ const Lightbox = (()=>{
   const img  = $('#lbImage');
   const cap  = $('#lbCaption');
   let index = 0;
-  const DATA = window.MEDIA||[];
 
   function show(i){
-    if(!DATA.length) return;
-    index = (i + DATA.length) % DATA.length;
-    const m = DATA[index];
+    index = (i + MEDIA.length) % MEDIA.length;
+    const m = MEDIA[index];
     img.src = m.src;
-    img.alt = m.alt || '';
+    img.alt = m.alt || 'Mídia';
     cap.textContent = m.alt || '';
   }
 
   function open(i=0){
-    if(!DATA.length) return;
+    if (!MEDIA.length) return;
     show(i);
     root.hidden = false;
     root.setAttribute('aria-hidden','false');
@@ -556,37 +502,11 @@ const Lightbox = (()=>{
   return { open, close, next, prev };
 })();
 
-/* ---------- Stars + submit nota ---------- */
-(function StarInput(){
-  const wrap = $('#starInput');
-  for(let i=1;i<=10;i++){
-    const b = document.createElement('button');
-    b.type='button';
-    b.className='star';
-    b.dataset.value = i;
-    b.innerHTML = `<svg viewBox="0 0 24 24"><path d="m12 2 2.9 6.1 6.7.9-4.8 4.6 1.2 6.7L12 17.9 6 20.3l1.2-6.7L2.4 9l6.7-.9L12 2z"/></svg>`;
-    wrap.appendChild(b);
-  }
-  let current = 0;
-  const update = (n)=>{
-    current = n;
-    $$('.star', wrap).forEach((el,idx)=> el.classList.toggle('is-on', idx < n));
-    $('#notaInput').value = String(current);
-  };
-  wrap.addEventListener('mouseover', e=>{
-    const v = +e.target.closest('.star')?.dataset.value || 0; if(v) update(v);
-  });
-  wrap.addEventListener('mouseleave', ()=>update(current));
-  wrap.addEventListener('click', e=>{
-    const v = +e.target.closest('.star')?.dataset.value || 0; if(v) update(v);
-  });
-  update(0);
-})();
+/* ---------------------- AVALIAÇÕES (listagem) ---------------------- */
+const REVIEWS = Array.isArray(window.STORM?.reviews) ? window.STORM.reviews : [];
 
-/* ---------- Reviews ---------- */
 function renderReview(r){
   const tpl = $('#tpl-review').content.cloneNode(true);
-  const root = tpl.querySelector('.review');
   tpl.querySelector('.review__avatar').src = r.avatar;
   tpl.querySelector('.review__avatar').alt = `Avatar de ${r.user}`;
   tpl.querySelector('.review__name').textContent = r.user;
@@ -594,26 +514,12 @@ function renderReview(r){
   time.textContent = fmtDate(r.date);
   time.dateTime = r.date;
   tpl.querySelector('.review__score').textContent = `⭐ ${Number(r.score).toFixed(1)}/10`;
-  tpl.querySelector('.review__text').textContent = r.text;
-
-  const delBtn = tpl.querySelector('.delete');
-  const delForm = tpl.querySelector('.deleteForm');
-  delForm.rid.value = r.id;
-
-  if (!r.mine) {
-    delBtn.style.display = 'none';
-  } else {
-    delBtn.addEventListener('click', ()=>{
-      if (confirm('Excluir sua avaliação?')) {
-        delForm.submit();
-      }
-    });
-  }
+  tpl.querySelector('.review__text').textContent = r.text || '';
   return tpl;
 }
 
 function sortReviews(mode){
-  const data = [...(window.REVIEWS||[])];
+  const data = [...REVIEWS];
   if(mode==='recent')  data.sort((a,b)=> new Date(b.date)-new Date(a.date));
   if(mode==='high')    data.sort((a,b)=> b.score-a.score);
   if(mode==='low')     data.sort((a,b)=> a.score-b.score);
@@ -624,28 +530,46 @@ function loadReviews(){
   const list = $('#reviewsList');
   const mode = $('#reviewSort').value;
   const items = sortReviews(mode);
-  list.innerHTML = items.length ? '' : '<p class="muted" style="padding:1rem">Ainda não há avaliações.</p>';
+  list.innerHTML = '';
+  if (!items.length) {
+    list.innerHTML = '<p class="muted">Ainda não há avaliações para este jogo.</p>';
+    return;
+  }
   items.forEach(r=> list.appendChild(renderReview(r)));
 }
 $('#reviewSort')?.addEventListener('change', loadReviews);
 loadReviews();
 
-/* ---------- Relacionados ---------- */
+// Atualiza média/contagem (garantia caso vindo do back seja 0)
+(function SetupRating(){
+  const avg = Number(window.STORM?.avg || 0);
+  const cnt = Number(window.STORM?.count || 0);
+  $('#avgScore').textContent = avg.toFixed(1).replace('.', ',');
+  $('#reviewCount').textContent = cnt.toLocaleString('pt-BR');
+})();
+
+/* ---------------------- RELACIONADOS (carrossel) ---------------------- */
+const RELATED = Array.isArray(window.STORM?.related) ? window.STORM.related : [];
+
 function renderRelatedCard(g){
   const tpl = $('#tpl-related-card').content.cloneNode(true);
   tpl.querySelector('.card__img').src = g.cover;
   tpl.querySelector('.card__img').alt = `Capa de ${g.title}`;
   tpl.querySelector('.card__title').textContent = g.title;
-  tpl.querySelector('.card__score').textContent = g.score ? `⭐ ${g.score.toFixed(1)}` : '—';
+  tpl.querySelector('.card__score').textContent = g.score!=null ? `⭐ ${Number(g.score).toFixed(1)}` : '';
   tpl.querySelector('.card').addEventListener('click', ()=> {
-    window.location.href = `aval-jogo.php?id=${encodeURIComponent(g.id)}`;
+    window.open(`aval-jogo.php?id=${encodeURIComponent(g.id)}`, '_self');
   });
   return tpl;
 }
 
 (function RelatedRail(){
   const rail = $('#relatedRail');
-  (window.RELATED||[]).forEach(g=> rail.appendChild(renderRelatedCard(g)));
+  if (!RELATED.length) {
+    rail.innerHTML = '<p class="muted" style="padding:1rem">Sem relacionados no momento.</p>';
+    return;
+  }
+  RELATED.forEach(g=> rail.appendChild(renderRelatedCard(g)));
 
   const prev = $('#relPrev');
   const next = $('#relNext');
