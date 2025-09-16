@@ -18,10 +18,69 @@
   --shadow-2: 0 22px 70px rgba(0,0,0,.22);
 
   /* troque a imagem aqui, se quiser, sem editar HTML */
-  --login-hero: url("https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1600&auto=format&fit=crop");
+  --login-hero: url("https://i.pinimg.com/736x/78/8e/24/788e2470a8c4c11872cbf731bfb03a89.jpg");
 }
 
-/* ---------- Reset suave ---------- */
+/* ======= consertando a bagaça das camadas para o layout do login ======= */
+.auth, .auth-wrap { position: relative; }
+
+/* Painel da imagem (esquerda) */
+.pane--visual {
+  position: relative;           
+  z-index: 1;                  
+  overflow: hidden;             
+  border-radius: 22px;          
+}
+
+.pane--visual img,
+.pane--visual .hero-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;        
+}
+
+/* Painel do formulário (direita) */
+.pane--form {
+  position: relative;
+  z-index: 5;                   
+}
+
+/* Card do formulário */
+.login-card {
+  position: relative;
+  z-index: 6;                  
+  background: #2c2f38;
+  border: 1px solid #3d474e;
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.38);
+}
+
+.auth-topbar,
+.btn-signup,
+.btn-join {
+  position: relative;
+  z-index: 7;                   
+}
+
+.pane--visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  box-shadow: inset 0 0 0 4px rgba(255,255,255,.35);
+  z-index: 2;                   
+  pointer-events: none;
+}
+
+@media (max-width: 900px){
+  .pane--form { z-index: 8; }
+  .login-card { margin-top: 16px; }
+}
+
+
+
 *,
 *::before,
 *::after{ box-sizing: border-box; }

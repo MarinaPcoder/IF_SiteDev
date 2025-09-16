@@ -79,7 +79,7 @@
 
     <div class="signup-hint">
         <span>Não tem conta?</span>
-        <a href="cadastro.php" class="btn-signup">Sign Up</a>
+        <a href="cadastroUsuario.php" class="btn-signup">Sign Up</a>
     </div>
 
 </body>
