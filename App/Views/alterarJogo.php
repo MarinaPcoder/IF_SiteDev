@@ -38,6 +38,8 @@
 ?>
  <!-- configuração  Head -->
 
+<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/altjogo.css'?>">
+ 
 </head>
 
 <?php 

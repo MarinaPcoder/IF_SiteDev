@@ -1,0 +1,208 @@
+/* ==========================================================================
+   Storm • Admin – Alterar Jogos
+   Paleta: #192230 (bg) | #2c2f38 (panel) | #3d474e (stroke) | #ffcd00 (accent)
+   ========================================================================== */
+
+/* --------------------------- Design tokens --------------------------- */
+:root{
+  --bg: #192230;
+  --panel: #2c2f38;
+  --panel-2: #1f2731;
+  --stroke: #3d474e;
+  --ink: #f1f4f9;
+  --muted: #a9b4c3;
+
+  --accent: #ffcd00;
+  --accent-ink: #141821;
+
+  --radius: 14px;
+  --radius-lg: 20px;
+
+  --shadow-1: 0 10px 28px rgba(0,0,0,.28);
+  --shadow-2: 0 18px 60px rgba(0,0,0,.42);
+
+  --field-h: 46px;
+}
+
+/* ------------------------------ Reset -------------------------------- */
+*,
+*::before,
+*::after{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font: 500 15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell;
+  background: radial-gradient(1200px 600px at 20% -10%, #203044 0%, transparent 60%) var(--bg);
+  color: var(--ink);
+  padding: clamp(16px, 3vw, 32px);
+  display:flex; flex-direction:column; align-items:center;
+}
+
+/* ------------------------------ Título -------------------------------- */
+h1{
+  width:min(960px, 100%);
+  margin: 6px auto 18px;
+  font-weight: 900;
+  letter-spacing:.2px;
+  font-size: clamp(20px, 2.6vw, 28px);
+  color: var(--accent);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* --------------------------- Mensagens de erro ------------------------ */
+.erro{
+  width:min(960px, 100%);
+  background: #3a1a1a;
+  color: #ffd6d6;
+  border: 1px solid #ff8f8f;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 8px auto 14px;
+  box-shadow: var(--shadow-1);
+}
+.erro strong{ display:block; margin-bottom:6px; color:#ffe1e1; }
+.erro ul{ margin:0 0 0 18px; }
+
+/* ------------------------------ Form ---------------------------------- */
+form{
+  width:min(960px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: clamp(16px, 3vw, 28px);
+  display:grid;
+  gap: 14px;
+}
+
+/* layout em 2 colunas quando couber */
+@media (min-width: 860px){
+  form{
+    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: row dense;
+  }
+  /* titulo, genero, plataforma lado a lado; textarea ocupa duas colunas */
+  #titulo{ grid-column: 1 / -1; }
+  #descricao{ grid-column: 1 / -1; min-height: 160px; }
+  input[type="submit"]{ grid-column: 1 / -1; justify-self:end; }
+}
+
+/* rótulos */
+label{
+  font-weight: 800;
+  color: var(--accent);
+  margin: 4px 2px -2px;
+}
+
+/* campos de texto/numérico/url/data */
+input[type="text"],
+input[type="url"],
+input[type="date"],
+input[type="number"],
+select,
+textarea{
+  width: 100%;
+  min-height: var(--field-h);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--stroke);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, transform .06s, background .2s;
+}
+
+/* placeholder e tipografia */
+input::placeholder,
+textarea::placeholder{ color: var(--muted); }
+
+/* foco */
+input:focus,
+select:focus,
+textarea:focus{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+}
+
+/* hover sutil */
+input:hover,
+select:hover,
+textarea:hover{
+  border-color: color-mix(in oklab, var(--stroke) 60%, var(--accent));
+}
+
+/* select estilizado */
+select{
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%),
+    linear-gradient(to right, transparent, transparent);
+  background-position:
+    calc(100% - 18px) 55%,
+    calc(100% - 12px) 55%,
+    100% 0;
+  background-size: 6px 6px, 6px 6px, 2.5rem 100%;
+  background-repeat: no-repeat;
+  padding-right: 44px;
+}
+
+/* textarea */
+textarea{
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* botão enviar */
+input[type="submit"]{
+  appearance:none;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 900;
+  border-radius: 999px;
+  padding: 12px 18px;
+  box-shadow: 0 12px 26px color-mix(in oklab, var(--accent) 28%, transparent);
+  cursor: pointer;
+  justify-self: start;
+}
+input[type="submit"]:hover{ filter:brightness(1.06); transform: translateY(-1px); }
+input[type="submit"]:active{ transform: translateY(1px); }
+
+/* ---------------------------- Dicas de acessibilidade ------------------- */
+:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ---------------------------- Estados inválidos ------------------------- */
+input:invalid,
+select:invalid,
+textarea:invalid{
+  border-color: #e5484d;
+}
+input:invalid:focus,
+select:invalid:focus,
+textarea:invalid:focus{
+  box-shadow: 0 0 0 3px rgba(229,72,77,.25);
+}
+
+/* ------------------------------ Pequenos ajustes ------------------------ */
+#titulo{ font-weight:700; }
+#descricao{ font-size: .98rem; }
+
+/* Corrige o id digitado como 'desenvolvendora' no HTML (continua funcionando) */
+#desenvolvedora, #desenvolvendora{
+  /* usa a mesma aparência dos inputs */
+}
+
+/* ----------------------------- Barra de rolagem ------------------------- */
+@media (pointer: fine){
+  *{ scrollbar-width: thin; scrollbar-color: var(--stroke) transparent; }
+  *::-webkit-scrollbar{ height:12px; width:12px; }
+  *::-webkit-scrollbar-thumb{ background: var(--stroke); border-radius: 12px; border: 3px solid transparent; background-clip: padding-box; }
+  *::-webkit-scrollbar-track{ background: transparent; }
+}

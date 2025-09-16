@@ -31,6 +31,8 @@
 ?>
  <!-- configuração  Head -->
 
+<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/altusuario.css'?>">
+
 </head>
 
 <?php 
