@@ -174,7 +174,7 @@ function h(?string $s): string {
     @media (max-width: 1200px){ .app{grid-template-columns:1fr} .two-col{grid-template-columns:1fr} }
 
     /* Cards containers */
-    .section{background:var(--panel);border-radius:14px;padding:16px}
+    .section{background:var(--panel);border-radius:14px;padding:16px;height: fit-content;}
     .section h2{margin:0 0 10px}
     .section .muted{color:var(--muted)}
 

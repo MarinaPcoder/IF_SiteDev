@@ -6,18 +6,42 @@ session_start();
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\DB\Conexao;
+use App\Controllers\UsuarioController;
+
+$usuario = new UsuarioController;
 
 // URLs de views para links/redirects
 const CAMINHO_VIEWS = './../App/Views/';
 
-// util simples de escape
+// Confere se é admin
+$admin = false;
+if (!empty($_SESSION['Usuario'])) {
+    [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
+
+    if (!$logado) {
+        header('Location: ./logout.php');
+        exit;
+    }
+
+    if ($tipo_usuario === 'admin') {
+        $admin = true;
+    }
+}
+
+// util de escape
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+
+// helper: detectar se é vídeo pela extensão (fallback quando tipo no BD vier "screenshot")
+function isVideoByExt(string $path): bool {
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    return in_array($ext, ['mp4','webm','ogg','ogv','m4v','mov'], true);
+}
 
 // ---------- Obtém ID do jogo ----------
 $idJogo = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$idJogo || $idJogo <= 0) {
-  header('Location: index.php');
-  exit;
+    header('Location: index.php');
+    exit;
 }
 
 // ---------- Conexão ----------
@@ -46,11 +70,11 @@ $stmt->execute([':id' => $idJogo]);
 $game = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 if (!$game) {
-  header('Location: index.php');
-  exit;
+    header('Location: index.php');
+    exit;
 }
 
-// ---------- Imagens (poster, banner, screenshots) ----------
+// ---------- Imagens (poster, banner, mídia) ----------
 $poster = $pdo->prepare("SELECT caminho FROM Jogo_Imagem WHERE id_jogo = :id AND tipo = 'poster' ORDER BY ordem_exib LIMIT 1");
 $poster->execute([':id' => $idJogo]);
 $posterPath = $poster->fetchColumn() ?: '/assets/img/poster.png';
@@ -59,22 +83,24 @@ $banner = $pdo->prepare("SELECT caminho FROM Jogo_Imagem WHERE id_jogo = :id AND
 $banner->execute([':id' => $idJogo]);
 $bannerPath = $banner->fetchColumn() ?: '/assets/img/banner.png';
 
-$shots = $pdo->prepare("SELECT caminho FROM Jogo_Imagem WHERE id_jogo = :id AND tipo = 'screenshot' ORDER BY ordem_exib");
+// screenshots + videos
+$shots = $pdo->prepare("
+  SELECT caminho, tipo 
+  FROM Jogo_Imagem 
+  WHERE id_jogo = :id AND tipo IN ('screenshot','video')
+  ORDER BY ordem_exib, id_imagem
+");
 $shots->execute([':id' => $idJogo]);
-$screens = $shots->fetchAll(\PDO::FETCH_COLUMN);
+$mediaRows = $shots->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
 // ---------- Média e contagem de avaliações ----------
 $stats = $pdo->prepare("SELECT ROUND(AVG(nota),1) AS media, COUNT(*) AS total FROM Avaliacao WHERE id_jogo = :id");
-$stats->execute([':id' => $idJogo]);
-$mediaAv = (float)($stats->fetch(\PDO::FETCH_ASSOC)['media'] ?? 0);
-$countAv = (int)($stats->fetch(\PDO::FETCH_ASSOC)['total'] ?? 0); // cuidado: fetch já foi feito
-// corrigindo a leitura dupla: refaz a consulta de forma segura
 $stats->execute([':id' => $idJogo]);
 $rowStats = $stats->fetch(\PDO::FETCH_ASSOC) ?: ['media'=>null,'total'=>0];
 $mediaAv = $rowStats['media'] !== null ? (float)$rowStats['media'] : 0.0;
 $countAv = (int)$rowStats['total'];
 
-// ---------- Lista de avaliações (com usuário) ----------
+// ---------- Lista de avaliações ----------
 $sqlReviews = "
   SELECT 
     a.id_avaliacao   AS id,
@@ -92,7 +118,7 @@ $stmtR = $pdo->prepare($sqlReviews);
 $stmtR->execute([':id' => $idJogo]);
 $reviewRows = $stmtR->fetchAll(\PDO::FETCH_ASSOC);
 
-// ---------- “Relacionados”: outros jogos (ordenados pela média, depois id) ----------
+// ---------- Relacionados ----------
 $sqlRelated = "
   SELECT 
     j.id_jogo,
@@ -106,7 +132,7 @@ $sqlRelated = "
     GROUP BY id_jogo
   ) m ON m.id_jogo = j.id_jogo
   LEFT JOIN (
-    SELECT id_jogo, caminho
+    SELECT id_jogo, MIN(caminho) AS caminho
     FROM Jogo_Imagem
     WHERE tipo = 'poster'
     GROUP BY id_jogo
@@ -123,39 +149,45 @@ $relatedRows = $stmtRel->fetchAll(\PDO::FETCH_ASSOC);
 $basePath   = rtrim(str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'])), '/');
 $basePrefix = $basePath === '' ? '' : $basePath;
 $toWeb = function (?string $p) use ($basePrefix): string {
-  $p = (string)($p ?? '');
-  if ($p === '') return '';
-  if (preg_match('#^https?://#i', $p)) return $p;
-  $p = ltrim($p, '/');
-  return ($basePrefix ? $basePrefix.'/' : '/') . $p;
+    $p = (string)($p ?? '');
+    if ($p === '') return '';
+    if (preg_match('#^https?://#i', $p)) return $p;
+    $p = ltrim($p, '/');
+    return ($basePrefix ? $basePrefix.'/' : '/') . $p;
 };
 
-// Dados para o front
-$MEDIA = array_map(fn($c) => ['src' => $toWeb($c), 'alt' => 'Screenshot'], $screens ?: []);
+// Monta dados para o front
+$MEDIA = [];
+foreach ($mediaRows as $m) {
+    $src  = $toWeb((string)$m['caminho']);
+    $tipo = (string)($m['tipo'] ?? 'screenshot');
+    $kind = ($tipo === 'video' || isVideoByExt($m['caminho'])) ? 'video' : 'image';
+    $MEDIA[] = ['src' => $src, 'type' => $kind, 'alt' => 'Mídia do jogo'];
+}
+
 $REVIEWS = array_map(function(array $r) {
-  // avatar dummy estável por usuário
-  $avatar = 'https://i.pravatar.cc/96?u=' . urlencode((string)$r['uid']);
-  $iso = (new DateTime($r['dt']))->format('Y-m-d');
-  return [
-    'id'     => (int)$r['id'],
-    'user'   => (string)$r['user'],
-    'avatar' => $avatar,
-    'date'   => $iso,
-    'score'  => (float)$r['score'],
-    'text'   => (string)($r['text'] ?? ''),
-  ];
+    $avatar = 'https://i.pravatar.cc/96?u=' . urlencode((string)$r['uid']);
+    $iso = (new DateTime($r['dt']))->format('Y-m-d');
+    return [
+        'id'     => (int)$r['id'],
+        'user'   => (string)$r['user'],
+        'avatar' => $avatar,
+        'date'   => $iso,
+        'score'  => (float)$r['score'],
+        'text'   => (string)($r['text'] ?? ''),
+    ];
 }, $reviewRows);
 
 $RELATED = array_map(function(array $r) use ($toWeb) {
-  return [
-    'id'    => (int)$r['id_jogo'],
-    'title' => (string)$r['titulo'],
-    'cover' => $toWeb((string)$r['poster']),
-    'score' => isset($r['media']) ? (float)$r['media'] : null
-  ];
+    return [
+        'id'    => (int)$r['id_jogo'],
+        'title' => (string)$r['titulo'],
+        'cover' => $toWeb((string)$r['poster']),
+        'score' => isset($r['media']) ? (float)$r['media'] : null
+    ];
 }, $relatedRows);
 
-// Campos do jogo para exibir
+// Campos do jogo
 $titulo         = (string)$game['titulo'];
 $descricao      = (string)($game['descricao'] ?? '');
 $desenvolvedora = (string)($game['desenvolvedora'] ?? '');
@@ -184,6 +216,19 @@ $bannerWeb = $toWeb($bannerPath);
     .facts .platforms .pf{ width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; }
     .facts .platforms .pf svg{ width:20px; height:20px; display:block; }
     .facts .platforms em{ font-style:normal; opacity:.8; }
+
+    /* Thumbs de vídeo na galeria */
+    .gallery__grid .gallery__item video{
+      width:100%; height:auto; display:block; border-radius:.5rem;
+    }
+    .gallery__grid .gallery__item img{
+      width:100%; height:auto; display:block; border-radius:.5rem;
+    }
+
+    /* Lightbox vídeo */
+    #lbVideo{ max-width:90vw; max-height:80vh; display:none; border-radius:.5rem; }
+    #lbImage{ max-width:90vw; max-height:80vh; display:none; border-radius:.5rem; }
+    .lightbox__figure{ display:flex; align-items:center; justify-content:center; min-height:200px; }
   </style>
 </head>
 <body>
@@ -227,6 +272,24 @@ $bannerWeb = $toWeb($bannerPath);
           </span>
           <span class="label">Sugestões de Jogos</span>
         </a>
+
+        <?php if (isset($_SESSION['Usuario']) and $admin): ?>
+          <a class="nav__item" href="admin.php">
+            <span class="nav__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                  width="20" height="20" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true" focusable="false">
+                <title>Admin</title>
+                <path d="M12 2 19 6v5c0 5-3.6 9-7 11-3.4-2-7-6-7-11V6l7-4z"/>
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 7.5v1.6M12 14.9v1.6M7.5 12h1.6M14.9 12h1.6M8.8 8.8l1.1 1.1M14.1 14.1l1.1 1.1M15.2 8.8l-1.1 1.1M9.9 14.1l-1.1 1.1"/>
+              </svg>
+            </span>
+            <span class="label">Administração</span>
+          </a>
+        <?php endif; ?>
+
       </div>
 
       <div class="nav__group">
@@ -273,7 +336,6 @@ $bannerWeb = $toWeb($bannerPath);
           <li class="platforms">
             <strong>Plataforma:</strong>
             <span class="pf" title="<?= e($plataforma ?: '—') ?>" aria-hidden="true">
-              <!-- Ícone genérico de PC/monitor; ajuste se quiser mapear por plataforma -->
               <svg viewBox="0 0 24 24"><path d="M3 5h18v9H3zM2 16h8v2H2zm10 0h10v2H12z"></path></svg>
             </span>
             <em class="muted"><?= e($plataforma ?: '—') ?></em>
@@ -301,12 +363,10 @@ $bannerWeb = $toWeb($bannerPath);
       <header class="section__header">
         <h2>Mídia</h2>
       </header>
-      <div id="galleryGrid" class="gallery__grid" role="list">
-        <!-- JS insere thumbs -->
-      </div>
+      <div id="galleryGrid" class="gallery__grid" role="list"></div>
     </section>
 
-    <!-- AVALIAÇÕES (somente listagem) -->
+    <!-- AVALIAÇÕES -->
     <section class="section reviews" aria-label="Avaliações e Comentários">
       <header class="section__header reviews__header">
         <h2>Avaliações</h2>
@@ -321,9 +381,7 @@ $bannerWeb = $toWeb($bannerPath);
         </div>
       </header>
 
-      <div id="reviewsList" class="reviews__list" role="list">
-        <!-- JS injeta cards -->
-      </div>
+      <div id="reviewsList" class="reviews__list" role="list"></div>
     </section>
 
     <!-- RELACIONADOS -->
@@ -346,6 +404,7 @@ $bannerWeb = $toWeb($bannerPath);
   <button class="lightbox__nav prev" id="lbPrev" aria-label="Anterior">‹</button>
   <figure class="lightbox__figure">
     <img id="lbImage" alt="Mídia em destaque" />
+    <video id="lbVideo" controls playsinline></video>
     <figcaption id="lbCaption" class="sr-only"></figcaption>
   </figure>
   <button class="lightbox__nav next" id="lbNext" aria-label="Próximo">›</button>
@@ -452,7 +511,11 @@ const MEDIA = Array.isArray(window.STORM?.media) ? window.STORM.media : [];
   MEDIA.forEach((m, i)=>{
     const btn = document.createElement('button');
     btn.className = 'gallery__item';
-    btn.innerHTML = `<img src="${m.src}" alt="${m.alt||'Mídia'}">`;
+    if (m.type === 'video') {
+      btn.innerHTML = `<video src="${m.src}" preload="metadata" muted playsinline></video>`;
+    } else {
+      btn.innerHTML = `<img src="${m.src}" alt="${m.alt||'Mídia'}">`;
+    }
     btn.addEventListener('click', ()=>Lightbox.open(i));
     grid.appendChild(btn);
   });
@@ -461,15 +524,30 @@ const MEDIA = Array.isArray(window.STORM?.media) ? window.STORM.media : [];
 const Lightbox = (()=>{
   const root = $('#lightbox');
   const img  = $('#lbImage');
+  const vid  = $('#lbVideo');
   const cap  = $('#lbCaption');
   let index = 0;
 
   function show(i){
     index = (i + MEDIA.length) % MEDIA.length;
     const m = MEDIA[index];
-    img.src = m.src;
-    img.alt = m.alt || 'Mídia';
-    cap.textContent = m.alt || '';
+
+    // pausa o vídeo atual sempre que muda
+    if (!vid.paused) { try{ vid.pause(); }catch{} }
+
+    if (m.type === 'video') {
+      img.style.display = 'none';
+      vid.style.display = 'block';
+      vid.src = m.src;
+      cap.textContent = m.alt || 'Vídeo';
+      // evitar autoplay agressivo; o usuário decide
+    } else {
+      vid.style.display = 'none';
+      img.style.display = 'block';
+      img.src = m.src;
+      img.alt = m.alt || 'Imagem';
+      cap.textContent = m.alt || 'Imagem';
+    }
   }
 
   function open(i=0){
@@ -481,6 +559,8 @@ const Lightbox = (()=>{
     $('#lbClose').focus();
   }
   function close(){
+    // pausa ao fechar
+    if (!vid.paused) { try{ vid.pause(); }catch{} }
     root.hidden = true;
     root.setAttribute('aria-hidden','true');
     document.body.style.overflow = '';
@@ -540,7 +620,7 @@ function loadReviews(){
 $('#reviewSort')?.addEventListener('change', loadReviews);
 loadReviews();
 
-// Atualiza média/contagem (garantia caso vindo do back seja 0)
+// Atualiza média/contagem
 (function SetupRating(){
   const avg = Number(window.STORM?.avg || 0);
   const cnt = Number(window.STORM?.count || 0);

@@ -1,210 +1,235 @@
-<?php 
-    session_start();
+<?php
+// App/Views/upload_form.php
+declare(strict_types=1);
 
-    require_once '../../vendor/autoload.php';
+session_start();
 
-    use App\Controllers\UsuarioController;
-    use App\Controllers\JogoController;
-    $usuario = new UsuarioController;
-    $jogo = new JogoController;
+require_once '../../vendor/autoload.php';
 
-      const CAMINHO_PUBLIC = './../../public/';
-      const CAMINHO_INDEX = './../../public/index.php';
+use App\Controllers\UsuarioController;
+use App\Controllers\JogoController;
 
-    if (isset($_SESSION['Mensagem_redirecionamento'])) {
-        echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
-        unset($_SESSION['Mensagem_redirecionamento']);
-    }
+$usuario = new UsuarioController();
+$jogo    = new JogoController();
 
-    if (empty($_SESSION['Usuario'])) {
-        header(header: 'Location: ./loginUsuario.php');
-        exit;
-    } else {
-        [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
-    
-        if (!$logado || $tipo_usuario !== 'admin') {
+// Constantes de caminho usadas no HTML
+const CAMINHO_PUBLIC = './../../public/';
+const CAMINHO_INDEX  = './../../public/index.php';
 
-        $_SESSION['Mensagem_redirecionamento'] = "Usuario não existe ou não tem permissão. Redirecionado para ./logout.php";
+// ----- mensagens de debug (opcional) -----
+if (isset($_SESSION['Mensagem_redirecionamento'])) {
+    echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
+    unset($_SESSION['Mensagem_redirecionamento']);
+}
 
-            header(header: 'Location: ./logout.php');
-            exit;
-        }
-    }
+// ----- guard de autenticação/autorizaçao (precisa ser admin) -----
+if (empty($_SESSION['Usuario'])) {
+    header('Location: ./loginUsuario.php');
+    exit;
+}
+[$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
+if (!$logado || $tipo_usuario !== 'admin') {
+    $_SESSION['Mensagem_redirecionamento'] = "Usuario não existe ou não tem permissão. Redirecionado para ./logout.php";
+    header('Location: ./logout.php');
+    exit;
+}
 
-    if (isset($_SESSION['Jogo'])) {
-        $idJogo = $_SESSION['Jogo']['id_jogo'];
-    }
+// ----- id do jogo (GET tem prioridade, POST é fallback no submit) -----
+$idJogo = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$idJogo) {
+    $idJogo = filter_input(INPUT_POST, 'idJogo', FILTER_VALIDATE_INT);
+}
+if (!$idJogo) {
+    $_SESSION['Mensagem_redirecionamento'] = "Jogo não especificado. Redirecionado para ./../../public";
+    header('Location: ./../../public');
+    exit;
+}
 
-    if(isset($_GET['id'])) {
-        $idJogo = $_GET['id'];
-    }
+// ----- valida existência do jogo -----
+if (!$jogo->ExisteJogo(idJogo: $idJogo)) {
+    $_SESSION['Mensagem_redirecionamento'] = "Jogo não encontrado. Redirecionado para ./../../public";
+    header('Location: ./../../public');
+    exit;
+}
 
-    if (isset($_POST['idJogo'])) {
-        $idJogo = $_POST['idJogo'];
-    }
+// ----- lê dados do jogo -----
+$jogoDados = $jogo->LerJogo(idJogo: $idJogo);
+if (!$jogoDados) {
+    $_SESSION['Mensagem_redirecionamento'] = "Erro ao ler os dados do jogo. Redirecionado para ./../../public";
+    header('Location: ./../../public');
+    exit;
+}
 
-    if (!isset($idJogo)) {
-        $_SESSION['Mensagem_redirecionamento'] = "Jogo não especificado. Redirecionado para ./../../public";
+$ContScreenshots = isset($jogoDados['screenshots']) && is_array($jogoDados['screenshots'])
+    ? count($jogoDados['screenshots'])
+    : 0;
 
-        header(header: 'Location: ./../../public');
-        exit;
-    }
+// ----- head -----
+$titulo = 'Upload de imagens';
+require_once '../../public/assets/components/head.php';
 
-    if (!$jogo->ExisteJogo(idJogo: $idJogo)) {
-        $_SESSION['Mensagem_redirecionamento'] = "Jogo não encontrado. Redirecionado para ./../../public";
-        header(header: 'Location: ./../../public');
-        exit;
-    }
+// ----- processamento do POST (upload) -----
+$erros = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    unset($_SESSION['Jogo']);
 
-    $jogoDados = $jogo->LerJogo(idJogo: $idJogo);
-    if (!$jogoDados) {
-        $_SESSION['Mensagem_redirecionamento'] = "Erro ao ler os dados do jogo. Redirecionado para ./../../public";
-        header(header: 'Location: ./../../public');
-        exit;
-    }
+    $poster      = $_FILES['poster']      ?? null;
+    $banner      = $_FILES['banner']      ?? null;
+    $screenshots = $_FILES['screenshot']  ?? null;
 
-    $ContScreenshots = count($jogoDados['screenshots']);
+    $erros = $jogo->UploadImagens(
+        idJogo: $idJogo,
+        poster: $poster,
+        banner: $banner,
+        screenshots: $screenshots,
+        ordemScreenshots: $ContScreenshots
+    );
 
-    $titulo = 'Upload de imagens';
-    require_once '../../public/assets/components/head.php';
+}
 
-    $erros = [];
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        unset($_SESSION['Jogo']);
-        
-        $poster = $_FILES['poster'] ?? null;
-        $banner = $_FILES['banner'] ?? null;
-        $screenshots = $_FILES['screenshot'] ?? null;
-
-        $erros = $jogo->UploadImagens(
-            idJogo: $idJogo,
-            poster: $poster,
-            banner: $banner,
-            screenshots: $screenshots,
-            ordemScreenshots: $ContScreenshots
-        );
-
-        if (empty($erros)) {
-            $_SESSION['Jogo'] = $jogo->GetJogoPorTituloEPlataforma(titulo: $jogoDados['titulo'], plataforma: $jogoDados['plataforma']);
-
-            $message = "Imagens enviadas com sucesso.";
-            echo "<script>console.log('PHP Debug: " . addslashes($message) . "');</script>";
-
-            header(header: 'Location: ./upload_form.php');
-            exit;
-        }
-    }
-
-
+// helper de escape curto
+$h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 ?>
- <!-- configuração  Head -->
-
-<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/upform.css'?>">
-    <style>
-        
-    </style>
+<link rel="stylesheet" href="<?= CAMINHO_PUBLIC . 'assets/css/upform.css' ?>">
+<style>
+  .erro{background:#2a1e1f;border:1px solid #734040;color:#f7dede;padding:.75rem 1rem;border-radius:.5rem;margin:.5rem 0}
+  .red{color:#ff6b6b;margin:.5rem 0}
+  .grid-media{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px;margin:.5rem 0 1rem}
+  .media-box{background:#16181d;border:1px solid #2b2f3a;border-radius:.6rem;padding:.75rem}
+  .media-box img,.media-box video{width:100%;height:auto;border-radius:.4rem;display:block}
+  .media-actions{display:flex;justify-content:flex-end;margin-top:.5rem}
+  .media-actions a{background:#2b2f3a;color:#fff;padding:.35rem .6rem;border-radius:.4rem;text-decoration:none}
+  .media-actions a:hover{background:#394055}
+  .uploader .row{margin:.5rem 0}
+  .input-screenshot{display:block}
+  .btn{cursor:pointer;background:#3b82f6;border:none;color:#fff;border-radius:.4rem;padding:.45rem .7rem}
+  .btn--ghost{background:#2b2f3a}
+</style>
 </head>
 
 <body>
-        
-    <h1><a class="brand__avatar" href="<?=CAMINHO_PUBLIC?>index.php" aria-label="Storm — Homepage"><</a> <?= htmlspecialchars($titulo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').' de '.$jogoDados['titulo'] ?></h1>
+  <h1>
+    <a class="brand__avatar" href="<?= CAMINHO_PUBLIC ?>index.php" aria-label="Storm — Homepage">&lt;</a>
+    <?= $h($titulo) . ' de ' . $h($jogoDados['titulo']) ?>
+  </h1>
 
+  <?php if (!empty($erros)): ?>
     <?php foreach ($erros as $chave => $msgs): ?>
-        <div class="erro">
-            <strong><?= $chave ?>:</strong>
-            <ul>
-                <?php foreach ($msgs as $msg): ?>
-                    <li><?= htmlspecialchars(string: $msg, flags: ENT_QUOTES) ?></li>
-                <?php endforeach ?>
-            </ul>
-        </div>
+      <div class="erro">
+        <strong><?= $h($chave) ?>:</strong>
+        <ul>
+          <?php foreach ((array)$msgs as $msg): ?>
+            <li><?= $h($msg) ?></li>
+          <?php endforeach ?>
+        </ul>
+      </div>
     <?php endforeach ?>
-    <H2>Poster atual</H2>
+  <?php endif; ?>
 
-    <img src="<?= htmlspecialchars('./../../public'.$jogoDados['poster'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="Poster de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" srcset="" width="200" height="300">
-    <?php 
-        if ($jogoDados['poster'] == "/assets/img/poster.png") {
-            echo "<p class='red'>Poster padrão, não foi enviada uma imagem personalizada para este jogo.</p>";
-        }
-    ?>
+  <h2>Poster atual</h2>
+  <img
+    src="<?= $h(CAMINHO_PUBLIC . ltrim((string)$jogoDados['poster'], '/')) ?>"
+    alt="Poster de <?= $h($jogoDados['titulo']) ?>"
+    width="200" height="300">
+  <?php if (($jogoDados['poster'] ?? '') === "/assets/img/poster.png"): ?>
+    <p class="red">Poster padrão, não foi enviada uma imagem personalizada para este jogo.</p>
+  <?php endif; ?>
 
-    <H2>Banner atual</H2>
-    <img src="<?= htmlspecialchars('./../../public'.$jogoDados['banner'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="Banner de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" srcset="" width="500" height="200">
-    <?php 
-        if ($jogoDados['banner'] == "/assets/img/banner.png") {
-            echo "<p class='red'>Banner padrão, não foi enviada uma banner personalizada para este jogo.</p>";
-        }
-    ?>
+  <h2>Banner atual</h2>
+  <img
+    src="<?= $h(CAMINHO_PUBLIC . ltrim((string)$jogoDados['banner'], '/')) ?>"
+    alt="Banner de <?= $h($jogoDados['titulo']) ?>"
+    width="500" height="200">
+  <?php if (($jogoDados['banner'] ?? '') === "/assets/img/banner.png"): ?>
+    <p class="red">Banner padrão, não foi enviada um banner personalizado para este jogo.</p>
+  <?php endif; ?>
 
-    <?php if (!empty($jogoDados['screenshots'])): ?>
-        <H2>Screenshots atuais</H2>
-    <?php endif; ?>
-
-    <?php foreach ($jogoDados['screenshots'] as $screenshot): ?>
-        <div>
-            
-            <img src="<?= htmlspecialchars('./../../public'.$screenshot['caminho'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="Screenshot de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" srcset="" width="400" height="200">
-            <?php 
-                if (empty($jogoDados['screenshots'])) {
-                    echo "<p class='red'>Nenhuma screenshot personalizada foi enviada para este jogo.</p>";
-                }
-            ?>
-            <a href="DeletarImagem.php?id_imagem=<?=htmlspecialchars($screenshot['id_imagem'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>&deletar_imagem=true">Deletar</a>
+  <?php if (!empty($jogoDados['screenshots'])): ?>
+    <h2>Screenshots atuais</h2>
+    <div class="grid-media">
+      <?php foreach ($jogoDados['screenshots'] as $shot): ?>
+        <?php
+          // Caminho absoluto no filesystem para detecção do MIME
+          $abs = realpath(__DIR__ . '/../../public' . $shot['caminho']);
+          $mime_type = '';
+          if ($abs && extension_loaded('fileinfo')) {
+              $finfo = finfo_open(FILEINFO_MIME_TYPE);
+              if ($finfo) {
+                  $mime_type = (string)finfo_file($finfo, $abs);
+                  finfo_close($finfo);
+              }
+          }
+        ?>
+        <div class="media-box">
+          <?php if (strpos($mime_type, 'video/') === 0): ?>
+            <video controls muted playsinline
+              src="<?= $h(CAMINHO_PUBLIC . ltrim((string)$shot['caminho'], '/')) ?>">
+            </video>
+          <?php else: ?>
+            <img
+              src="<?= $h(CAMINHO_PUBLIC . ltrim((string)$shot['caminho'], '/')) ?>"
+              alt="Screenshot de <?= $h($jogoDados['titulo']) ?>">
+          <?php endif; ?>
+          <div class="media-actions">
+            <a href="DeletarImagem.php?id_imagem=<?= $h($shot['id_imagem']) ?>&deletar_imagem=true">Deletar</a>
+          </div>
         </div>
-    <?php endforeach?>
-    <form action="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" method="post" enctype="multipart/form-data">
+      <?php endforeach; ?>
+    </div>
+  <?php else: ?>
+    <p class="red">Nenhuma screenshot personalizada foi enviada para este jogo.</p>
+  <?php endif; ?>
 
-        <label for="poster">Insira o poster de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>:</label>
-        <br>
-        <input type="file" name="poster" id="poster" accept="image/*">
-        <br>
-        <br>
-        <label for="banner">Insira um banner de <?= htmlspecialchars($jogoDados['titulo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>:</label>
-        <br>
-        <input type="file" name="banner" id="banner" accept="image/*">
-        <br>
-        <input type="hidden" name="idJogo" value="<?= htmlspecialchars(string: $idJogo, flags: ENT_QUOTES | ENT_SUBSTITUTE, encoding: 'UTF-8') ?>">
-        <br>
-        <label for="banner">Fotos/vídeos para o jogo:</label>
-        <br>
-            <button type="button" onclick="aumentar()">+</button>
-            <button type="button" onclick="diminuir()">-</button>
-        <br>
-        <br>
-        
-        <div id="imagens/videos">
-            <!-- <input type="file" name="screenshot[]" id="screenshot" accept="image/*"> -->
-        </div>
+  <form class="uploader" action="<?= $h($_SERVER['PHP_SELF']) ?>?id=<?= $jogoDados['id_jogo']?>" method="post" enctype="multipart/form-data">
+    <div class="row">
+      <label for="poster">Insira o poster de <?= $h($jogoDados['titulo']) ?>:</label><br>
+      <input type="file" name="poster" id="poster" accept="image/*">
+    </div>
 
-        <br>
-        <input type="submit" value="Upload">
-    </form>
+    <div class="row">
+      <label for="banner">Insira um banner de <?= $h($jogoDados['titulo']) ?>:</label><br>
+      <input type="file" name="banner" id="banner" accept="image/*">
+    </div>
 
-    <script>
-        Ninputs = 1
-        Idteste = document.getElementById('imagens/videos')
-        AtualizarInputsFotos()
-        
-        function aumentar() {
-            Ninputs++
-            AtualizarInputsFotos()
-        }
+    <input type="hidden" name="idJogo" value="<?= $h($idJogo) ?>">
 
-        function diminuir() {
-            Ninputs--
+    <div class="row">
+      <label>Fotos/Vídeos para o jogo:</label><br>
+      <button type="button" class="btn btn--ghost" onclick="aumentar()">+</button>
+      <button type="button" class="btn btn--ghost" onclick="diminuir()">-</button>
+    </div>
 
-            AtualizarInputsFotos()
-        }
+    <div id="imagens_videos" class="row"></div>
 
-        function AtualizarInputsFotos() {
-            Idteste.innerHTML = '';
-            for (let i = 0; i < Ninputs; i++) {
-                Idteste.innerHTML += `
-                    <input type="file" name="screenshot[]" id="screenshot" accept="image/*,video/*" class="input-screenshot">
-                    <br><br>`;
-            }
-        }
-    </script>
+    <div class="row">
+      <button type="submit" class="btn">Upload</button>
+    </div>
+  </form>
+
+  <script>
+    let nInputs = 1;
+    const MAX_INPUTS = 12;
+    const container = document.getElementById('imagens_videos');
+
+    function atualizarInputs() {
+      if (nInputs < 0) nInputs = 0;
+      if (nInputs > MAX_INPUTS) nInputs = MAX_INPUTS;
+      container.innerHTML = '';
+      for (let i = 0; i < nInputs; i++) {
+        const id = 'screenshot_' + i;
+        const wrap = document.createElement('div');
+        wrap.style.marginBottom = '8px';
+        wrap.innerHTML = `
+          <input type="file" name="screenshot[]" id="${id}" accept="image/*,video/*" class="input-screenshot">
+        `;
+        container.appendChild(wrap);
+      }
+    }
+    function aumentar() { nInputs++; atualizarInputs(); }
+    function diminuir() { nInputs--; atualizarInputs(); }
+
+    // inicia com 1 input
+    atualizarInputs();
+  </script>
 </body>
 </html>

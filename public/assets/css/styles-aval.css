@@ -134,7 +134,7 @@ button{ font:inherit; color:inherit; cursor:pointer; background:transparent; bor
 .btn--tiny{ padding:8px 12px; border-radius:10px; font-size:13px; }
 
 /* =============================== HERO ==================================== */
-.game{ min-width:0; display:grid; gap:24px; }
+.game{ min-width:0; display:grid; gap:24px;}
 
 .hero{
   position:relative;
@@ -146,7 +146,9 @@ button{ font:inherit; color:inherit; cursor:pointer; background:transparent; bor
 }
 
 .hero__backdrop{
-  position:relative; aspect-ratio: 16/6; overflow:hidden;
+  position:relative; 
+  aspect-ratio: 16/6; 
+  overflow:hidden;
   background: #111;
 }
 .hero__backdrop img{
@@ -198,6 +200,7 @@ button{ font:inherit; color:inherit; cursor:pointer; background:transparent; bor
   border-radius: 18px;
   box-shadow: var(--shadow-1);
   padding: 14px;
+  max-width: 1150px;
 }
 .section__header{
   display:flex; align-items:center; justify-content:space-between;

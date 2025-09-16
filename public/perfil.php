@@ -6,9 +6,27 @@ session_start();
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\DB\Conexao;
+use App\Controllers\UsuarioController;
+
+$usuario = new UsuarioController; 
 
 // URLs de views para links/redirects
 const CAMINHO_VIEWS = './../App/Views/';
+
+// Confere se é adimin
+$admin = false;
+    if (!empty($_SESSION['Usuario'])) {
+        [$logado, $tipo_usuario] = $usuario->ConfereLogin(id: $_SESSION['Usuario']['Id']);
+
+        if (!$logado) {
+            header(header: 'Location: ./logout.php');
+            exit;
+        }
+
+        if ($tipo_usuario == 'admin') {
+            $admin = true;
+        }
+    }
 
 // ---------- Guard: precisa estar logado ----------
 if (empty($_SESSION['Usuario']['Id'])) {
@@ -160,6 +178,25 @@ $memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('d/m/Y');
           </span>
           <span class="label">Sugestões de Jogos</span>
         </a>
+
+        <?php if (isset($_SESSION['Usuario']) and $admin): ?>
+          <a class="nav__item" href="admin.php">
+            <span class="nav__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                  width="20" height="20" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true" focusable="false">
+                <title>Admin</title>
+                <!-- escudo -->
+                <path d="M12 2 19 6v5c0 5-3.6 9-7 11-3.4-2-7-6-7-11V6l7-4z"/>
+                <!-- engrenagem simples -->
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 7.5v1.6M12 14.9v1.6M7.5 12h1.6M14.9 12h1.6M8.8 8.8l1.1 1.1M14.1 14.1l1.1 1.1M15.2 8.8l-1.1 1.1M9.9 14.1l-1.1 1.1"/>
+              </svg>
+            </span>
+            <span class="label">Administração</span>
+          </a>
+        <?php endif; ?>
       </div>
 
       <div class="nav__group">
@@ -171,6 +208,7 @@ $memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('d/m/Y');
           </span>
           <span class="label">Perfil</span>
         </a>
+        
       </div>
     </nav>
 

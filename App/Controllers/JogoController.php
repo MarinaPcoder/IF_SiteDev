@@ -225,67 +225,67 @@
             }
         }
 
-        public function UploadImagens($idJogo, $poster, $banner, $screenshots, $ordemScreenshots): array {
+    public function UploadImagens($idJogo, $poster, $banner, $screenshots, $ordemScreenshots): array {
+        $erros = [];
 
-            $erros = [];
+        // cria diretório se necessário
+        $basePublic = realpath(__DIR__ . '/../../public') ?: __DIR__ . '/../../public';
+        $dir = $basePublic . '/uploads';
+        if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
 
-            // cria diretório se necessário
-            $basePublic = realpath(__DIR__ . '/../../public') ?: __DIR__ . '/../../public';
-            $dir = $basePublic . '/uploads';
-            if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
+        // Validação e upload do poster
+        if ($poster && $poster['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($poster['name'], PATHINFO_EXTENSION));
+            $novoNome = "poster_{$idJogo}.{$ext}";
+            $destino = "{$dir}/{$novoNome}";
 
-            // Validação e upload do poster
-            if ($poster && $poster['error'] === UPLOAD_ERR_OK) {
-                $ext = strtolower(pathinfo($poster['name'], PATHINFO_EXTENSION));
-                $novoNome = "poster_{$idJogo}.{$ext}";
-                $destino = "{$dir}/{$novoNome}";
-
-                if (!move_uploaded_file($poster['tmp_name'], $destino)) {
-                    $erros['poster'][] = 'Erro ao fazer upload do poster.';
-                } else {
-                    // Registrar o caminho do poster no banco de dados
-                    $caminho = "/uploads/$novoNome";
-                    $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'poster');
-                }
+            if (!move_uploaded_file($poster['tmp_name'], $destino)) {
+                $erros['poster'][] = 'Erro ao fazer upload do poster.';
+            } else {
+                // Registrar o caminho do poster no banco de dados
+                $caminho = "/uploads/$novoNome";
+                $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'poster');
             }
-
-            // Validação e upload do banner
-            if ($banner && $banner['error'] === UPLOAD_ERR_OK) {
-                $ext = strtolower(pathinfo($banner['name'], PATHINFO_EXTENSION));
-                $novoNome = "banner_{$idJogo}.{$ext}";
-                $destino = "{$dir}/{$novoNome}";
-
-                if (!move_uploaded_file($banner['tmp_name'], $destino)) {
-                    $erros['banner'][] = 'Erro ao fazer upload do banner.';
-                } else {
-                    // Registrar o caminho do banner no banco de dados
-                    $caminho = "/uploads/$novoNome";
-                    $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'banner');
-                }
-            }
-
-            
-            // SCREENSHOTS – se quiser casar 100% com a ordem do BD:
-            if ($screenshots) {
-                foreach ($screenshots['tmp_name'] as $k => $tmp) {
-                    if ($screenshots['error'][$k] === UPLOAD_ERR_OK) {
-                        $ext = strtolower(pathinfo($screenshots['name'][$k], PATHINFO_EXTENSION));
-                        // Opção A (simples): salva com timestamp único
-                        $novoNome = "screenshots_{$idJogo}_" . time() . ".ordem({$ordemScreenshots}).{$ext}";
-                        $destino = "{$dir}/{$novoNome}";
-
-                        if (move_uploaded_file($tmp, $destino)) {
-                            $this->jogoCRUD->CreateImage(idJogo:$idJogo, caminho:"/uploads/{$novoNome}", tipo:'screenshot', ordemScreenshots: $ordemScreenshots);
-                        } else {
-                            $erros['screenshots'][] = "Falha no upload da screenshot #{$k}.";
-                        }
-                        $ordemScreenshots++;
-                    }
-                }
-            }
-
-            return $erros;
         }
+
+        // Validação e upload do banner
+        if ($banner && $banner['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($banner['name'], PATHINFO_EXTENSION));
+            $novoNome = "banner_{$idJogo}.{$ext}";
+            $destino = "{$dir}/{$novoNome}";
+
+            if (!move_uploaded_file($banner['tmp_name'], $destino)) {
+                $erros['banner'][] = 'Erro ao fazer upload do banner.';
+            } else {
+                // Registrar o caminho do banner no banco de dados
+                $caminho = "/uploads/$novoNome";
+                $this->jogoCRUD->UpdateImage(idJogo: $idJogo, caminho: $caminho, tipo: 'banner');
+            }
+        }
+
+        // SCREENSHOTS – Verifica se o arquivo é uma imagem ou vídeo
+        if ($screenshots) {
+            foreach ($screenshots['tmp_name'] as $k => $tmp) {
+                if ($screenshots['error'][$k] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($screenshots['name'][$k], PATHINFO_EXTENSION));
+                    $novoNome = "screenshots_{$idJogo}_" . time() . ".ordem({$ordemScreenshots}).{$ext}";
+                    $destino = "{$dir}/{$novoNome}";
+
+                    // Verifica se é imagem ou vídeo e define o tipo
+                    $tipo = ((strpos(mime_content_type($tmp), 'image/') === 0) ? 'screenshot' : (strpos(mime_content_type($tmp), 'video/') === 0)) ? 'video' : 'outro';
+
+                    if (move_uploaded_file($tmp, $destino)) {
+                        $this->jogoCRUD->CreateImage(idJogo:$idJogo, caminho:"/uploads/{$novoNome}", tipo:$tipo, ordemScreenshots: $ordemScreenshots);
+                    } else {
+                        $erros['screenshots'][] = "Falha no upload da screenshot/video #{$k}.";
+                    }
+                    $ordemScreenshots++;
+                }
+            }
+        }
+
+        return $erros;
+    }
 
         public function ListarGeneros(): array {
             return $this->jogoCRUD->ListGenres();

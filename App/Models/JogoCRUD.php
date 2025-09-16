@@ -388,7 +388,10 @@
                 $stmtJogo->execute();
                 $jogo = $stmtJogo->fetch(PDO::FETCH_ASSOC);
 
-                if (!$jogo) { $this->pdo->rollBack(); return false; }
+                if (!$jogo) { 
+                    $this->pdo->rollBack(); 
+                    return []; 
+                }
 
                 // Ler na tabela jogo_genero
                 $sqlJG = "SELECT id_genero FROM jogo_genero WHERE id_jogo = :id";
@@ -399,7 +402,7 @@
                 $genero = $stmtJG->fetch(PDO::FETCH_ASSOC);
                 if (!$genero) {
                     $this->pdo->rollBack(); 
-                    return false; 
+                    return []; 
                 }
 
                 $jogo['generos'] = $genero;
@@ -422,7 +425,7 @@
 
                 if (!$jogo['poster']) {
                     $this->pdo->rollBack();
-                    return False;
+                    return [];
                 }
 
                 $sqlBanner = "
@@ -438,7 +441,7 @@
 
                 if (!$jogo['banner']) {
                     $this->pdo->rollBack();
-                    return False;
+                    return [];
                 }
 
                 $stmtScreenshot = $this->pdo->prepare(query: "
@@ -452,7 +455,7 @@
 
                 if (!$jogo['screenshots']) {
                     $this->pdo->rollBack();
-                    return False;
+                    return [];
                 }
 
                 $this->pdo->commit();

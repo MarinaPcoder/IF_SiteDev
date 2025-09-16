@@ -10,6 +10,7 @@
     const CAMINHO_PUBLIC = './../../public/';
     const CAMINHO_INDEX = './../../public/index.php';
     const CAMINHO_PERFIL = './../../public/perfil.php';
+    const CAMINHO_ADMIN = './../../public/admin.php';
 
     if (isset($_SESSION['Mensagem_redirecionamento'])) {
         echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
@@ -65,6 +66,6 @@
             :
             $_SESSION['Mensagem_redirecionamento'] = "Erro ao deletar avaliação. ";
 
-        header('Location: ' . CAMINHO_PERFIL);
+        header('Location: ' . CAMINHO_ADMIN);
         exit;
 }
