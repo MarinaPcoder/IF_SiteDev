@@ -99,14 +99,9 @@
 
 ?>
  <!-- configuração  Head -->
-<style>
-    .red {
-        color: red;
-        font-weight: bold;
-        text-decoration: underline;
-        font-size: 15px;
-    }
-</style>
+
+<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/upform.css'?>">
+
 </head>
 
 <body>

@@ -1,0 +1,151 @@
+/* ==========================================================================
+   Storm • Exclusão de Jogo (deljogo.css)
+   Paleta: #192230 | #2c2f38 | #3d474e | #ffcd00
+   ========================================================================== */
+
+:root {
+  --bg: #192230;
+  --panel: #2c2f38;
+  --panel-2: #1f2731;
+  --stroke: #3d474e;
+  --ink: #f2f4f7;
+  --muted: #a4b0be;
+
+  --accent: #ffcd00;
+  --accent-ink: #141821;
+
+  --danger: #e74c3c;
+
+  --radius: 14px;
+  --radius-lg: 20px;
+
+  --shadow-1: 0 8px 22px rgba(0, 0, 0, .26);
+  --shadow-2: 0 16px 50px rgba(0, 0, 0, .38);
+
+  --field-h: 46px;
+}
+
+/* ------------------------------- Reset ------------------------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font: 500 15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell;
+  background: radial-gradient(1200px 600px at 40% -20%, #223245 0%, transparent 70%) var(--bg);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: clamp(20px, 4vw, 40px);
+}
+
+/* ---------------------------- Caixa de Erros -------------------------- */
+.erro {
+  width: min(500px, 100%);
+  background: #3a1a1a;
+  border: 1px solid #ff8f8f;
+  color: #ffd6d6;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-1);
+}
+.erro strong {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: #ffe1e1;
+}
+.erro ul { margin: 0 0 0 18px; }
+
+/* ------------------------------ Formulário ----------------------------- */
+form {
+  width: min(520px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  padding: clamp(20px, 5vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-2);
+}
+
+form p {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Campo senha */
+input[type="password"] {
+  width: 100%;
+  min-height: var(--field-h);
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--stroke);
+  background: var(--panel-2);
+  color: var(--ink);
+  font-size: 15px;
+  transition: border-color .2s, box-shadow .2s, transform .06s;
+}
+input::placeholder { color: var(--muted); }
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+  outline: none;
+}
+
+/* ------------------------------ Botões ------------------------------- */
+input[type="submit"],
+button[type="button"] {
+  border: 0;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 999px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: filter .15s, transform .1s;
+}
+
+/* Botão "Sim" (perigoso) */
+input[type="submit"] {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(231, 76, 60, .35);
+}
+input[type="submit"]:hover { filter: brightness(1.1); transform: translateY(-1px); }
+input[type="submit"]:active { transform: translateY(1px); }
+
+/* Botão "Não" (seguro) */
+button[type="button"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 10px 22px rgba(255, 205, 0, .35);
+  margin-top: 10px;
+}
+button[type="button"]:hover { filter: brightness(1.08); transform: translateY(-1px); }
+button[type="button"]:active { transform: translateY(1px); }
+
+/* --------------------------- Acessibilidade --------------------------- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Scrollbar custom */
+@media (pointer:fine) {
+  * { scrollbar-width: thin; scrollbar-color: var(--stroke) transparent; }
+  *::-webkit-scrollbar { width: 12px; }
+  *::-webkit-scrollbar-thumb {
+    background: var(--stroke);
+    border-radius: 12px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-track { background: transparent; }
+}

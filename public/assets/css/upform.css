@@ -1,0 +1,253 @@
+/* ==========================================================================
+   Storm • Upload de Imagens do Jogo (upform.css)
+   Paleta: #192230 (bg) | #2c2f38 (panel) | #3d474e (stroke) | #ffcd00 (accent)
+   ========================================================================== */
+
+/* --------------------------- Tokens / Design --------------------------- */
+:root{
+  --bg: #192230;
+  --panel: #2c2f38;
+  --panel-2: #1f2731;
+  --stroke: #3d474e;
+  --ink: #f2f4f7;
+  --muted: #a9b4c3;
+
+  --accent: #ffcd00;
+  --accent-ink: #141821;
+  --danger: #e74c3c;
+
+  --radius: 14px;
+  --radius-lg: 20px;
+
+  --shadow-1: 0 8px 22px rgba(0,0,0,.26);
+  --shadow-2: 0 18px 50px rgba(0,0,0,.38);
+
+  --field-h: 46px;
+}
+
+/* ------------------------------- Reset -------------------------------- */
+*,
+*::before,
+*::after{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font: 500 15px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell;
+  background: radial-gradient(1200px 560px at 22% -10%, #223245 0%, transparent 65%) var(--bg);
+  color: var(--ink);
+  padding: clamp(18px, 3vw, 30px);
+}
+
+/* ------------------------------- Títulos ------------------------------- */
+h1{
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 900;
+  color: var(--accent);
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+h2, H2{
+  font-size: clamp(16px, 1.8vw, 20px);
+  font-weight: 800;
+  margin: 20px 0 10px;
+  color: #fff;
+}
+
+/* -------------------------- Debug (var_dump) --------------------------- */
+pre, code{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+pre{
+  max-width: 100%;
+  overflow: auto;
+  background: #10161e;
+  color: #cfe4ff;
+  border: 1px dashed #314155;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 10px 0 18px;
+}
+
+/* -------------------------- Caixa de Erros ----------------------------- */
+.erro{
+  background:#3a1a1a;
+  border:1px solid #ff8f8f;
+  color:#ffd6d6;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 10px 0 18px;
+  box-shadow: var(--shadow-1);
+  width:min(980px,100%);
+}
+.erro strong{ display:block; margin-bottom:6px; color:#ffe1e1; }
+.erro ul{ margin:0 0 0 18px; }
+
+/* ----------------------- Painéis / Visualização ------------------------ */
+img{
+  display:block;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow-1);
+  background:#0f141b;
+}
+
+/* Mensagens em vermelho já usadas no PHP */
+.red{ color:#ffb3b3; font-weight:600; margin: 8px 0 0; }
+
+/* Galeria de screenshots (wrapper dinâmico) */
+.gallery{
+  display:grid;
+  grid-template-columns: repeat( auto-fill, minmax(260px, 1fr) );
+  gap: 14px;
+}
+.gallery .shot{
+  background: var(--panel);
+  border:1px solid var(--stroke);
+  border-radius: var(--radius);
+  padding: 10px;
+  box-shadow: var(--shadow-1);
+}
+.gallery .shot img{
+  width:100%;
+  height:auto;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+.gallery .shot .actions{
+  display:flex; gap:10px; margin-top:10px; justify-content: flex-end;
+}
+.gallery .shot a{
+  color:#ffb4b4;
+  text-decoration: none;
+  font-weight:700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border:1px solid rgba(231,76,60,.35);
+  background: rgba(231,76,60,.12);
+}
+.gallery .shot a:hover{ filter: brightness(1.05); }
+
+/* Se o HTML atual já cria <div> soltos para cada screenshot, estilizamos genericamente */
+body > div > img[alt^="Screenshot"]{
+  margin: 8px 0 6px;
+  max-width: 100%;
+}
+body > div > a[href*="DeletarImagem.php"]{
+  display:inline-block;
+  margin: 6px 0 16px;
+  color:#ffb4b4;
+  text-decoration:none;
+  font-weight:700;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(231,76,60,.35);
+  background: rgba(231,76,60,.12);
+}
+
+/* ------------------------------- Formulário ---------------------------- */
+form{
+  margin-top: 18px;
+  background: var(--panel);
+  border:1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: clamp(16px, 2.8vw, 28px);
+  width:min(980px, 100%);
+  display:grid;
+  gap: 12px;
+}
+label{
+  font-weight:800;
+  color: var(--accent);
+}
+
+/* Inputs file */
+input[type="file"]{
+  display:block;
+  width:100%;
+  background: var(--panel-2);
+  border:1px solid var(--stroke);
+  border-radius: var(--radius);
+  color: var(--ink);
+  min-height: var(--field-h);
+  padding: 10px 12px;
+  cursor:pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+input[type="file"]:focus{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 28%, transparent);
+  outline:none;
+}
+
+/* Botões + / - */
+button[type="button"]{
+  border:0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 900;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-right: 6px;
+  cursor:pointer;
+  box-shadow: 0 10px 22px rgba(255,205,0,.25);
+  transition: filter .15s, transform .1s;
+}
+button[type="button"]:hover{ filter: brightness(1.06); transform: translateY(-1px); }
+button[type="button"]:active{ transform: translateY(1px); }
+
+/* Área dinâmica com id contendo "/" — selecionar por atributo */
+[id="imagens/videos"]{
+  background: color-mix(in oklab, var(--panel) 75%, transparent);
+  border: 1px dashed var(--stroke);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+[id="imagens/videos"] .input-screenshot{
+  display:block;
+  width:100%;
+  margin-bottom: 10px;
+}
+
+/* Botão enviar */
+input[type="submit"]{
+  justify-self: end;
+  appearance:none;
+  border:0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 900;
+  border-radius: 999px;
+  padding: 12px 18px;
+  box-shadow: 0 12px 26px color-mix(in oklab, var(--accent) 28%, transparent);
+  cursor:pointer;
+  transition: filter .15s, transform .1s;
+}
+input[type="submit"]:hover{ filter:brightness(1.08); transform: translateY(-1px); }
+input[type="submit"]:active{ transform: translateY(1px); }
+
+/* ------------------------- Acessibilidade / Focus ---------------------- */
+:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ------------------------------ Responsivo ----------------------------- */
+@media (max-width: 700px){
+  form{ padding: 14px; }
+  img{ width:100%; height:auto; }
+}
+
+/* ------------------------------ Scrollbar ------------------------------ */
+@media (pointer:fine){
+  *{ scrollbar-width: thin; scrollbar-color: var(--stroke) transparent; }
+  *::-webkit-scrollbar{ width: 12px; height:12px; }
+  *::-webkit-scrollbar-thumb{
+    background: var(--stroke);
+    border-radius: 12px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-track{ background: transparent; }
+}

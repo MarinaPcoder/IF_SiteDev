@@ -36,6 +36,8 @@
 ?>
  <!-- configuração  Head -->
 
+<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/cadjogo.css'?>">
+
 </head>
 
 <?php 

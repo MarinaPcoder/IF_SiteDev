@@ -35,6 +35,8 @@
 ?>
  <!-- configuração  Head -->
 
+<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/cadaval.css'?>">
+
 </head>
 
 <?php 

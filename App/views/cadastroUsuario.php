@@ -22,6 +22,7 @@
     }
 ?>
     <!-- configuração  Head -->
+<link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/cadusuario.css'?>">
 
 </head>
 
