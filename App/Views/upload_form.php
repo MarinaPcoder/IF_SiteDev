@@ -101,15 +101,14 @@
  <!-- configuração  Head -->
 
 <link rel="stylesheet" href="<?=CAMINHO_PUBLIC . 'assets/css/upform.css'?>">
-
+    <style>
+        
+    </style>
 </head>
 
 <body>
-    <h1><?= htmlspecialchars($titulo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').' de '.$jogoDados['titulo'] ?></h1>
-
-    <?php 
-        var_dump($jogoDados);
-    ?>
+        
+    <h1><a class="brand__avatar" href="<?=CAMINHO_PUBLIC?>index.php" aria-label="Storm — Homepage"><</a> <?= htmlspecialchars($titulo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').' de '.$jogoDados['titulo'] ?></h1>
 
     <?php foreach ($erros as $chave => $msgs): ?>
         <div class="erro">

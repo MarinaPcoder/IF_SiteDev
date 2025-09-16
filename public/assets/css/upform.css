@@ -251,3 +251,11 @@ input[type="submit"]:active{ transform: translateY(1px); }
   }
   *::-webkit-scrollbar-track{ background: transparent; }
 }
+
+.brand__avatar {
+            text-decoration: none;
+            color: black;
+            background-color: yellow;
+            padding: 1px 10px 4px 10px;
+            border-radius: 20px;
+        }

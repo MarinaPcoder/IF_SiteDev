@@ -12,6 +12,7 @@ const CAMINHO_VIEWS = './../App/Views/';
 
 // ---------- Guard: precisa estar logado ----------
 if (empty($_SESSION['Usuario']['Id'])) {
+  $_SESSION['Mensagem_redirecionamento'] = "Você precisa estar logado para acessar o perfil.";
   header('Location: ' . CAMINHO_VIEWS . 'loginUsuario.php');
   exit;
 }
