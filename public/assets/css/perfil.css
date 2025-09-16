@@ -310,8 +310,8 @@ input,select,textarea,button{ outline: none; }
   border-top: 1px solid var(--stroke);
 }
 .usercard .btn--primary{ justify-self: stretch; }
-.usercard .btn--danger{ justify-self: stretch; }
-.usercard .btn--ghost{ justify-self: stretch; background: var(--panel-2); }
+.usercard .btn--danger{ justify-self: stretch; width: 100%; text-align: left;}
+.usercard .btn--ghost{ justify-self: stretch; background: var(--panel-2); width: 100%; text-align: left;}
 
 /* ============================== Foco A11y ================================ */
 :focus-visible{

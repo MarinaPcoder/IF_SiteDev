@@ -11,6 +11,7 @@
 
     const CAMINHO_PUBLIC = './../../public/';
     const CAMINHO_INDEX = './../../public/index.php';
+    const CAMINHO_PERFIL = './../../public/perfil.php';
 
     if (isset($_SESSION['Mensagem_redirecionamento'])) {
         echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
@@ -46,7 +47,7 @@
             $id_avaliacao = $_GET['id'] ?? ($_SESSION['avaliacao']['alterar']['id'] ?? null);
             if ($id_avaliacao === null || !ctype_digit((string)$id_avaliacao)) {
                 $_SESSION['Mensagem_redirecionamento'] = "ID da avaliação inválido.";
-                header('Location: ' . CAMINHO_INDEX);
+                header('Location: ' . CAMINHO_PERFIL);
                 exit;
             }
 
@@ -56,7 +57,7 @@
 
             if (empty($dadoAvaliacao)) {
                 $_SESSION['Mensagem_redirecionamento'] = "Avaliação não encontrada.";
-                header(header: "Location: " . CAMINHO_INDEX);
+                header(header: "Location: " . CAMINHO_PERFIL);
                 exit;
             } else {
                 $_SESSION['avaliacao']['alterar']['id'] = $id_avaliacao;  
@@ -65,7 +66,7 @@
         // Verifica se o usuário tem permissão para alterar a avaliação
             if ($dadoAvaliacao[0]['id_usuario'] !== $_SESSION['Usuario']['Id'] && $tipo_usuario !== 'admin') {
                 $_SESSION['Mensagem_redirecionamento'] = "Você não tem permissão para alterar esta avaliação.";
-                header(header: "Location: " . CAMINHO_INDEX);
+                header(header: "Location: " . CAMINHO_PERFIL);
                 exit;
             }
         
@@ -73,7 +74,7 @@
             $dadoUsuario = $usuario->getUsuario(id: $dadoAvaliacao[0]['id_usuario']);
             if (empty($dadoUsuario)) {
                 $_SESSION['Mensagem_redirecionamento'] = "Usuário relacionado à avaliação não encontrado.";
-                header(header: "Location: " . CAMINHO_INDEX);
+                header(header: "Location: " . CAMINHO_PERFIL);
                 exit;
             }
 
@@ -81,7 +82,7 @@
             $dadoJogo = $jogo->LerJogo(idJogo: $dadoAvaliacao[0]['id_jogo']);
             if (empty($dadoJogo)) {
                 $_SESSION['Mensagem_redirecionamento'] = "Jogo relacionado à avaliação não encontrado.";
-                header(header: "Location: " . CAMINHO_INDEX);
+                header(header: "Location: " . CAMINHO_PERFIL);
                 exit;
             }
 
@@ -114,7 +115,7 @@
                     $_SESSION['Mensagem_redirecionamento'] = "Avaliação atualizada com sucesso.";
                     unset($_SESSION['avaliacao']);
 
-                    header(header: "Location: " . CAMINHO_INDEX);
+                    header(header: "Location: " . CAMINHO_PERFIL);
                     exit;
                 }
                 

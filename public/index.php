@@ -271,10 +271,10 @@ unset($_SESSION['Mensagem_redirecionamento']);
       <div id="searchResults" class="search__results" role="listbox" aria-label="Resultados da busca"></div>
     </section>
 
-    <!-- Mais pesquisados (proxy: top por votos) -->
-    <section class="panel reveal popular" aria-label="Mais pesquisados">
+    <!-- Mais avaliados (proxy: top por votos) -->
+    <section class="panel reveal popular" aria-label="Mais avaliados">
       <header class="section__header section__header--tight">
-        <h2>Mais pesquisados</h2>
+        <h2>Mais avaliados</h2>
       </header>
       <div id="popularList" class="popular__list" role="list"></div>
     </section>

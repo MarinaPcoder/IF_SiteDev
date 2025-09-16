@@ -21,7 +21,7 @@ $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
 $userId = (int) $_SESSION['Usuario']['Id'];
 
-// ---------- Ações POST (editar/excluir avaliação, logout, excluir conta) ----------
+// ---------- Ações POST (logout e ir para deletar conta) ----------
 $flash = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';
@@ -32,55 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       exit;
     }
 
+    // Encaminha para tela de deletar usuário
     if ($action === 'delete') {
       header('Location: ' . CAMINHO_VIEWS . 'deletarUsuario.php');
-      exit;   
-    }
-
-    if ($action === 'delete_review') {
-      $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-      if ($id > 0) {
-        $stmt = $pdo->prepare("DELETE FROM Avaliacao WHERE id_avaliacao = :id AND id_usuario = :u");
-        $stmt->execute([':id'=>$id, ':u'=>$userId]);
-        $flash = $stmt->rowCount() ? 'Avaliação excluída.' : 'Avaliação não encontrada.';
-      }
-    }
-
-    if ($action === 'edit_review') {
-      $id   = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-      $nota = isset($_POST['nota']) ? (float)$_POST['nota'] : -1;
-      $just = trim((string)($_POST['just'] ?? ''));
-      if ($id > 0 && $nota >= 0 && $nota <= 10) {
-        $stmt = $pdo->prepare("
-          UPDATE Avaliacao 
-          SET nota = :n, justificativa = :j 
-          WHERE id_avaliacao = :id AND id_usuario = :u
-        ");
-        $stmt->execute([':n'=>$nota, ':j'=>$just, ':id'=>$id, ':u'=>$userId]);
-        $flash = 'Avaliação atualizada.';
-      } else {
-        $flash = 'Dados inválidos para editar.';
-      }
-    }
-
-    if ($action === 'delete_account') {
-      $senha = (string)($_POST['senha'] ?? '');
-      if ($senha === '') { $flash = 'Informe sua senha para excluir a conta.'; }
-      else {
-        // valida a senha e apaga; ON DELETE CASCADE cuidará das dependências
-        $stmt = $pdo->prepare("SELECT senha FROM Usuario WHERE id_usuario = :id");
-        $stmt->execute([':id'=>$userId]);
-        $hash = $stmt->fetchColumn();
-        if ($hash && $hash === md5($senha)) {
-          $del = $pdo->prepare("DELETE FROM Usuario WHERE id_usuario = :id");
-          $del->execute([':id'=>$userId]);
-          unset($_SESSION['Usuario']);
-          header('Location: ' . CAMINHO_VIEWS . 'cadastroUsuario.php');
-          exit;
-        } else {
-          $flash = 'Senha incorreta.';
-        }
-      }
+      exit;
     }
   } catch (\Throwable $e) {
     $flash = 'Erro: ' . $e->getMessage();
@@ -131,12 +86,12 @@ $toWeb = function (?string $p) use ($basePrefix): string {
 $reviews = [];
 foreach ($rows as $r) {
   $reviews[] = [
-    'id'    => (int)$r['id'],
-    'game'  => (string)$r['titulo'],
-    'gameId'=> (int)$r['id_jogo'],
-    'cover' => $toWeb($r['poster'] ?? 'assets/img/poster.png'),
-    'rating'=> (float)$r['nota'],
-    'date'  => (new \DateTime($r['data_avaliacao']))->format('Y-m-d'),
+    'id'     => (int)$r['id'],
+    'game'   => (string)$r['titulo'],
+    'gameId' => (int)$r['id_jogo'],
+    'cover'  => $toWeb($r['poster'] ?? 'assets/img/poster.png'),
+    'rating' => (float)$r['nota'],
+    'date'   => (new \DateTime($r['data_avaliacao']))->format('Y-m-d'),
     'comment'=> (string)($r['justificativa'] ?? '')
   ];
 }
@@ -211,7 +166,7 @@ $memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('d/m/Y');
 
         <a class="nav__item active" href="perfil.php">
           <span class="nav__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c-2.8 0-5-3.6-5-8z"/></svg>
           </span>
           <span class="label">Perfil</span>
         </a>
@@ -253,7 +208,6 @@ $memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('d/m/Y');
       <div class="usercard__cover" aria-hidden="true"></div>
 
       <div class="usercard__header">
-
         <div class="usercard__id">
           <h2 id="uc-name" class="usercard__name"><?= htmlspecialchars($user['nome_usuario'] ?? '', ENT_QUOTES) ?></h2>
           <div class="usercard__user">@<?= htmlspecialchars($username, ENT_QUOTES) ?></div>
@@ -263,7 +217,6 @@ $memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('d/m/Y');
       <p class="usercard__bio"><?= htmlspecialchars($user['bio'] ?: 'Sem bio ainda.', ENT_QUOTES) ?></p>
 
       <ul class="usercard__meta">
-
         <li>
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M7 4h10v2H7V4zm-3 4h16v2H4V8zm3 4h10v2H7v-2zm-3 4h16v2H4v-2z"/></svg>
@@ -292,15 +245,6 @@ $memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('d/m/Y');
     </section>
   </aside>
 </div>
-
-<!-- ======= FORM SECRETO PARA AÇÕES JS ======= -->
-<form id="actionForm" method="post" style="display:none">
-  <input type="hidden" name="action" value="">
-  <input type="hidden" name="id" value="">
-  <input type="hidden" name="nota" value="">
-  <input type="hidden" name="just" value="">
-  <input type="password" name="senha" value="">
-</form>
 
 <!-- ======= TEMPLATES ======= -->
 <template id="tpl-review-card">
@@ -340,6 +284,7 @@ $memberSince  = (new \DateTime($user['criado_em'] ?? 'now'))->format('d/m/Y');
 <!-- ======= DADOS DO BACK-END ======= -->
 <script>
   window.STORM_REVIEWS = <?= json_encode($reviews, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+  window.CAMINHO_VIEWS = <?= json_encode(CAMINHO_VIEWS, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
 </script>
 
 <!-- ======= JS ======= -->
@@ -395,9 +340,7 @@ const ReviewsStore = (()=> {
   const items = Array.isArray(window.STORM_REVIEWS) ? window.STORM_REVIEWS : [];
   return {
     all(){ return [...items]; },
-    get(id){ return items.find(x=>x.id===id); },
-    update(id, patch){ const it=this.get(id); if(it) Object.assign(it, patch); },
-    remove(id){ const i=items.findIndex(x=>x.id===id); if(i>=0) items.splice(i,1); }
+    get(id){ return items.find(x=>x.id===id); }
   };
 })();
 
@@ -422,20 +365,20 @@ function renderReviewCard(model){
   date.dateTime     = model.date;
   text.textContent  = model.comment || '';
 
-  // ações
+  // EDITAR -> vai para AlterarAvaliacao.php?id=...
   tpl.querySelector('.edit').addEventListener('click', (e)=>{
     e.stopPropagation();
-    const newRating = prompt(`Nova nota para "${model.game}" (0-10):`, model.rating);
-    if (newRating === null) return;
-    const val = Math.max(0, Math.min(10, parseFloat(newRating)));
-    const newJust = prompt(`Novo comentário (opcional):`, model.comment || '');
-    submitAction('edit_review', {id:model.id, nota:val, just:newJust ?? ''});
+    const base = (window.CAMINHO_VIEWS || './');
+    window.location.href = base + 'AlterarAvaliacao.php?id=' + encodeURIComponent(model.id);
   });
 
+  // EXCLUIR -> confirma e vai para DeletarAvaliacao.php?id=...
   tpl.querySelector('.delete').addEventListener('click', (e)=>{
     e.stopPropagation();
-    if (confirm(`Excluir sua avaliação de "${model.game}"? Esta ação não pode ser desfeita.`)) {
-      submitAction('delete_review', {id:model.id});
+    const ok = confirm(`Excluir sua avaliação de "${model.game}"? Esta ação não pode ser desfeita.`);
+    if (ok) {
+      const base = (window.CAMINHO_VIEWS || './');
+      window.location.href = base + 'DeletarAvaliacao.php?id=' + encodeURIComponent(model.id);
     }
   });
 
@@ -456,20 +399,6 @@ function loadReviews(){
   }
   data.forEach(r => list.appendChild(renderReviewCard(r)));
 }
-
-/* Submissões POST invisíveis */
-function submitAction(action, fields){
-  const f = $('#actionForm');
-  f.reset();
-  f.action.value = action;
-  if ('id' in fields)   f.id.value   = fields.id;
-  if ('nota' in fields) f.nota.value = fields.nota;
-  if ('just' in fields) f.just.value = fields.just;
-  if ('senha' in fields) f.senha.value = fields.senha;
-  f.submit();
-}
-
-
 
 /* Init */
 loadReviews();

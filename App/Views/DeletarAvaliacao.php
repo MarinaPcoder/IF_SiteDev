@@ -9,6 +9,7 @@
 
     const CAMINHO_PUBLIC = './../../public/';
     const CAMINHO_INDEX = './../../public/index.php';
+    const CAMINHO_PERFIL = './../../public/perfil.php';
 
     if (isset($_SESSION['Mensagem_redirecionamento'])) {
         echo "<script>console.log('PHP Debug: " . addslashes($_SESSION['Mensagem_redirecionamento']) . "');</script>";
@@ -34,7 +35,7 @@
 
             if ($id_avaliacao === null || !ctype_digit((string) $id_avaliacao)) {
                 $_SESSION['Mensagem_redirecionamento'] = "ID da avaliação inválido.";
-                header('Location: ' . CAMINHO_INDEX);
+                header('Location: ' . CAMINHO_PERFIL);
                 exit;
             }
 
@@ -44,7 +45,7 @@
 
             if (empty($dadoAvaliacao)) {
                 $_SESSION['Mensagem_redirecionamento'] = "Avaliação não encontrada.";
-                header(header: "Location: " . CAMINHO_INDEX);
+                header(header: "Location: " . CAMINHO_PERFIL);
                 exit;
             } else {
                 $_SESSION['avaliacao']['deletar']['id'] = $id_avaliacao;  
@@ -53,7 +54,7 @@
         // Verifica se o usuário tem permissão para deletar a avaliação
             if ($dadoAvaliacao[0]['id_usuario'] !== $_SESSION['Usuario']['Id'] && $tipo_usuario !== 'admin') {
                 $_SESSION['Mensagem_redirecionamento'] = "Você não tem permissão para deletar esta avaliação.";
-                header(header: "Location: " . CAMINHO_INDEX);
+                header(header: "Location: " . CAMINHO_PERFIL);
                 exit;
             }
 
@@ -64,6 +65,6 @@
             :
             $_SESSION['Mensagem_redirecionamento'] = "Erro ao deletar avaliação. ";
 
-        header('Location: ' . CAMINHO_INDEX);
+        header('Location: ' . CAMINHO_PERFIL);
         exit;
 }

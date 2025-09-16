@@ -341,3 +341,32 @@ button{ font:inherit; color:inherit; cursor:pointer; background:transparent; bor
     --bg:#fff; --panel:#fff; --panel-2:#fff; --ink:#000; --muted:#444; --stroke:#bbb; --accent:#000; --accent-ink:#fff;
   }
 }
+/* Plataforma (label + ícone + nome) centralizados */
+.facts .platforms{
+  display: flex;
+  align-items: center;      /* alinha verticalmente ao centro */
+  justify-content: center;  /* centraliza o conjunto na linha */
+  gap: .5rem;               /* espaço entre os itens */
+  text-align: center;
+  flex-wrap: wrap;          /* quebra em telas menores sem bagunçar */
+}
+
+.facts .platforms .pf{
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.facts .platforms .pf svg{
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.facts .platforms em{
+  font-style: normal;  /* opcional: deixa “pc” sem itálico */
+  opacity: .8;         /* mantém aparência “muted” */
+}
